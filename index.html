@@ -402,6 +402,16 @@
             font-size: 0.9rem;
         }
 
+        /* Highlight effect for search navigation */
+        .highlight {
+            animation: highlight 2s ease;
+        }
+
+        @keyframes highlight {
+            0% { background-color: rgba(67, 97, 238, 0.2); }
+            100% { background-color: transparent; }
+        }
+
         /* Responsive Styles */
         @media (max-width: 768px) {
             .header-top {
@@ -459,7 +469,7 @@
                 <nav class="nav-links">
                     <a href="#">Home</a>
                     <a href="#home">Tools</a>
-                    <a href="#contact">Contact</a>
+                    <a href=".footer-bottom">Contact</a>
                 </nav>
                 
                 <div class="contact-info">
@@ -720,7 +730,7 @@
                 <div class="footer-column">
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="#home">Home</a></li>
+                        <li><a href="#">Home</a></li>
                         <li><a href="#image-tools">Image Tools</a></li>
                         <li><a href="#file-tools">File Tools</a></li>
                         <li><a href="#seo-tools">SEO Tools</a></li>
@@ -786,34 +796,34 @@
         
         // All tools data for search
         const tools = [
-            { name: 'Image Resizer', category: 'Image Tools', link: '#image-resizer', icon: 'fa-expand' },
-            { name: 'Image Format Converter', category: 'Image Tools', link: '#image-format-converter', icon: 'fa-exchange-alt' },
-            { name: 'Background Remover', category: 'Image Tools', link: '#background-remover', icon: 'fa-cut' },
-            { name: 'Image Compressor', category: 'Image Tools', link: '#image-compressor', icon: 'fa-compress-alt' },
-            { name: 'PDF to Word', category: 'File Tools', link: '#pdf-to-word', icon: 'fa-file-pdf' },
-            { name: 'Word to PDF', category: 'File Tools', link: '#word-to-pdf', icon: 'fa-file-word' },
-            { name: 'Image to PDF', category: 'File Tools', link: '#image-to-pdf', icon: 'fa-file-image' },
-            { name: 'ZIP Extractor', category: 'File Tools', link: '#zip-extractor', icon: 'fa-file-archive' },
-            { name: 'Meta Tag Generator', category: 'SEO & Web Tools', link: '#meta-tag-generator', icon: 'fa-tags' },
-            { name: 'Domain WHOIS Lookup', category: 'SEO & Web Tools', link: '#whois-lookup', icon: 'fa-search' },
-            { name: 'URL Shortener', category: 'SEO & Web Tools', link: '#url-shortener', icon: 'fa-link' },
-            { name: 'QR Code Generator', category: 'SEO & Web Tools', link: '#qr-code-generator', icon: 'fa-qrcode' },
-            { name: 'Calculator', category: 'Math & Utility Tools', link: '#calculator', icon: 'fa-calculator' },
-            { name: 'Unit Converter', category: 'Math & Utility Tools', link: '#unit-converter', icon: 'fa-ruler-combined' },
-            { name: 'Currency Converter', category: 'Math & Utility Tools', link: '#currency-converter', icon: 'fa-money-bill-wave' },
-            { name: 'Age Calculator', category: 'Math & Utility Tools', link: '#age-calculator', icon: 'fa-birthday-cake' },
-            { name: 'Word Counter', category: 'Text Tools', link: '#word-counter', icon: 'fa-sort-numeric-up' },
-            { name: 'Case Converter', category: 'Text Tools', link: '#case-converter', icon: 'fa-text-height' },
-            { name: 'Lorem Ipsum Generator', category: 'Text Tools', link: '#lorem-ipsum', icon: 'fa-paragraph' },
-            { name: 'Text Encryption/Decryption', category: 'Text Tools', link: '#text-encryption', icon: 'fa-lock' },
-            { name: 'JSON Formatter/Validator', category: 'Developer Tools', link: '#json-formatter', icon: 'fa-code' },
-            { name: 'Base64 Encoder/Decoder', category: 'Developer Tools', link: '#base64-converter', icon: 'fa-key' },
-            { name: 'Regex Tester', category: 'Developer Tools', link: '#regex-tester', icon: 'fa-regex' },
-            { name: 'UUID Generator', category: 'Developer Tools', link: '#uuid-generator', icon: 'fa-fingerprint' },
-            { name: 'Color Picker', category: 'Color Tools', link: '#color-picker', icon: 'fa-eye-dropper' },
-            { name: 'Color Code Generator', category: 'Color Tools', link: '#color-code-generator', icon: 'fa-barcode' },
-            { name: 'Color Combinator', category: 'Color Tools', link: '#color-combinator', icon: 'fa-object-group' },
-            { name: 'Color Palettes Generator', category: 'Color Tools', link: '#color-palettes', icon: 'fa-swatchbook' }
+            { name: 'Image Resizer', category: 'Image Tools', link: '#image-tools', icon: 'fa-expand' },
+            { name: 'Image Format Converter', category: 'Image Tools', link: '#image-tools', icon: 'fa-exchange-alt' },
+            { name: 'Background Remover', category: 'Image Tools', link: '#image-tools', icon: 'fa-cut' },
+            { name: 'Image Compressor', category: 'Image Tools', link: '#image-tools', icon: 'fa-compress-alt' },
+            { name: 'PDF to Word', category: 'File Tools', link: '#file-tools', icon: 'fa-file-pdf' },
+            { name: 'Word to PDF', category: 'File Tools', link: '#file-tools', icon: 'fa-file-word' },
+            { name: 'Image to PDF', category: 'File Tools', link: '#file-tools', icon: 'fa-file-image' },
+            { name: 'ZIP Extractor', category: 'File Tools', link: '#file-tools', icon: 'fa-file-archive' },
+            { name: 'Meta Tag Generator', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-tags' },
+            { name: 'Domain WHOIS Lookup', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-search' },
+            { name: 'URL Shortener', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-link' },
+            { name: 'QR Code Generator', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-qrcode' },
+            { name: 'Calculator', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-calculator' },
+            { name: 'Unit Converter', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-ruler-combined' },
+            { name: 'Currency Converter', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-money-bill-wave' },
+            { name: 'Age Calculator', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-birthday-cake' },
+            { name: 'Word Counter', category: 'Text Tools', link: '#text-tools', icon: 'fa-sort-numeric-up' },
+            { name: 'Case Converter', category: 'Text Tools', link: '#text-tools', icon: 'fa-text-height' },
+            { name: 'Lorem Ipsum Generator', category: 'Text Tools', link: '#text-tools', icon: 'fa-paragraph' },
+            { name: 'Text Encryption/Decryption', category: 'Text Tools', link: '#text-tools', icon: 'fa-lock' },
+            { name: 'JSON Formatter/Validator', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-code' },
+            { name: 'Base64 Encoder/Decoder', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-key' },
+            { name: 'Regex Tester', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-regex' },
+            { name: 'UUID Generator', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-fingerprint' },
+            { name: 'Color Picker', category: 'Color Tools', link: '#color-tools', icon: 'fa-eye-dropper' },
+            { name: 'Color Code Generator', category: 'Color Tools', link: '#color-tools', icon: 'fa-barcode' },
+            { name: 'Color Combinator', category: 'Color Tools', link: '#color-tools', icon: 'fa-object-group' },
+            { name: 'Color Palettes Generator', category: 'Color Tools', link: '#color-tools', icon: 'fa-swatchbook' }
         ];
         
         // Header search functionality
@@ -831,6 +841,26 @@
             ).slice(0, 5);
             
             displaySearchResults(filteredTools);
+        });
+        
+        // Handle Enter key press in search
+        headerSearchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                if (searchTerm.length === 0) return;
+                
+                // Find the first matching tool
+                const matchedTool = tools.find(tool => 
+                    tool.name.toLowerCase().includes(searchTerm) || 
+                    tool.category.toLowerCase().includes(searchTerm)
+                );
+                
+                if (matchedTool) {
+                    // Navigate to the tool's section
+                    navigateToSection(matchedTool.link);
+                }
+            }
         });
         
         // Display search results
@@ -852,15 +882,41 @@
                 `;
                 
                 resultItem.addEventListener('click', () => {
-                    window.location.href = tool.link;
-                    searchResults.style.display = 'none';
-                    headerSearchInput.value = '';
+                    navigateToSection(tool.link);
                 });
                 
                 searchResults.appendChild(resultItem);
             });
             
             searchResults.style.display = 'block';
+        }
+        
+        // Navigate to section with highlight effect
+        function navigateToSection(sectionId) {
+            const targetElement = document.querySelector(sectionId);
+            
+            if (targetElement) {
+                // Add highlight class for visual feedback
+                targetElement.classList.add('highlight');
+                
+                // Scroll to the section
+                targetElement.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+                
+                // Update URL
+                history.pushState(null, null, sectionId);
+                
+                // Remove highlight after animation completes
+                setTimeout(() => {
+                    targetElement.classList.remove('highlight');
+                }, 2000);
+                
+                // Hide search results and clear input
+                searchResults.style.display = 'none';
+                headerSearchInput.value = '';
+            }
         }
         
         // Close search results when clicking outside
@@ -877,17 +933,7 @@
                 
                 e.preventDefault();
                 const targetId = this.getAttribute('href');
-                const targetElement = document.querySelector(targetId);
-                
-                if (targetElement) {
-                    targetElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'start'
-                    });
-                    
-                    // Update URL without page jump
-                    history.pushState(null, null, targetId);
-                }
+                navigateToSection(targetId);
             });
         });
     </script>
