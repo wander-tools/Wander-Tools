@@ -41,6 +41,7 @@
             line-height: 1.6;
             transition: var(--transition);
             padding: 20px;
+            min-height: 100vh;
         }
 
         .container {
@@ -452,12 +453,22 @@
         let originalAspectRatio = 0;
         let processedImage = null;
 
-        // Theme Toggle Functionality
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme === 'dark') {
-            document.documentElement.setAttribute('data-theme', 'dark');
-            themeIcon.classList.replace('fa-moon', 'fa-sun');
+        // Theme Toggle Functionality - localStorage সহ
+        function initTheme() {
+            try {
+                // localStorage availability check
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                }
+            } catch (e) {
+                console.log("LocalStorage not available, using default theme");
+            }
         }
+
+        // Initialize theme on page load
+        initTheme();
 
         themeToggle.addEventListener('click', () => {
             const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -465,11 +476,19 @@
             if (currentTheme === 'dark') {
                 document.documentElement.removeAttribute('data-theme');
                 themeIcon.classList.replace('fa-sun', 'fa-moon');
-                localStorage.setItem('theme', 'light');
+                try {
+                    localStorage.setItem('theme', 'light');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
             } else {
                 document.documentElement.setAttribute('data-theme', 'dark');
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
-                localStorage.setItem('theme', 'dark');
+                try {
+                    localStorage.setItem('theme', 'dark');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
             }
         });
 
@@ -595,23 +614,4 @@
                     heightWarning.style.display = 'flex';
                 } else {
                     widthWarning.style.display = 'none';
-                    heightWarning.style.display = 'none';
-                }
-                
-                // Update aspect ratio display
-                aspectRatioEl.textContent = `${newWidth}:${newHeight}`;
-            }
-        }
-
-        // Process image
-        processBtn.addEventListener('click', () => {
-            if (!originalImage) return;
-
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            
-            const newWidth = parseInt(widthInput.value) || originalWidth;
-            const newHeight = parseInt(heightInput.value) || originalHeight;
-            
-            canvas.width = newWidth;
-       
+                    heightWarni
