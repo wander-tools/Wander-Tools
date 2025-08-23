@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tag Generator - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --success-color: #4bb543;
+            --warning-color: #ff9500;
+            --error-color: #ff3333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4895ef;
+            --secondary-color: #4361ee;
+            --light-color: #121416;
+            --dark-color: #e9ecef;
+            --gray-color: #adb5bd;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            transition: var(--transition);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tool-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tool-header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .tool-header p {
+            color: var(--gray-color);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .back-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .tool-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .tool-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .input-section {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .preview-section {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray-color);
+            border-radius: var(--border-radius);
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            transition: var(--transition);
+            font-size: 1rem;
+        }
+
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group .char-count {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .form-group .char-count.limit-exceeded {
+            color: var(--error-color);
+        }
+
+        .toggle-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .toggle-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+        }
+
+        .toggle-option input {
+            width: auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d9436;
+        }
+
+        .preview-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            flex-grow: 1;
+        }
+
+        .search-preview {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .search-result {
+            padding: 15px;
+        }
+
+        .search-url {
+            color: #006621;
+            font-size: 14px;
+            line-height: 1.3;
+            margin-bottom: 5px;
+        }
+
+        .search-title {
+            color: #1a0dab;
+            font-size: 20px;
+            line-height: 1.3;
+            margin-bottom: 5px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .search-title:hover {
+            text-decoration: underline;
+        }
+
+        .search-description {
+            color: #545454;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .social-preview {
+            margin-top: 25px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .social-image {
+            height: 250px;
+            background-color: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .social-content {
+            padding: 15px;
+        }
+
+        .social-url {
+            color: #606770;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .social-title {
+            color: #1d2129;
+            font-size: 16px;
+            font-weight: bold;
+            line-height: 1.3;
+            margin-bottom: 5px;
+        }
+
+        .social-description {
+            color: #606770;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .code-container {
+            background: #2d2d2d;
+            color: #f8f8f2;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            margin-top: 20px;
+        }
+
+        .code-container code {
+            display: block;
+            line-height: 1.5;
+        }
+
+        .meta-tag {
+            color: #a6e22e;
+        }
+
+        .meta-name {
+            color: #f92672;
+        }
+
+        .meta-content {
+            color: #e6db74;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+            border: none;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .section-title {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--gray-color);
+        }
+
+        .tag-importance {
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-top: 5px;
+        }
+
+        .advanced-options {
+            background-color: rgba(0, 0, 0, 0.03);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Back to Tools
+        </a>
+
+        <div class="tool-header">
+            <h1><i class="fas fa-tags"></i> Meta Tag Generator</h1>
+            <p>Generate optimized meta tags for better SEO and social media sharing</p>
+        </div>
+
+        <div class="tool-container">
+            <div class="input-section">
+                <div class="form-group">
+                    <label for="page-title"><i class="fas fa-heading"></i> Page Title</label>
+                    <input type="text" id="page-title" placeholder="My Awesome Website - Welcome" value="Wander Tools - Your Complete Online Toolkit">
+                    <div class="char-count" id="title-char-count">0/60 characters</div>
+                    <div class="tag-importance">Essential for SEO and search results</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-description"><i class="fas fa-align-left"></i> Meta Description</label>
+                    <textarea id="page-description" placeholder="A brief description of your page content">Wander Tools provides a complete suite of free online tools for developers, designers, and content creators. Convert, compress, and optimize your files with our easy-to-use tools.</textarea>
+                    <div class="char-count" id="description-char-count">0/160 characters</div>
+                    <div class="tag-importance">Important for SEO and search result snippets</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-url"><i class="fas fa-link"></i> Page URL</label>
+                    <input type="text" id="page-url" placeholder="https://example.com" value="https://wandertools.com">
+                    <div class="tag-importance">Important for social media sharing</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-keywords"><i class="fas fa-key"></i> Keywords (comma separated)</label>
+                    <input type="text" id="page-keywords" placeholder="online tools, converters, utilities" value="online tools, converters, utilities, image tools, PDF tools, SEO tools">
+                    <div class="tag-importance">Less important for SEO but still valuable</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-author"><i class="fas fa-user"></i> Author</label>
+                    <input type="text" id="page-author" placeholder="Author Name" value="Wander Tools Team">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-image"></i> Social Media Image</label>
+                    <input type="text" id="social-image" placeholder="https://example.com/image.jpg" value="https://wandertools.com/images/og-image.jpg">
+                    <div class="tag-importance">Important for social media sharing (1200×630px recommended)</div>
+                </div>
+
+                <div class="advanced-options">
+                    <div class="section-title">
+                        <i class="fas fa-cog"></i> Advanced Options
+                    </div>
+
+                    <div class="form-group">
+                        <label for="viewport"><i class="fas fa-mobile-alt"></i> Viewport</label>
+                        <input type="text" id="viewport" value="width=device-width, initial-scale=1.0">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="charset"><i class="fas fa-font"></i> Character Set</label>
+                        <input type="text" id="charset" value="UTF-8">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="robots"><i class="fas fa-robot"></i> Robots Directive</label>
+                        <select id="robots">
+                            <option value="index, follow">Index, Follow</option>
+                            <option value="noindex, nofollow">Noindex, Nofollow</option>
+                            <option value="index, nofollow">Index, Nofollow</option>
+                            <option value="noindex, follow">Noindex, Follow</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="theme-color"><i class="fas fa-paint-brush"></i> Theme Color</label>
+                        <input type="color" id="theme-color" value="#4361ee">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="reset-btn" class="btn-secondary">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button id="generate-btn" class="btn-primary">
+                        <i class="fas fa-cog"></i> Generate Meta Tags
+                    </button>
+                    <button id="copy-btn" class="btn-success">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+
+            <div class="preview-section">
+                <div class="section-title">
+                    <i class="fas fa-eye"></i> Preview
+                </div>
+
+                <div class="preview-container">
+                    <div class="search-preview">
+                        <div class="search-result">
+                            <div class="search-url" id="preview-url">https://wandertools.com</div>
+                            <a href="#" class="search-title" id="preview-title">Wander Tools - Your Complete Online Toolkit</a>
+                            <div class="search-description" id="preview-description">Wander Tools provides a complete suite of free online tools for developers, designers, and content creators. Convert, compress, and optimize your files with our easy-to-use tools.</div>
+                        </div>
+                    </div>
+
+                    <div class="social-preview">
+                        <div class="social-image" id="preview-social-image">
+                            <i class="fas fa-image fa-3x"></i>
+                        </div>
+                        <div class="social-content">
+                            <div class="social-url" id="preview-social-url">wandertools.com</div>
+                            <div class="social-title" id="preview-social-title">Wander Tools - Your Complete Online Toolkit</div>
+                            <div class="social-description" id="preview-social-description">Wander Tools provides a complete suite of free online tools for developers, designers, and content creators.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-title">
+                    <i class="fas fa-code"></i> Generated Code
+                </div>
+
+                <div class="code-container">
+                    <code id="generated-code">
+                        <span class="meta-tag">&lt;!-- Generated meta tags will appear here --&gt;</span>
+                    </code>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i> <span id="notification-text"></span>
+    </div>
+
+    <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    <script>
+        // DOM Elements
+        const pageTitle = document.getElementById('page-title');
+        const pageDescription = document.getElementById('page-description');
+        const pageUrl = document.getElementById('page-url');
+        const pageKeywords = document.getElementById('page-keywords');
+        const pageAuthor = document.getElementById('page-author');
+        const socialImage = document.getElementById('social-image');
+        const viewport = document.getElementById('viewport');
+        const charset = document.getElementById('charset');
+        const robots = document.getElementById('robots');
+        const themeColor = document.getElementById('theme-color');
+        const generateBtn = document.getElementById('generate-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const copyBtn = document.getElementById('copy-btn');
+        const titleCharCount = document.getElementById('title-char-count');
+        const descriptionCharCount = document.getElementById('description-char-count');
+        const generatedCode = document.getElementById('generated-code');
+        const previewTitle = document.getElementById('preview-title');
+        const previewDescription = document.getElementById('preview-description');
+        const previewUrl = document.getElementById('preview-url');
+        const previewSocialTitle = document.getElementById('preview-social-title');
+        const previewSocialDescription = document.getElementById('preview-social-description');
+        const previewSocialUrl = document.getElementById('preview-social-url');
+        const previewSocialImage = document.getElementById('preview-social-image');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+
+        // Theme Toggle Functionality
+        function initTheme() {
+            try {
+                const savedTheme = localStorage.getItem('wander-tools-theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            } catch (e) {
+                console.log("LocalStorage not available, using default theme");
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            setupEventListeners();
+            updateCharCounts();
+            generateMetaTags();
+        });
+
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Input events
+            pageTitle.addEventListener('input', function() {
+                updateCharCounts();
+                generateMetaTags();
+            });
+            
+            pageDescription.addEventListener('input', function() {
+                updateCharCounts();
+                generateMetaTags();
+            });
+            
+            pageUrl.addEventListener('input', generateMetaTags);
+            pageKeywords.addEventListener('input', generateMetaTags);
+            pageAuthor.addEventListener('input', generateMetaTags);
+            socialImage.addEventListener('input', generateMetaTags);
+            viewport.addEventListener('input', generateMetaTags);
+            charset.addEventListener('input', generateMetaTags);
+            robots.addEventListener('change', generateMetaTags);
+            themeColor.addEventListener('input', generateMetaTags);
+
+            // Button events
+            generateBtn.addEventListener('click', generateMetaTags);
+            resetBtn.addEventListener('click', resetForm);
+            copyBtn.addEventListener('click', copyToClipboard);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                try {
+                    localStorage.setItem('wander-tools-theme', 'light');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                try {
+                    localStorage.setItem('wander-tools-theme', 'dark');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
+            }
+        }
+
+        function updateCharCounts() {
+            const titleLength = pageTitle.value.length;
+            const descriptionLength = pageDescription.value.length;
+            
+            titleCharCount.textContent = `${titleLength}/60 characters`;
+            descriptionCharCount.textContent = `${descriptionLength}/160 characters`;
+            
+            if (titleLength > 60) {
+                titleCharCount.classList.add('limit-exceeded');
+            } else {
+                titleCharCount.classList.remove('limit-exceeded');
+            }
+            
+            if (descriptionLength > 160) {
+                descriptionCharCount.classList.add('limit-exceeded');
+            } else {
+                descriptionCharCount.classList.remove('limit-exceeded');
+            }
+        }
+
+        function generateMetaTags() {
+            // Update preview
+            previewTitle.textContent = pageTitle.value || 'Page Title';
+            previewDescription.textContent = pageDescription.value || 'Page description';
+            previewUrl.textContent = extractDomain(pageUrl.value) || 'example.com';
+            previewSocialTitle.textContent = pageTitle.value || 'Page Title';
+            previewSocialDescription.textContent = truncateText(pageDescription.value, 120) || 'Page description';
+            previewSocialUrl.textContent = extractDomain(pageUrl.value) || 'example.com';
+            
+            // Update social image preview
+            if (socialImage.value) {
+                previewSocialImage.style.backgroundImage = `url(${socialImage.value})`;
+                previewSocialImage.style.backgroundSize = 'cover';
+                previewSocialImage.style.backgroundPosition = 'center';
+                previewSocialImage.innerHTML = '';
+            } else {
+                previewSocialImage.style.backgroundImage = 'none';
+                previewSocialImage.innerHTML = '<i class="fas fa-image fa-3x"></i>';
+            }
+            
+            // Generate meta tags code
+            const tags = [];
+            
+            // Basic meta tags
+            tags.push(`<span class="meta-tag">&lt;title&gt;</span>${escapeHtml(pageTitle.value || 'Page Title')}<span class="meta-tag">&lt;/title&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"description"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageDescription.value || 'Page description')}"</span> <span class="meta-tag">/&gt;</span>`);
+            
+            if (pageKeywords.value) {
+                tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"keywords"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageKeywords.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            }
+            
+            if (pageAuthor.value) {
+                tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"author"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageAuthor.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            }
+            
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"viewport"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(viewport.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">charset=</span><span class="meta-content">"${escapeHtml(charset.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"robots"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(robots.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            
+            // Theme color
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"theme-color"</span> <span class="meta-name">content=</span><span class="meta-content">"${themeColor.value}"</span> <span class="meta-tag">/&gt;</span>`);
+            
+            // Open Graph tags (for social media)
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">property=</span><span class="meta-content">"og:title"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageTitle.value || 'Page Title')}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">property=</span><span class="meta-content">"og:description"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageDescription.value || 'Page description')}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">property=</span><span class="meta-content">"og:url"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageUrl.value || 'https://example.com')}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">property=</span><span class="meta-content">"og:type"</span> <span class="meta-name">content=</span><span class="meta-content">"website"</span> <span class="meta-tag">/&gt;</span>`);
+            
+            if (socialImage.value) {
+                tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">property=</span><span class="meta-content">"og:image"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(socialImage.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            }
+            
+            // Twitter Card tags
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"twitter:card"</span> <span class="meta-name">content=</span><span class="meta-content">"summary_large_image"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"twitter:title"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageTitle.value || 'Page Title')}"</span> <span class="meta-tag">/&gt;</span>`);
+            tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"twitter:description"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(pageDescription.value || 'Page description')}"</span> <span class="meta-tag">/&gt;</span>`);
+            
+            if (socialImage.value) {
+                tags.push(`<span class="meta-tag">&lt;meta</span> <span class="meta-name">name=</span><span class="meta-content">"twitter:image"</span> <span class="meta-name">content=</span><span class="meta-content">"${escapeHtml(socialImage.value)}"</span> <span class="meta-tag">/&gt;</span>`);
+            }
+            
+            // Update generated code
+            generatedCode.innerHTML = tags.join('\n');
+        }
+
+        function resetForm() {
+            pageTitle.value = 'Wander Tools - Your Complete Online Toolkit';
+            pageDescription.value = 'Wander Tools provides a complete suite of free online tools for developers, designers, and content creators. Convert, compress, and optimize your files with our easy-to-use tools.';
+            pageUrl.value = 'https://wandertools.com';
+            pageKeywords.value = 'online tools, converters, utilities, image tools, PDF tools, SEO tools';
+            pageAuthor.value = 'Wander Tools Team';
+            socialImage.value = 'https://wandertools.com/images/og-image.jpg';
+            viewport.value = 'width=device-width, initial-scale=1.0';
+            charset.value = 'UTF-8';
+            robots.value = 'index, follow';
+            themeColor.value = '#4361ee';
+            
+            updateCharCounts();
+            generateMetaTags();
+            
+            showNotification('Form reset to default values');
+        }
+
+        function copyToClipboard() {
+            // Create a plain text version of the meta tags
+            const plainTextTags = [];
+            plainTextTags.push(`<title>${pageTitle.value || 'Page Title'}</title>`);
+            plainTextTags.push(`<meta name="description" content="${pageDescription.value || 'Page description'}" />`);
+            
+            if (pageKeywords.value) {
+                plainTextTags.push(`<meta name="keywords" content="${pageKeywords.value}" />`);
+            }
+            
+            if (pageAuthor.value) {
+                plainTextTags.push(`<meta name="author" content="${pageAuthor.value}" />`);
+            }
+            
+            plainTextTags.push(`<meta name="viewport" content="${viewport.value}" />`);
+            plainTextTags.push(`<meta charset="${charset.value}" />`);
+            plainTextTags.push(`<meta name="robots" content="${robots.value}" />`);
+            plainTextTags.push(`<meta name="theme-color" content="${themeColor.value}" />`);
+            
+            // Open Graph tags
+            plainTextTags.push(`<meta property="og:title" content="${pageTitle.value || 'Page Title'}" />`);
+            plainTextTags.push(`<meta property="og:description" content="${pageDescription.value || 'Page description'}" />`);
+            plainTextTags.push(`<meta property="og:url" content="${pageUrl.value || 'https://example.com'}" />`);
+            plainTextTags.push(`<meta property="og:type" content="website" />`);
+            
+            if (socialImage.value) {
+                plainTextTags.push(`<meta property="og:image" content="${socialImage.value}" />`);
+            }
+            
+            // Twitter Card tags
+            plainTextTags.push(`<meta name="twitter:card" content="summary_large_image" />`);
+            plainTextTags.push(`<meta name="twitter:title" content="${pageTitle.value || 'Page Title'}" />`);
+            plainTextTags.push(`<meta name="twitter:description" content="${pageDescription.value || 'Page description'}" />`);
+            
+            if (socialImage.value) {
+                plainTextTags.push(`<meta name="twitter:image" content="${socialImage.value}" />`);
+            }
+            
+            // Copy to clipboard
+            const textToCopy = plainTextTags.join('\n');
+            
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                showNotification('Meta tags copied to clipboard!');
+            }).catch(err => {
+                showNotification('Failed to copy: ' + err, false);
+            });
+        }
+
+        function showNotification(message, isSuccess = true) {
+            notificationText.textContent = message;
+            notification.className = isSuccess ? 'notification show' : 'notification show error';
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Helper functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function extractDomain(url) {
+            if (!url) return '';
+            try {
+                const domain = new URL(url).hostname;
+                return domain.replace('www.', '');
+            } catch (e) {
+                return url;
+            }
+        }
+
+        function truncateText(text, maxLength) {
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        }
+    </script>
+</body>
+</html>
