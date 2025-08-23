@@ -246,6 +246,58 @@
             transform: rotate(180deg);
         }
         
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 10px;
+        }
+        
+        @media (max-width: 480px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .calculate-btn {
+            padding: 15px;
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .calculate-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .reset-btn {
+            padding: 15px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .reset-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            background: #ff5252;
+        }
+        
         .category-selector {
             display: flex;
             gap: 10px;
@@ -463,7 +515,7 @@
         </div>
         
         <header>
-            <h1>Wander Tools</h1>
+            <h1>Unit Converter</h1>
             <p>A collection of handy web tools for everyday use</p>
         </header>
         
@@ -506,6 +558,15 @@
                     </div>
                 </div>
                 
+                <div class="button-group">
+                    <button class="calculate-btn" onclick="convertUnits()">
+                        Convert
+                    </button>
+                    <button class="reset-btn" id="resetBtn">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                
                 <div class="conversion-result">
                     <h3>Conversion Results</h3>
                     <div id="resultsContainer"></div>
@@ -522,6 +583,7 @@
                 <li>Select the unit to convert to in the "To" dropdown</li>
                 <li>The conversion will happen automatically as you type or change units</li>
                 <li>Use the swap button to swap the "From" and "To" units</li>
+                <li>Use the "Reset" button to clear inputs and reset to default values</li>
                 <li>See all common conversions in the results section below</li>
                 <li>Toggle between dark and light mode using the moon/sun button</li>
             </ul>
@@ -595,6 +657,7 @@
         const resultsContainer = document.getElementById('resultsContainer');
         const categoryButtons = document.querySelectorAll('.category-btn');
         const darkModeToggle = document.getElementById('darkModeToggle');
+        const resetBtn = document.getElementById('resetBtn');
 
         // Initialize the converter
         function initConverter() {
@@ -609,6 +672,9 @@
                 });
             });
 
+            // Set up reset button
+            resetBtn.addEventListener('click', resetConverter);
+            
             // Set up dark mode toggle
             darkModeToggle.addEventListener('click', toggleDarkMode);
             
@@ -627,6 +693,28 @@
             toUnitSelect.addEventListener('change', convertUnits);
             
             // Perform initial conversion
+            convertUnits();
+        }
+
+        // Reset the converter
+        function resetConverter() {
+            // Reset input value to 1
+            fromValueInput.value = 1;
+            
+            // Reset unit selections to default for current category
+            const units = Object.keys(unitCategories[currentCategory]);
+            if (currentCategory === 'temperature') {
+                fromUnitSelect.value = 'celsius';
+                toUnitSelect.value = 'fahrenheit';
+            } else {
+                fromUnitSelect.value = units[0];
+                toUnitSelect.value = units[1];
+            }
+            
+            // Clear results
+            resultsContainer.innerHTML = '';
+            
+            // Convert units again to update display
             convertUnits();
         }
 
