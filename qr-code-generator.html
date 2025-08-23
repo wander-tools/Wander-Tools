@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Code Generator - Wander Tools</title>
+    <title>QR & Barcode Generator - Wander Tools</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.1/build/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     <style>
         :root {
             --primary: #6c63ff;
@@ -32,12 +33,12 @@
             color: #333;
             line-height: 1.6;
             min-height: 100vh;
+            padding: 20px;
         }
 
         .container {
             max-width: 1000px;
             margin: 0 auto;
-            padding: 20px;
         }
 
         header {
@@ -56,6 +57,11 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
         }
 
         .theme-toggle {
@@ -173,11 +179,16 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
         .color-input {
             flex: 1;
             min-width: 120px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
         }
 
         .color-preview {
@@ -219,7 +230,7 @@
             justify-content: center;
         }
 
-        .qr-preview {
+        .preview-container {
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -230,7 +241,7 @@
             min-height: 300px;
         }
 
-        #qrcode {
+        #qrcode, #barcode {
             margin-bottom: 20px;
             padding: 15px;
             background: white;
@@ -241,6 +252,10 @@
             align-items: center;
             min-width: 200px;
             min-height: 200px;
+        }
+
+        #barcode {
+            min-height: 150px;
         }
 
         .action-buttons {
@@ -315,6 +330,62 @@
             border-top: 1px solid #e0e0e0;
         }
 
+        .code-type-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: var(--border-radius);
+        }
+
+        .code-type-btn {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .code-type-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .upload-area {
+            border: 2px dashed #ddd;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            margin-bottom: 15px;
+        }
+
+        .image-preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: var(--border-radius);
+            margin-top: 15px;
+            display: none;
+        }
+
         /* Dark mode styles */
         body.dark-mode {
             background-color: #1a1a2e;
@@ -354,11 +425,11 @@
             color: #f8f9fa;
         }
 
-        body.dark-mode .qr-preview {
+        body.dark-mode .preview-container {
             background: #0f3460;
         }
 
-        body.dark-mode #qrcode {
+        body.dark-mode #qrcode, body.dark-mode #barcode {
             background: #1a1a2e;
         }
 
@@ -370,7 +441,20 @@
             border-top: 1px solid #394867;
         }
 
+        body.dark-mode .code-type-selector {
+            background: #0f3460;
+        }
+
+        body.dark-mode .upload-area {
+            border-color: #394867;
+            background: #0f3460;
+        }
+
         @media (max-width: 768px) {
+            .header-controls {
+                flex-direction: column;
+            }
+            
             .action-buttons {
                 flex-direction: column;
             }
@@ -392,9 +476,9 @@
         <header>
             <div class="logo">
                 <i class="fas fa-qrcode"></i>
-                <span>QR Code Generator</span>
+                <span>QR & Barcode Generator</span>
             </div>
-            <div style="display: flex; gap: 15px;">
+            <div class="header-controls">
                 <button class="theme-toggle" id="themeToggle">
                     <i class="fas fa-moon"></i>
                     <span>Dark Mode</span>
@@ -410,15 +494,20 @@
             <div class="card">
                 <h2 class="card-title">
                     <i class="fas fa-cog"></i>
-                    QR Code Settings
+                    Code Settings
                 </h2>
+                
+                <div class="code-type-selector">
+                    <div class="code-type-btn active" id="qrCodeBtn">QR Code</div>
+                    <div class="code-type-btn" id="barcodeBtn">Barcode</div>
+                </div>
                 
                 <div class="input-group">
                     <label class="input-label">Content to encode</label>
-                    <textarea class="text-input textarea" id="contentInput" placeholder="Enter text, URL, or other content to generate QR code">https://wander-tools.github.io</textarea>
+                    <textarea class="text-input textarea" id="contentInput" placeholder="Enter text, URL, or other content to generate code">https://wander-tools.github.io</textarea>
                 </div>
 
-                <div class="option-group">
+                <div class="option-group" id="qrOptions">
                     <label class="option-label">QR Code Type</label>
                     <select class="select" id="typeSelect">
                         <option value="url">URL</option>
@@ -431,8 +520,20 @@
                     </select>
                 </div>
 
+                <div class="option-group" id="barcodeOptions" style="display: none;">
+                    <label class="option-label">Barcode Type</label>
+                    <select class="select" id="barcodeTypeSelect">
+                        <option value="CODE128">CODE128</option>
+                        <option value="CODE39">CODE39</option>
+                        <option value="EAN13">EAN13</option>
+                        <option value="EAN8">EAN8</option>
+                        <option value="UPC">UPC</option>
+                        <option value="ITF14">ITF14</option>
+                    </select>
+                </div>
+
                 <div class="option-group">
-                    <label class="option-label">QR Code Size</label>
+                    <label class="option-label">Code Size</label>
                     <select class="select" id="sizeSelect">
                         <option value="200">Small (200x200)</option>
                         <option value="300" selected>Medium (300x300)</option>
@@ -441,41 +542,60 @@
                 </div>
 
                 <div class="option-group">
-                    <label class="option-label">QR Code Colors</label>
+                    <label class="option-label">Code Colors</label>
                     <div class="color-group">
-                        <div class="color-input">
+                        <div class="color-input-container">
                             <label class="option-label">Foreground</label>
-                            <input type="color" id="colorInput" value="#000000" class="text-input">
+                            <input type="color" id="colorInput" value="#000000" class="color-input">
                         </div>
-                        <div class="color-input">
+                        <div class="color-input-container">
                             <label class="option-label">Background</label>
-                            <input type="color" id="bgColorInput" value="#ffffff" class="text-input">
+                            <input type="color" id="bgColorInput" value="#ffffff" class="color-input">
                         </div>
-                        <div class="color-preview" id="colorPreview" style="background: #ffffff;"></div>
+                        <div class="color-preview" id="colorPreview"></div>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Or generate from image</label>
+                    <div class="upload-area" id="dropZone">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <p class="upload-text">Drag & drop your image here</p>
+                        <p class="upload-text">OR</p>
+                        <button class="btn" id="uploadButton">
+                            <i class="fas fa-file-image"></i>
+                            Select Image
+                        </button>
+                        <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                        <img id="imagePreview" class="image-preview" alt="Image preview">
                     </div>
                 </div>
 
                 <button class="btn btn-full" id="generateBtn">
                     <i class="fas fa-bolt"></i>
-                    Generate QR Code
+                    Generate Code
                 </button>
 
                 <div class="loading" id="loadingIndicator">
                     <div class="spinner"></div>
-                    <p>Generating your QR code...</p>
+                    <p>Generating your code...</p>
                 </div>
             </div>
 
             <div class="card">
                 <h2 class="card-title">
                     <i class="fas fa-eye"></i>
-                    QR Code Preview
+                    Code Preview
                 </h2>
 
-                <div class="qr-preview">
+                <div class="preview-container">
                     <div id="qrcode">
                         <p>Your QR code will appear here</p>
                     </div>
+                    <svg id="barcode" style="display: none;"></svg>
+                    <p id="previewText">Your code will appear here</p>
                 </div>
 
                 <div class="action-buttons">
@@ -498,45 +618,48 @@
         <div class="card history">
             <h2 class="card-title">
                 <i class="fas fa-history"></i>
-                Recently Generated QR Codes
+                Recently Generated Codes
             </h2>
-
-            <div class="history-item">
-                <div class="history-content">https://google.com</div>
-                <div class="history-actions">
-                    <span class="history-action" onclick="regenerateQR('https://google.com')"><i class="fas fa-redo"></i></span>
-                    <span class="history-action" onclick="downloadQR('https://google.com')"><i class="fas fa-download"></i></span>
+            <div id="historyList">
+                <div class="history-item">
+                    <div class="history-content">https://google.com</div>
+                    <div class="history-actions">
+                        <span class="history-action" onclick="regenerateCode('https://google.com')"><i class="fas fa-redo"></i></span>
+                        <span class="history-action" onclick="downloadCode('https://google.com')"><i class="fas fa-download"></i></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="history-item">
-                <div class="history-content">Welcome to Wander Tools</div>
-                <div class="history-actions">
-                    <span class="history-action" onclick="regenerateQR('Welcome to Wander Tools')"><i class="fas fa-redo"></i></span>
-                    <span class="history-action" onclick="downloadQR('Welcome to Wander Tools')"><i class="fas fa-download"></i></span>
+                <div class="history-item">
+                    <div class="history-content">Welcome to Wander Tools</div>
+                    <div class="history-actions">
+                        <span class="history-action" onclick="regenerateCode('Welcome to Wander Tools')"><i class="fas fa-redo"></i></span>
+                        <span class="history-action" onclick="downloadCode('Welcome to Wander Tools')"><i class="fas fa-download"></i></span>
+                    </div>
                 </div>
-            </div>
 
-            <div class="history-item">
-                <div class="history-content">contact@example.com</div>
-                <div class="history-actions">
-                    <span class="history-action" onclick="regenerateQR('contact@example.com')"><i class="fas fa-redo"></i></span>
-                    <span class="history-action" onclick="downloadQR('contact@example.com')"><i class="fas fa-download"></i></span>
+                <div class="history-item">
+                    <div class="history-content">1234567890128</div>
+                    <div class="history-actions">
+                        <span class="history-action" onclick="regenerateCode('1234567890128')"><i class="fas fa-redo"></i></span>
+                        <span class="history-action" onclick="downloadCode('1234567890128')"><i class="fas fa-download"></i></span>
+                    </div>
                 </div>
             </div>
         </div>
 
         <footer>
-            <p>© 2023 Wander Tools - QR Code Generator</p>
-            <p>Create custom QR codes for URLs, text, contact info and more</p>
+            <p>© 2023 Wander Tools - QR & Barcode Generator</p>
+            <p>Create custom QR codes and barcodes for URLs, text, products and more</p>
         </footer>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // DOM elements
             const themeToggle = document.getElementById('themeToggle');
             const contentInput = document.getElementById('contentInput');
             const typeSelect = document.getElementById('typeSelect');
+            const barcodeTypeSelect = document.getElementById('barcodeTypeSelect');
             const sizeSelect = document.getElementById('sizeSelect');
             const colorInput = document.getElementById('colorInput');
             const bgColorInput = document.getElementById('bgColorInput');
@@ -547,11 +670,95 @@
             const resetBtn = document.getElementById('resetBtn');
             const loadingIndicator = document.getElementById('loadingIndicator');
             const qrcodeElement = document.getElementById('qrcode');
+            const barcodeElement = document.getElementById('barcode');
+            const previewText = document.getElementById('previewText');
+            const qrCodeBtn = document.getElementById('qrCodeBtn');
+            const barcodeBtn = document.getElementById('barcodeBtn');
+            const qrOptions = document.getElementById('qrOptions');
+            const barcodeOptions = document.getElementById('barcodeOptions');
+            const dropZone = document.getElementById('dropZone');
+            const uploadButton = document.getElementById('uploadButton');
+            const fileInput = document.getElementById('fileInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const historyList = document.getElementById('historyList');
             
-            let currentQRCode = null;
+            // State variables
+            let currentCode = null;
+            let isQRCodeMode = true;
+            let uploadedImage = null;
+            let searchHistory = [];
             
-            // Theme toggle functionality
-            themeToggle.addEventListener('click', function() {
+            // Initialize the app
+            function init() {
+                // Set up event listeners
+                setupEventListeners();
+                
+                // Initialize color preview
+                updateColorPreview();
+                
+                // Generate initial code
+                generateCode();
+            }
+            
+            // Set up all event listeners
+            function setupEventListeners() {
+                // Theme toggle
+                themeToggle.addEventListener('click', toggleTheme);
+                
+                // Code type toggle
+                qrCodeBtn.addEventListener('click', () => setCodeType(true));
+                barcodeBtn.addEventListener('click', () => setCodeType(false));
+                
+                // Color preview update
+                colorInput.addEventListener('input', updateColorPreview);
+                bgColorInput.addEventListener('input', updateColorPreview);
+                
+                // Image upload handling
+                uploadButton.addEventListener('click', () => fileInput.click());
+                fileInput.addEventListener('change', handleImageUpload);
+                
+                // Drag and drop handling
+                setupDragAndDrop();
+                
+                // Generate code
+                generateBtn.addEventListener('click', generateCode);
+                
+                // Download code
+                downloadBtn.addEventListener('click', downloadCode);
+                
+                // Share code
+                shareBtn.addEventListener('click', shareCode);
+                
+                // Reset form
+                resetBtn.addEventListener('click', resetForm);
+            }
+            
+            // Set up drag and drop functionality
+            function setupDragAndDrop() {
+                dropZone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    dropZone.style.borderColor = '#6c63ff';
+                    dropZone.style.backgroundColor = 'rgba(108, 99, 255, 0.05)';
+                });
+                
+                dropZone.addEventListener('dragleave', function() {
+                    dropZone.style.borderColor = '';
+                    dropZone.style.backgroundColor = '';
+                });
+                
+                dropZone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    dropZone.style.borderColor = '';
+                    dropZone.style.backgroundColor = '';
+                    
+                    if (e.dataTransfer.files.length) {
+                        handleImageUpload({ target: { files: e.dataTransfer.files } });
+                    }
+                });
+            }
+            
+            // Toggle between light and dark theme
+            function toggleTheme() {
                 document.body.classList.toggle('dark-mode');
                 
                 if (document.body.classList.contains('dark-mode')) {
@@ -559,185 +766,322 @@
                 } else {
                     themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Dark Mode</span>';
                 }
-            });
+            }
             
-            // Color preview update
-            colorInput.addEventListener('input', updateColorPreview);
-            bgColorInput.addEventListener('input', updateColorPreview);
+            // Set code type (QR code or barcode)
+            function setCodeType(isQRCode) {
+                isQRCodeMode = isQRCode;
+                qrCodeBtn.classList.toggle('active', isQRCode);
+                barcodeBtn.classList.toggle('active', !isQRCode);
+                qrOptions.style.display = isQRCode ? 'block' : 'none';
+                barcodeOptions.style.display = isQRCode ? 'none' : 'block';
+                qrcodeElement.style.display = isQRCode ? 'flex' : 'none';
+                barcodeElement.style.display = isQRCode ? 'none' : 'block';
+                previewText.textContent = isQRCode ? 'Your QR code will appear here' : 'Your barcode will appear here';
+            }
             
+            // Update color preview
             function updateColorPreview() {
                 colorPreview.style.background = `linear-gradient(135deg, ${bgColorInput.value} 50%, ${colorInput.value} 50%)`;
             }
             
-            // Generate QR code
-            generateBtn.addEventListener('click', generateQRCode);
+            // Handle image upload
+            function handleImageUpload(e) {
+                const file = e.target.files[0];
+                
+                if (!file || !file.type.match('image.*')) {
+                    alert('Please select a valid image file');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    uploadedImage = e.target.result;
+                    imagePreview.src = uploadedImage;
+                    imagePreview.style.display = 'block';
+                    
+                    // Auto-generate code from image
+                    contentInput.value = "Image: " + file.name;
+                    generateCode();
+                };
+                
+                reader.readAsDataURL(file);
+            }
             
-            // Download QR code
-            downloadBtn.addEventListener('click', function() {
-                if (currentQRCode) {
+            // Generate QR code or barcode
+            function generateCode() {
+                const content = contentInput.value.trim();
+                
+                if (!content) {
+                    alert('Please enter some content to generate a code');
+                    return;
+                }
+                
+                loadingIndicator.style.display = 'block';
+                qrcodeElement.innerHTML = '';
+                barcodeElement.innerHTML = '';
+                previewText.style.display = 'none';
+                
+                // Format content based on type for QR codes
+                let formattedContent = content;
+                if (isQRCodeMode) {
+                    switch(typeSelect.value) {
+                        case 'email':
+                            formattedContent = `mailto:${content}`;
+                            break;
+                        case 'phone':
+                            formattedContent = `tel:${content}`;
+                            break;
+                        case 'sms':
+                            formattedContent = `sms:${content}`;
+                            break;
+                        case 'wifi':
+                            formattedContent = `WIFI:T:WPA;S:${content};P:password;;`;
+                            break;
+                    }
+                }
+                
+                // Generate the code after a short delay
+                setTimeout(() => {
                     try {
+                        if (isQRCodeMode) {
+                            generateQRCode(formattedContent);
+                        } else {
+                            generateBarcode(formattedContent);
+                        }
+                        
+                        // Add to history
+                        addToHistory(content);
+                        
+                    } catch (error) {
+                        console.error('Error generating code:', error);
+                        showError('Error generating code. Please try again.');
+                    }
+                }, 500);
+            }
+            
+            // Generate QR code - FIXED VERSION
+            function generateQRCode(content) {
+                qrcodeElement.innerHTML = '';
+                
+                // Create a canvas element
+                const canvas = document.createElement('canvas');
+                
+                // Use the correct QRCode API
+                QRCode.toCanvas(canvas, content, {
+                    width: parseInt(sizeSelect.value),
+                    margin: 1,
+                    color: {
+                        dark: colorInput.value,
+                        light: bgColorInput.value
+                    },
+                    errorCorrectionLevel: 'H'
+                }, function(error) {
+                    loadingIndicator.style.display = 'none';
+                    
+                    if (error) {
+                        console.error('QR Code generation error:', error);
+                        showError('Error generating QR code. Please try different content.');
+                        return;
+                    }
+                    
+                    // Success - add canvas to preview
+                    qrcodeElement.appendChild(canvas);
+                    currentCode = 'qr';
+                    previewText.style.display = 'none';
+                });
+            }
+            
+            // Generate barcode
+            function generateBarcode(content) {
+                barcodeElement.innerHTML = '';
+                
+                try {
+                    JsBarcode(barcodeElement, content, {
+                        format: barcodeTypeSelect.value,
+                        width: 2,
+                        height: parseInt(sizeSelect.value) / 2,
+                        displayValue: true,
+                        fontOptions: "bold",
+                        font: "monospace",
+                        textAlign: "center",
+                        textPosition: "bottom",
+                        textMargin: 5,
+                        fontSize: 16,
+                        background: bgColorInput.value,
+                        lineColor: colorInput.value
+                    });
+                    
+                    currentCode = 'barcode';
+                    previewText.style.display = 'none';
+                    loadingIndicator.style.display = 'none';
+                } catch (error) {
+                    console.error('Barcode generation error:', error);
+                    showError('Error generating barcode. Please try different content.');
+                    loadingIndicator.style.display = 'none';
+                }
+            }
+            
+            // Show error message
+            function showError(message) {
+                if (isQRCodeMode) {
+                    qrcodeElement.innerHTML = `<p>${message}</p>`;
+                } else {
+                    barcodeElement.innerHTML = `<p>${message}</p>`;
+                }
+                previewText.style.display = 'block';
+            }
+            
+            // Download generated code
+            function downloadCode() {
+                if (!currentCode) {
+                    alert('Please generate a code first');
+                    return;
+                }
+                
+                try {
+                    if (isQRCodeMode) {
                         const canvas = qrcodeElement.querySelector('canvas');
                         if (canvas) {
                             const link = document.createElement('a');
                             link.download = 'qrcode.png';
                             link.href = canvas.toDataURL('image/png');
                             link.click();
-                        } else {
-                            throw new Error('No QR code canvas found');
                         }
-                    } catch (error) {
-                        console.error('Download error:', error);
-                        alert('Error downloading QR code. Please try generating it again.');
-                    }
-                } else {
-                    alert('Please generate a QR code first');
-                }
-            });
-            
-            // Share QR code
-            shareBtn.addEventListener('click', function() {
-                if (currentQRCode) {
-                    if (navigator.share) {
-                        navigator.share({
-                            title: 'QR Code',
-                            text: 'Check out this QR code I created with Wander Tools',
-                            url: window.location.href
-                        }).catch(console.error);
                     } else {
-                        alert('Web Share API is not supported in your browser. You can download the QR code instead.');
+                        const svgXml = new XMLSerializer().serializeToString(barcodeElement);
+                        const svgBlob = new Blob([svgXml], {type: "image/svg+xml;charset=utf-8"});
+                        const svgUrl = URL.createObjectURL(svgBlob);
+                        
+                        const img = new Image();
+                        img.onload = function() {
+                            const canvas = document.createElement("canvas");
+                            canvas.width = img.width;
+                            canvas.height = img.height;
+                            
+                            const ctx = canvas.getContext("2d");
+                            ctx.fillStyle = bgColorInput.value;
+                            ctx.fillRect(0, 0, canvas.width, canvas.height);
+                            ctx.drawImage(img, 0, 0);
+                            
+                            const link = document.createElement('a');
+                            link.download = 'barcode.png';
+                            link.href = canvas.toDataURL('image/png');
+                            link.click();
+                            
+                            URL.revokeObjectURL(svgUrl);
+                        };
+                        img.src = svgUrl;
                     }
-                } else {
-                    alert('Please generate a QR code first');
+                } catch (error) {
+                    console.error('Download error:', error);
+                    alert('Error downloading code. Please try again.');
                 }
-            });
+            }
+            
+            // Share code
+            function shareCode() {
+                if (!currentCode) {
+                    alert('Please generate a code first');
+                    return;
+                }
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: isQRCodeMode ? 'QR Code' : 'Barcode',
+                        text: `Check out this ${isQRCodeMode ? 'QR code' : 'barcode'} I created with Wander Tools`,
+                        url: window.location.href
+                    }).catch(console.error);
+                } else {
+                    alert('Web Share API is not supported in your browser. You can download the code instead.');
+                }
+            }
             
             // Reset form
-            resetBtn.addEventListener('click', function() {
+            function resetForm() {
                 contentInput.value = '';
                 typeSelect.value = 'url';
+                barcodeTypeSelect.value = 'CODE128';
                 sizeSelect.value = '300';
                 colorInput.value = '#000000';
                 bgColorInput.value = '#ffffff';
                 updateColorPreview();
                 qrcodeElement.innerHTML = '<p>Your QR code will appear here</p>';
-                currentQRCode = null;
-            });
+                barcodeElement.innerHTML = '';
+                currentCode = null;
+                previewText.textContent = isQRCodeMode ? 'Your QR code will appear here' : 'Your barcode will appear here';
+                uploadedImage = null;
+                imagePreview.style.display = 'none';
+                imagePreview.src = '';
+            }
             
-            // Generate QR code function - FIXED VERSION
-            function generateQRCode() {
-                const content = contentInput.value.trim();
-                if (!content) {
-                    alert('Please enter some content to generate a QR code');
+            // Add to history
+            function addToHistory(content) {
+                // Avoid duplicates
+                if (searchHistory.includes(content)) return;
+                
+                searchHistory.unshift(content);
+                
+                // Keep only the last 5 searches
+                if (searchHistory.length > 5) {
+                    searchHistory.pop();
+                }
+                
+                // Update UI
+                renderHistory();
+            }
+            
+            // Render history list
+            function renderHistory() {
+                historyList.innerHTML = '';
+                
+                if (searchHistory.length === 0) {
+                    historyList.innerHTML = '<p>No search history yet.</p>';
                     return;
                 }
                 
-                loadingIndicator.style.display = 'block';
-                qrcodeElement.innerHTML = '';
-                
-                // Format content based on type
-                let formattedContent = content;
-                switch(typeSelect.value) {
-                    case 'email':
-                        formattedContent = `mailto:${content}`;
-                        break;
-                    case 'phone':
-                        formattedContent = `tel:${content}`;
-                        break;
-                    case 'sms':
-                        formattedContent = `sms:${content}`;
-                        break;
-                    case 'wifi':
-                        formattedContent = `WIFI:T:WPA;S:${content};P:password;;`;
-                        break;
-                    // Additional formatting can be added for other types
-                }
-                
-                // Use the QRCode API correctly
-                try {
-                    // Create canvas for QR code
-                    const canvas = document.createElement('canvas');
-                    
-                    // Generate QR code with proper error handling
-                    QRCode.toCanvas(canvas, formattedContent, {
-                        width: parseInt(sizeSelect.value),
-                        margin: 1,
-                        color: {
-                            dark: colorInput.value,
-                            light: bgColorInput.value
-                        },
-                        errorCorrectionLevel: 'H'
-                    }, function(error) {
-                        loadingIndicator.style.display = 'none';
-                        
-                        if (error) {
-                            console.error('QR Code generation error:', error);
-                            qrcodeElement.innerHTML = '<p>Error generating QR code. Please try different content.</p>';
-                            return;
-                        }
-                        
-                        // Success - add canvas to preview
-                        qrcodeElement.appendChild(canvas);
-                        currentQRCode = true;
-                        
-                        // Add to history
-                        addToHistory(content);
-                    });
-                } catch (error) {
-                    loadingIndicator.style.display = 'none';
-                    console.error('QR Code generation exception:', error);
-                    qrcodeElement.innerHTML = '<p>Error generating QR code. Please try again.</p>';
-                }
+                searchHistory.forEach(content => {
+                    const historyItem = document.createElement('div');
+                    historyItem.className = 'history-item';
+                    historyItem.innerHTML = `
+                        <div class="history-content">${content}</div>
+                        <div class="history-actions">
+                            <span class="history-action" onclick="regenerateCode('${content.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-redo"></i>
+                            </span>
+                            <span class="history-action" onclick="downloadCodeFromHistory('${content.replace(/'/g, "\\'")}')">
+                                <i class="fas fa-download"></i>
+                            </span>
+                        </div>
+                    `;
+                    historyList.appendChild(historyItem);
+                });
             }
             
-            // Add to history function
-            function addToHistory(content) {
-                const history = document.querySelector('.history');
-                const historyItems = history.querySelectorAll('.history-item');
-                
-                // Create new history item
-                const historyItem = document.createElement('div');
-                historyItem.className = 'history-item';
-                historyItem.innerHTML = `
-                    <div class="history-content">${content}</div>
-                    <div class="history-actions">
-                        <span class="history-action" onclick="regenerateQR('${content.replace(/'/g, "\\'")}')"><i class="fas fa-redo"></i></span>
-                        <span class="history-action" onclick="downloadQR('${content.replace(/'/g, "\\'")}')"><i class="fas fa-download"></i></span>
-                    </div>
-                `;
-                
-                // Add to top of history
-                if (historyItems.length > 0) {
-                    history.insertBefore(historyItem, historyItems[0]);
-                } else {
-                    history.appendChild(historyItem);
-                }
-                
-                // Limit to 5 history items
-                if (history.querySelectorAll('.history-item').length > 5) {
-                    history.removeChild(history.lastChild);
-                }
+            // Regenerate code from history
+            function regenerateCode(content) {
+                contentInput.value = content;
+                generateCode();
             }
             
-            // Initialize color preview
-            updateColorPreview();
+            // Download code from history
+            function downloadCodeFromHistory(content) {
+                contentInput.value = content;
+                generateCode();
+                
+                setTimeout(() => {
+                    downloadCode();
+                }, 800);
+            }
             
-            // Generate initial QR code
-            generateQRCode();
+            // Make functions available globally for history actions
+            window.regenerateCode = regenerateCode;
+            window.downloadCodeFromHistory = downloadCodeFromHistory;
+            
+            // Initialize the application
+            init();
         });
-        
-        // Global functions for history actions
-        function regenerateQR(content) {
-            const contentInput = document.getElementById('contentInput');
-            contentInput.value = content;
-            document.getElementById('generateBtn').click();
-        }
-        
-        function downloadQR(content) {
-            regenerateQR(content);
-            setTimeout(() => {
-                document.getElementById('downloadBtn').click();
-            }, 800);
-        }
     </script>
 </body>
 </html>
