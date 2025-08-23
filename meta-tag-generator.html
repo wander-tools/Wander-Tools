@@ -497,7 +497,7 @@
                     <button id="generate-btn" class="btn-primary">
                         <i class="fas fa-cog"></i> Generate Meta Tags
                     </button>
-                    <button id="copy-btn" class="btn-success">
+                    <button id="copy-btn" class="btn-success" disabled>
                         <i class="fas fa-copy"></i> Copy to Clipboard
                     </button>
                 </div>
@@ -535,7 +535,7 @@
 
                 <div class="code-container">
                     <code id="generated-code">
-                        <span class="meta-tag">&lt;!-- Generated meta tags will appear here --&gt;</span>
+                        <span class="meta-tag">&lt;!-- Click "Generate Meta Tags" to create your meta tags --&gt;</span>
                     </code>
                 </div>
             </div>
@@ -602,7 +602,6 @@
             initTheme();
             setupEventListeners();
             updateCharCounts();
-            generateMetaTags();
         });
 
         function setupEventListeners() {
@@ -610,24 +609,8 @@
             themeToggle.addEventListener('click', toggleTheme);
 
             // Input events
-            pageTitle.addEventListener('input', function() {
-                updateCharCounts();
-                generateMetaTags();
-            });
-            
-            pageDescription.addEventListener('input', function() {
-                updateCharCounts();
-                generateMetaTags();
-            });
-            
-            pageUrl.addEventListener('input', generateMetaTags);
-            pageKeywords.addEventListener('input', generateMetaTags);
-            pageAuthor.addEventListener('input', generateMetaTags);
-            socialImage.addEventListener('input', generateMetaTags);
-            viewport.addEventListener('input', generateMetaTags);
-            charset.addEventListener('input', generateMetaTags);
-            robots.addEventListener('change', generateMetaTags);
-            themeColor.addEventListener('input', generateMetaTags);
+            pageTitle.addEventListener('input', updateCharCounts);
+            pageDescription.addEventListener('input', updateCharCounts);
 
             // Button events
             generateBtn.addEventListener('click', generateMetaTags);
@@ -740,6 +723,12 @@
             
             // Update generated code
             generatedCode.innerHTML = tags.join('\n');
+            
+            // Enable copy button
+            copyBtn.disabled = false;
+            
+            // Show success notification
+            showNotification('Meta tags generated successfully!');
         }
 
         function resetForm() {
@@ -755,7 +744,21 @@
             themeColor.value = '#4361ee';
             
             updateCharCounts();
-            generateMetaTags();
+            
+            // Reset preview and code
+            previewTitle.textContent = 'Wander Tools - Your Complete Online Toolkit';
+            previewDescription.textContent = 'Wander Tools provides a complete suite of free online tools for developers, designers, and content creators. Convert, compress, and optimize your files with our easy-to-use tools.';
+            previewUrl.textContent = 'wandertools.com';
+            previewSocialTitle.textContent = 'Wander Tools - Your Complete Online Toolkit';
+            previewSocialDescription.textContent = 'Wander Tools provides a complete suite of free online tools for developers, designers, and content creators.';
+            previewSocialUrl.textContent = 'wandertools.com';
+            previewSocialImage.style.backgroundImage = 'none';
+            previewSocialImage.innerHTML = '<i class="fas fa-image fa-3x"></i>';
+            
+            generatedCode.innerHTML = '<span class="meta-tag">&lt;!-- Click "Generate Meta Tags" to create your meta tags --&gt;</span>';
+            
+            // Disable copy button
+            copyBtn.disabled = true;
             
             showNotification('Form reset to default values');
         }
