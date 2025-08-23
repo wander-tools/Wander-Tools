@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Base64 Converter - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dark-mode .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dark-mode .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            color: white;
+        }
+        
+        .dark-mode header {
+            color: #f0f0f0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .tool-container {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .converter {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .conversion-type {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .conversion-btn {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .conversion-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #f0f0f0;
+        }
+        
+        .conversion-btn.active {
+            background: #4776E6;
+            color: white;
+            border-color: #4776E6;
+        }
+        
+        .dark-mode .conversion-btn.active {
+            background: #8E54E9;
+            border-color: #8E54E9;
+        }
+        
+        .conversion-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .dark-mode .conversion-btn:hover {
+            background: #475569;
+        }
+        
+        .conversion-btn.active:hover {
+            background: #3b5fc9;
+        }
+        
+        .dark-mode .conversion-btn.active:hover {
+            background: #7c3aed;
+        }
+        
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .text-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .text-input {
+            border-color: #475569;
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .file-input-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding: 15px;
+            border: 2px dashed #e9ecef;
+            border-radius: 10px;
+            text-align: center;
+            transition: border-color 0.3s, background-color 0.3s;
+            cursor: pointer;
+        }
+        
+        .dark-mode .file-input-container {
+            border-color: #475569;
+            background-color: #334155;
+        }
+        
+        .file-input-container:hover {
+            border-color: #4776E6;
+            background-color: #f8f9fa;
+        }
+        
+        .dark-mode .file-input-container:hover {
+            border-color: #8E54E9;
+            background-color: #3c4b64;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-input-label {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        
+        .file-icon {
+            font-size: 2rem;
+            color: #4776E6;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .file-icon {
+            color: #8E54E9;
+        }
+        
+        .file-input-text {
+            font-weight: 500;
+            color: #4776E6;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .file-input-text {
+            color: #8E54E9;
+        }
+        
+        .file-info {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 5px;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .file-info {
+            color: #cbd5e1;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        @media (max-width: 480px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .encode-btn {
+            padding: 15px;
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .encode-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .decode-btn {
+            padding: 15px;
+            background: linear-gradient(90deg, #20c997 0%, #0ca678 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .decode-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .reset-btn {
+            padding: 15px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .reset-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            background: #ff5252;
+        }
+        
+        .output-container {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .dark-mode .output-container {
+            background: #334155;
+            border-color: #475569;
+        }
+        
+        .output-container h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .output-container h3 {
+            color: #8E54E9;
+        }
+        
+        .text-output {
+            width: 100%;
+            min-height: 150px;
+            padding: 15px;
+            background: white;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            resize: vertical;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .text-output {
+            background: #1e293b;
+            border-color: #475569;
+            color: #f0f0f0;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            background: #4776E6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .action-btn:hover {
+            background: #3b5fc9;
+        }
+        
+        .stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 4px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .stat-item {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .stat-value {
+            font-weight: 600;
+            color: #4776E6;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .stat-value {
+            color: #8E54E9;
+        }
+        
+        .error-message {
+            padding: 12px;
+            background: #fff5f5;
+            border: 2px solid #ff6b6b;
+            border-radius: 8px;
+            color: #c92a2a;
+            margin-top: 10px;
+            display: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .error-message {
+            background: #2b1d1d;
+            border-color: #ff6b6b;
+            color: #ffa8a8;
+        }
+        
+        .error-message.visible {
+            display: block;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .instructions {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions h3 {
+            color: #8E54E9;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4776E6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions li:before {
+            color: #8E54E9;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding: 20px;
+            opacity: 0.8;
+        }
+        
+        .dark-mode footer {
+            color: #cbd5e1;
+        }
+        
+        @media (max-width: 768px) {
+            .conversion-type {
+                flex-direction: column;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="index.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Tools
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <header>
+            <h1>Wander Tools</h1>
+            <p>A collection of handy web tools for everyday use</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="tool-header">
+                <h2><i class="fas fa-exchange-alt"></i> Base64 Converter</h2>
+                <div class="tool-actions">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            
+            <div class="converter">
+                <div class="conversion-type">
+                    <button class="conversion-btn active" data-type="text">
+                        <i class="fas fa-font"></i> Text
+                    </button>
+                    <button class="conversion-btn" data-type="file">
+                        <i class="fas fa-file"></i> File
+                    </button>
+                </div>
+                
+                <div class="input-section" id="textInputSection">
+                    <textarea class="text-input" id="textInput" placeholder="Enter text to encode or Base64 to decode..."></textarea>
+                </div>
+                
+                <div class="input-section" id="fileInputSection" style="display: none;">
+                    <div class="file-input-container" id="fileDropArea">
+                        <input type="file" id="fileInput" class="file-input">
+                        <label for="fileInput" class="file-input-label">
+                            <i class="fas fa-cloud-upload-alt file-icon"></i>
+                            <span class="file-input-text">Choose a file or drag it here</span>
+                            <span class="file-info">Max file size: 10MB</span>
+                        </label>
+                    </div>
+                    <div class="file-info" id="fileInfo">No file selected</div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="encode-btn" id="encodeBtn">
+                        <i class="fas fa-lock"></i> Encode to Base64
+                    </button>
+                    <button class="decode-btn" id="decodeBtn">
+                        <i class="fas fa-unlock"></i> Decode from Base64
+                    </button>
+                </div>
+                
+                <button class="reset-btn" id="resetBtn">
+                    <i class="fas fa-redo"></i> Reset All
+                </button>
+                
+                <div class="output-container">
+                    <h3>
+                        <span>Result</span>
+                        <span class="stat-value" id="resultType">Plain Text</span>
+                    </h3>
+                    <textarea class="text-output" id="textOutput" readonly placeholder="Your converted text will appear here..."></textarea>
+                    
+                    <div class="action-buttons">
+                        <button class="action-btn" id="copyBtn">
+                            <i class="fas fa-copy"></i> Copy to Clipboard
+                        </button>
+                        <button class="action-btn" id="downloadBtn">
+                            <i class="fas fa-download"></i> Download Result
+                        </button>
+                        <button class="action-btn" id="clearBtn">
+                            <i class="fas fa-trash"></i> Clear Output
+                        </button>
+                    </div>
+                    
+                    <div class="stats">
+                        <div class="stat-item">
+                            <i class="fas fa-font"></i>
+                            <span>Input Size:</span>
+                            <span class="stat-value" id="inputSize">0 bytes</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-database"></i>
+                            <span>Output Size:</span>
+                            <span class="stat-value" id="outputSize">0 bytes</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="fas fa-exchange-alt"></i>
+                            <span>Conversion:</span>
+                            <span class="stat-value" id="conversionType">Text to Base64</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    <strong><i class="fas fa-exclamation-circle"></i> Error:</strong>
+                    <span id="errorText"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use the Base64 Converter</h3>
+            <ul>
+                <li>Select between Text or File conversion mode</li>
+                <li>For text: Enter text to encode or Base64 string to decode</li>
+                <li>For files: Upload a file to convert to Base64 or paste Base64 to decode to file</li>
+                <li>Click "Encode to Base64" to convert text/file to Base64 encoding</li>
+                <li>Click "Decode from Base64" to convert Base64 back to original format</li>
+                <li>Use the "Reset All" button to clear all inputs and outputs</li>
+                <li>Copy the result to clipboard using the "Copy" button</li>
+                <li>Download the result as a file using the "Download" button</li>
+                <li>Clear only the output using the "Clear Output" button</li>
+                <li>Toggle between dark and light mode using the moon/sun button</li>
+            </ul>
+            
+            <h3>About Base64 Encoding</h3>
+            <ul>
+                <li>Base64 is a encoding scheme that converts binary data to text format</li>
+                <li>It uses 64 different characters (A-Z, a-z, 0-9, +, /) and padding (=)</li>
+                <li>Commonly used for encoding data in XML, JSON, email attachments, and URLs</li>
+                <li>Increases data size by approximately 33% due to encoding overhead</li>
+                <li>Not encryption - it's encoding that can be easily decoded</li>
+            </ul>
+            
+            <h3>Common Use Cases</h3>
+            <ul>
+                <li>Embedding images in HTML/CSS (data URLs)</li>
+                <li>Storing binary data in JSON or XML</li>
+                <li>Email attachments (MIME encoding)</li>
+                <li>Basic authentication headers</li>
+                <li>URL parameters for small binary data</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Wander Tools | All Rights Reserved</p>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const textInput = document.getElementById('textInput');
+        const textOutput = document.getElementById('textOutput');
+        const fileInput = document.getElementById('fileInput');
+        const fileInfo = document.getElementById('fileInfo');
+        const fileDropArea = document.getElementById('fileDropArea');
+        const encodeBtn = document.getElementById('encodeBtn');
+        const decodeBtn = document.getElementById('decodeBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const conversionBtns = document.querySelectorAll('.conversion-btn');
+        const textInputSection = document.getElementById('textInputSection');
+        const fileInputSection = document.getElementById('fileInputSection');
+        const inputSize = document.getElementById('inputSize');
+        const outputSize = document.getElementById('outputSize');
+        const conversionType = document.getElementById('conversionType');
+        const resultType = document.getElementById('resultType');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        
+        // Current state
+        let currentMode = 'text';
+        let currentFile = null;
+        
+        // Initialize the Base64 converter
+        function initBase64Converter() {
+            // Set up event listeners
+            encodeBtn.addEventListener('click', encodeToBase64);
+            decodeBtn.addEventListener('click', decodeFromBase64);
+            resetBtn.addEventListener('click', resetConverter);
+            copyBtn.addEventListener('click', copyToClipboard);
+            downloadBtn.addEventListener('click', downloadResult);
+            clearBtn.addEventListener('click', clearOutput);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            fileInput.addEventListener('change', handleFileSelect);
+            
+            // Conversion type buttons
+            conversionBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    conversionBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMode = btn.getAttribute('data-type');
+                    updateUIForMode();
+                });
+            });
+            
+            // Drag and drop for files
+            setupDragAndDrop();
+            
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            // Initial stats update
+            updateStats();
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+        
+        // Update UI based on current mode
+        function updateUIForMode() {
+            if (currentMode === 'text') {
+                textInputSection.style.display = 'flex';
+                fileInputSection.style.display = 'none';
+                conversionType.textContent = 'Text to Base64';
+            } else {
+                textInputSection.style.display = 'none';
+                fileInputSection.style.display = 'flex';
+                conversionType.textContent = 'File to Base64';
+            }
+            clearOutput();
+            updateStats();
+        }
+        
+        // Setup drag and drop for files
+        function setupDragAndDrop() {
+            const preventDefault = (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+            };
+            
+            fileDropArea.addEventListener('dragenter', preventDefault);
+            fileDropArea.addEventListener('dragover', preventDefault);
+            fileDropArea.addEventListener('dragleave', preventDefault);
+            
+            fileDropArea.addEventListener('drop', (e) => {
+                preventDefault(e);
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFiles(files);
+                }
+            });
+        }
+        
+        // Handle file selection
+        function handleFileSelect(e) {
+            handleFiles(e.target.files);
+        }
+        
+        // Process selected files
+        function handleFiles(files) {
+            if (files.length === 0) return;
+            
+            const file = files[0];
+            
+            // Check file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size exceeds 10MB limit');
+                return;
+            }
+            
+            currentFile = file;
+            fileInfo.textContent = `${file.name} (${formatFileSize(file.size)})`;
+            clearOutput();
+            updateStats();
+        }
+        
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' bytes';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+        
+        // Encode to Base64
+        function encodeToBase64() {
+            try {
+                hideError();
+                
+                if (currentMode === 'text') {
+                    const text = textInput.value.trim();
+                    if (!text) {
+                        showError('Please enter some text to encode');
+                        return;
+                    }
+                    
+                    const base64 = btoa(unescape(encodeURIComponent(text)));
+                    textOutput.value = base64;
+                    resultType.textContent = 'Base64 Encoded';
+                } else {
+                    if (!currentFile) {
+                        showError('Please select a file to encode');
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const base64 = e.target.result.split(',')[1];
+                        textOutput.value = base64;
+                        resultType.textContent = 'Base64 Encoded';
+                        updateStats();
+                    };
+                    reader.onerror = function() {
+                        showError('Error reading file');
+                    };
+                    reader.readAsDataURL(currentFile);
+                }
+                
+                updateStats();
+            } catch (error) {
+                showError('Error encoding to Base64: ' + error.message);
+            }
+        }
+        
+        // Decode from Base64
+        function decodeFromBase64() {
+            try {
+                hideError();
+                
+                if (currentMode === 'text') {
+                    const base64 = textInput.value.trim();
+                    if (!base64) {
+                        showError('Please enter Base64 to decode');
+                        return;
+                    }
+                    
+                    // Check if it's valid Base64
+                    if (!isValidBase64(base64)) {
+                        showError('Invalid Base64 format');
+                        return;
+                    }
+                    
+                    const text = decodeURIComponent(escape(atob(base64)));
+                    textOutput.value = text;
+                    resultType.textContent = 'Base64 Decoded';
+                } else {
+                    const base64 = textInput.value.trim();
+                    if (!base64) {
+                        showError('Please enter Base64 to decode to file');
+                        return;
+                    }
+                    
+                    if (!isValidBase64(base64)) {
+                        showError('Invalid Base64 format');
+                        return;
+                    }
+                    
+                    // For file mode, we'll just show the binary data as text
+                    // In a real application, you might want to create a download link
+                    const binary = atob(base64);
+                    textOutput.value = binary;
+                    resultType.textContent = 'Binary Data (decoded from Base64)';
+                }
+                
+                updateStats();
+            } catch (error) {
+                showError('Error decoding from Base64: ' + error.message);
+            }
+        }
+        
+        // Validate Base64 string
+        function isValidBase64(str) {
+            try {
+                return btoa(atob(str)) === str;
+            } catch (err) {
+                return false;
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            let inputSizeValue = 0;
+            let outputSizeValue = 0;
+            
+            if (currentMode === 'text') {
+                inputSizeValue = new Blob([textInput.value]).size;
+                outputSizeValue = new Blob([textOutput.value]).size;
+            } else {
+                inputSizeValue = currentFile ? currentFile.size : 0;
+                outputSizeValue = new Blob([textOutput.value]).size;
+            }
+            
+            inputSize.textContent = formatFileSize(inputSizeValue);
+            outputSize.textContent = formatFileSize(outputSizeValue);
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard() {
+            if (!textOutput.value) return;
+            
+            textOutput.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const originalText = copyBtn.innerHTML;
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText;
+            }, 2000);
+        }
+        
+        // Download result
+        function downloadResult() {
+            if (!textOutput.value) return;
+            
+            let blob, filename;
+            
+            if (resultType.textContent.includes('Encoded')) {
+                // For encoded results, download as text file
+                blob = new Blob([textOutput.value], { type: 'text/plain' });
+                filename = 'base64-encoded.txt';
+            } else {
+                // For decoded results from file mode, try to reconstruct file
+                if (currentMode === 'file' && currentFile) {
+                    const binary = atob(textOutput.value);
+                    const array = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) {
+                        array[i] = binary.charCodeAt(i);
+                    }
+                    blob = new Blob([array], { type: currentFile.type });
+                    filename = 'decoded-' + currentFile.name;
+                } else {
+                    // For text mode decoded results
+                    blob = new Blob([textOutput.value], { type: 'text/plain' });
+                    filename = 'base64-decoded.txt';
+                }
+            }
+            
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            
+            // Clean up
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 100);
+        }
+        
+        // Clear output only
+        function clearOutput() {
+            textOutput.value = '';
+            resultType.textContent = 'Plain Text';
+            updateStats();
+        }
+        
+        // Reset the converter
+        function resetConverter() {
+            textInput.value = '';
+            textOutput.value = '';
+            fileInput.value = '';
+            fileInfo.textContent = 'No file selected';
+            currentFile = null;
+            resultType.textContent = 'Plain Text';
+            hideError();
+            updateStats();
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('visible');
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.classList.remove('visible');
+        }
+        
+        // Initialize the Base64 converter when the page loads
+        window.onload = initBase64Converter;
+    </script>
+</body>
+</html>
