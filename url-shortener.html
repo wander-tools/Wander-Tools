@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6c63ff;
+            --primary-dark: #564fd8;
+            --secondary: #ff6584;
+            --dark: #2c2c2c;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --success: #28a745;
+            --border-radius: 12px;
+            --box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            margin-bottom: 30px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .theme-toggle {
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            padding: 8px 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+        }
+
+        .back-button {
+            background: white;
+            color: var(--primary);
+            border: 1px solid #ddd;
+            border-radius: 30px;
+            padding: 8px 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            box-shadow: var(--box-shadow);
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .url-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: var(--transition);
+        }
+
+        .url-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+        }
+
+        .btn-secondary:hover {
+            background: #e04e6d;
+        }
+
+        .result-container {
+            display: none;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--success);
+        }
+
+        .result-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark);
+        }
+
+        .short-url {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .short-url input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            background: white;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .history {
+            margin-top: 30px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .history-item:last-child {
+            border-bottom: none;
+        }
+
+        .history-url {
+            font-weight: 600;
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            margin-right: 15px;
+        }
+
+        .history-short {
+            color: var(--primary);
+            margin-right: 15px;
+        }
+
+        .history-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .history-action {
+            color: var(--primary);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px 0;
+            margin-top: 50px;
+            color: var(--gray);
+            border-top: 1px solid #e0e0e0;
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background-color: #1a1a2e;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode header {
+            border-bottom: 1px solid #394867;
+        }
+
+        body.dark-mode .card {
+            background: #16213e;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #16213e;
+            border-color: #394867;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode .back-button {
+            background: #16213e;
+            border-color: #394867;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode .url-input {
+            background: #0f3460;
+            border-color: #394867;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode .result-container {
+            background: #0f3460;
+        }
+
+        body.dark-mode .short-url input {
+            background: #0f3460;
+            border-color: #394867;
+            color: #f8f9fa;
+        }
+
+        body.dark-mode .history-item {
+            border-bottom: 1px solid #394867;
+        }
+
+        body.dark-mode footer {
+            border-top: 1px solid #394867;
+        }
+
+        @media (max-width: 768px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .short-url {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .history-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .history-actions {
+                align-self: flex-end;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-link"></i>
+                <span>URL Shortener</span>
+            </div>
+            <div style="display: flex; gap: 15px;">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </button>
+                <a href="index.html" class="back-button">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Tools</span>
+                </a>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fas fa-paperclip"></i>
+                    Shorten Your URL
+                </h2>
+                
+                <div class="input-group">
+                    <label class="input-label">Enter URL to shorten</label>
+                    <input type="url" class="url-input" id="urlInput" placeholder="https://example.com/very-long-url">
+                </div>
+
+                <div class="input-group">
+                    <label class="input-label">Custom alias (optional)</label>
+                    <input type="text" class="url-input" id="aliasInput" placeholder="my-link">
+                </div>
+
+                <button class="btn" id="shortenBtn">
+                    <i class="fas fa-compress-alt"></i>
+                    Shorten URL
+                </button>
+
+                <div class="loading" id="loadingIndicator">
+                    <div class="spinner"></div>
+                    <p>Shortening your URL...</p>
+                </div>
+
+                <div class="result-container" id="resultContainer">
+                    <p class="result-title">Your shortened URL:</p>
+                    <div class="short-url">
+                        <input type="text" id="shortUrlOutput" readonly>
+                        <button class="btn" id="copyBtn">
+                            <i class="fas fa-copy"></i>
+                            Copy
+                        </button>
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-secondary" id="testBtn">
+                            <i class="fas fa-external-link-alt"></i>
+                            Test URL
+                        </button>
+                        <button class="btn" id="newBtn">
+                            <i class="fas fa-plus"></i>
+                            Create New
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card history">
+                <h2 class="card-title">
+                    <i class="fas fa-history"></i>
+                    Recent Shortened URLs
+                </h2>
+
+                <div class="history-item">
+                    <div class="history-url">https://www.example.com/very-long-url-path-that-needs-shortening</div>
+                    <div class="history-short">shrt.url/abc123</div>
+                    <div class="history-actions">
+                        <span class="history-action"><i class="fas fa-copy"></i></span>
+                        <span class="history-action"><i class="fas fa-external-link-alt"></i></span>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-url">https://another-example.com/blog/post-title</div>
+                    <div class="history-short">shrt.url/mypost</div>
+                    <div class="history-actions">
+                        <span class="history-action"><i class="fas fa-copy"></i></span>
+                        <span class="history-action"><i class="fas fa-external-link-alt"></i></span>
+                    </div>
+                </div>
+
+                <div class="history-item">
+                    <div class="history-url">https://long-domain-name.com/products/category/item</div>
+                    <div class="history-short">shrt.url/product1</div>
+                    <div class="history-actions">
+                        <span class="history-action"><i class="fas fa-copy"></i></span>
+                        <span class="history-action"><i class="fas fa-external-link-alt"></i></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            <p>© 2023 Wander Tools - URL Shortener Tool</p>
+            <p>Shorten your long URLs quickly and easily</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const urlInput = document.getElementById('urlInput');
+            const aliasInput = document.getElementById('aliasInput');
+            const shortenBtn = document.getElementById('shortenBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const resultContainer = document.getElementById('resultContainer');
+            const shortUrlOutput = document.getElementById('shortUrlOutput');
+            const copyBtn = document.getElementById('copyBtn');
+            const testBtn = document.getElementById('testBtn');
+            const newBtn = document.getElementById('newBtn');
+            
+            // Theme toggle functionality
+            themeToggle.addEventListener('click', function() {
+                document.body.classList.toggle('dark-mode');
+                
+                if (document.body.classList.contains('dark-mode')) {
+                    themeToggle.innerHTML = '<i class="fas fa-sun"></i><span>Light Mode</span>';
+                } else {
+                    themeToggle.innerHTML = '<i class="fas fa-moon"></i><span>Dark Mode</span>';
+                }
+            });
+            
+            // Shorten URL functionality
+            shortenBtn.addEventListener('click', function() {
+                const url = urlInput.value.trim();
+                
+                if (!isValidUrl(url)) {
+                    alert('Please enter a valid URL (e.g., https://example.com)');
+                    return;
+                }
+                
+                loadingIndicator.style.display = 'block';
+                resultContainer.style.display = 'none';
+                
+                // Simulate API call
+                setTimeout(() => {
+                    loadingIndicator.style.display = 'none';
+                    
+                    // Generate short URL
+                    const alias = aliasInput.value.trim() || generateRandomId();
+                    const shortUrl = `https://shrt.url/${alias}`;
+                    
+                    shortUrlOutput.value = shortUrl;
+                    resultContainer.style.display = 'block';
+                    
+                    // Add to history
+                    addToHistory(url, shortUrl);
+                    
+                }, 1500);
+            });
+            
+            // Copy URL functionality
+            copyBtn.addEventListener('click', function() {
+                shortUrlOutput.select();
+                document.execCommand('copy');
+                
+                // Visual feedback
+                const originalText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalText;
+                }, 2000);
+            });
+            
+            // Test URL functionality
+            testBtn.addEventListener('click', function() {
+                window.open(shortUrlOutput.value, '_blank');
+            });
+            
+            // Create new functionality
+            newBtn.addEventListener('click', function() {
+                urlInput.value = '';
+                aliasInput.value = '';
+                resultContainer.style.display = 'none';
+                urlInput.focus();
+            });
+            
+            // Helper functions
+            function isValidUrl(url) {
+                try {
+                    new URL(url);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+            
+            function generateRandomId() {
+                return Math.random().toString(36).substring(2, 8);
+            }
+            
+            function addToHistory(url, shortUrl) {
+                const history = document.querySelector('.history');
+                const historyItems = history.querySelectorAll('.history-item');
+                
+                // Create new history item
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                historyItem.innerHTML = `
+                    <div class="history-url">${url}</div>
+                    <div class="history-short">${shortUrl}</div>
+                    <div class="history-actions">
+                        <span class="history-action" onclick="copyToClipboard('${shortUrl}')"><i class="fas fa-copy"></i></span>
+                        <span class="history-action" onclick="testUrl('${shortUrl}')"><i class="fas fa-external-link-alt"></i></span>
+                    </div>
+                `;
+                
+                // Add to top of history
+                if (historyItems.length > 0) {
+                    history.insertBefore(historyItem, historyItems[0]);
+                } else {
+                    history.appendChild(historyItem);
+                }
+                
+                // Limit to 5 history items
+                if (history.querySelectorAll('.history-item').length > 5) {
+                    history.removeChild(history.lastChild);
+                }
+            }
+            
+            // Global functions for history actions
+            window.copyToClipboard = function(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Copied to clipboard: ' + text);
+                });
+            };
+            
+            window.testUrl = function(url) {
+                window.open(url, '_blank');
+            };
+        });
+    </script>
+</body>
+</html>
