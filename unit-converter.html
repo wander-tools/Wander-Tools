@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dark-mode .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dark-mode .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            color: white;
+        }
+        
+        .dark-mode header {
+            color: #f0f0f0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .tool-container {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .converter {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .converter-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .input-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .input-group label {
+            font-weight: 500;
+            color: #4776E6;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .input-group label {
+            color: #8E54E9;
+        }
+        
+        .input-field {
+            display: flex;
+            align-items: center;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            transition: border-color 0.3s;
+        }
+        
+        .dark-mode .input-field {
+            border-color: #475569;
+        }
+        
+        .input-field input {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            font-size: 1.1rem;
+            outline: none;
+            background: white;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .input-field input {
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .input-field select {
+            padding: 15px;
+            border: none;
+            border-left: 2px solid #e9ecef;
+            background: #f8f9fa;
+            font-size: 1rem;
+            cursor: pointer;
+            outline: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .input-field select {
+            background-color: #475569;
+            border-color: #64748b;
+            color: #f0f0f0;
+        }
+        
+        .swap-button {
+            background: #4776E6;
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .swap-button:hover {
+            background: #3b5fc9;
+            transform: rotate(180deg);
+        }
+        
+        .category-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .category-btn {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .category-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #f0f0f0;
+        }
+        
+        .category-btn.active {
+            background: #4776E6;
+            color: white;
+            border-color: #4776E6;
+        }
+        
+        .dark-mode .category-btn.active {
+            background: #8E54E9;
+            border-color: #8E54E9;
+        }
+        
+        .category-btn:hover {
+            background: #e9ecef;
+        }
+        
+        .dark-mode .category-btn:hover {
+            background: #475569;
+        }
+        
+        .category-btn.active:hover {
+            background: #3b5fc9;
+        }
+        
+        .dark-mode .category-btn.active:hover {
+            background: #7c3aed;
+        }
+        
+        .conversion-result {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .dark-mode .conversion-result {
+            background: #334155;
+            border-color: #475569;
+        }
+        
+        .conversion-result h3 {
+            color: #4776E6;
+            margin-bottom: 10px;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .conversion-result h3 {
+            color: #8E54E9;
+        }
+        
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+            transition: border-color 0.3s;
+        }
+        
+        .dark-mode .result-item {
+            border-bottom: 1px solid #475569;
+        }
+        
+        .result-item:last-child {
+            border-bottom: none;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .instructions {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions h3 {
+            color: #8E54E9;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4776E6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions li:before {
+            color: #8E54E9;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding: 20px;
+            opacity: 0.8;
+        }
+        
+        .dark-mode footer {
+            color: #cbd5e1;
+        }
+        
+        @media (max-width: 768px) {
+            .converter-row {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .input-group {
+                width: 100%;
+            }
+            
+            .swap-button {
+                align-self: center;
+                transform: rotate(90deg);
+            }
+            
+            .swap-button:hover {
+                transform: rotate(270deg);
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .category-selector {
+                flex-direction: column;
+            }
+            
+            .category-btn {
+                width: 100%;
+                text-align: center;
+            }
+            
+            .input-field {
+                flex-direction: column;
+            }
+            
+            .input-field select {
+                width: 100%;
+                border-left: none;
+                border-top: 2px solid #e9ecef;
+            }
+            
+            .dark-mode .input-field select {
+                border-top: 2px solid #475569;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="index.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Tools
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <header>
+            <h1>Wander Tools</h1>
+            <p>A collection of handy web tools for everyday use</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="tool-header">
+                <h2><i class="fas fa-exchange-alt"></i> Unit Converter</h2>
+                <div class="tool-actions">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            
+            <div class="converter">
+                <div class="category-selector">
+                    <button class="category-btn active" data-category="length">Length</button>
+                    <button class="category-btn" data-category="weight">Weight</button>
+                    <button class="category-btn" data-category="temperature">Temperature</button>
+                    <button class="category-btn" data-category="area">Area</button>
+                    <button class="category-btn" data-category="volume">Volume</button>
+                </div>
+                
+                <div class="converter-row">
+                    <div class="input-group">
+                        <label>From</label>
+                        <div class="input-field">
+                            <input type="number" id="fromValue" value="1" oninput="convertUnits()">
+                            <select id="fromUnit"></select>
+                        </div>
+                    </div>
+                    
+                    <button class="swap-button" onclick="swapUnits()">
+                        <i class="fas fa-exchange-alt"></i>
+                    </button>
+                    
+                    <div class="input-group">
+                        <label>To</label>
+                        <div class="input-field">
+                            <input type="number" id="toValue" readonly>
+                            <select id="toUnit"></select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="conversion-result">
+                    <h3>Conversion Results</h3>
+                    <div id="resultsContainer"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use the Unit Converter</h3>
+            <ul>
+                <li>Select the category of units you want to convert</li>
+                <li>Enter the value you want to convert in the "From" field</li>
+                <li>Select the unit to convert from in the "From" dropdown</li>
+                <li>Select the unit to convert to in the "To" dropdown</li>
+                <li>The conversion will happen automatically as you type or change units</li>
+                <li>Use the swap button to swap the "From" and "To" units</li>
+                <li>See all common conversions in the results section below</li>
+                <li>Toggle between dark and light mode using the moon/sun button</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Wander Tools | All Rights Reserved</p>
+    </footer>
+
+    <script>
+        // Unit conversion data
+        const unitCategories = {
+            length: {
+                meters: 1,
+                kilometers: 0.001,
+                centimeters: 100,
+                millimeters: 1000,
+                miles: 0.000621371,
+                yards: 1.09361,
+                feet: 3.28084,
+                inches: 39.3701,
+                nauticalMiles: 0.000539957
+            },
+            weight: {
+                kilograms: 1,
+                grams: 1000,
+                milligrams: 1000000,
+                pounds: 2.20462,
+                ounces: 35.274,
+                tons: 0.00110231,
+                metricTons: 0.001,
+                carats: 5000
+            },
+            temperature: {
+                celsius: 1,
+                fahrenheit: 33.8,
+                kelvin: 274.15
+            },
+            area: {
+                squareMeters: 1,
+                squareKilometers: 0.000001,
+                squareMiles: 0.000000386102,
+                squareYards: 1.19599,
+                squareFeet: 10.7639,
+                squareInches: 1550,
+                hectares: 0.0001,
+                acres: 0.000247105
+            },
+            volume: {
+                liters: 1,
+                milliliters: 1000,
+                cubicMeters: 0.001,
+                cubicCentimeters: 1000,
+                cubicInches: 61.0237,
+                cubicFeet: 0.0353147,
+                gallons: 0.264172,
+                quarts: 1.05669,
+                pints: 2.11338,
+                cups: 4.22675,
+                fluidOunces: 33.814
+            }
+        };
+
+        // Current category
+        let currentCategory = 'length';
+        const fromUnitSelect = document.getElementById('fromUnit');
+        const toUnitSelect = document.getElementById('toUnit');
+        const fromValueInput = document.getElementById('fromValue');
+        const toValueInput = document.getElementById('toValue');
+        const resultsContainer = document.getElementById('resultsContainer');
+        const categoryButtons = document.querySelectorAll('.category-btn');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+
+        // Initialize the converter
+        function initConverter() {
+            // Set up category buttons
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    currentCategory = button.getAttribute('data-category');
+                    populateUnitSelects();
+                    convertUnits();
+                });
+            });
+
+            // Set up dark mode toggle
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            // Populate unit selects for the default category
+            populateUnitSelects();
+            
+            // Set up event listeners
+            fromValueInput.addEventListener('input', convertUnits);
+            fromUnitSelect.addEventListener('change', convertUnits);
+            toUnitSelect.addEventListener('change', convertUnits);
+            
+            // Perform initial conversion
+            convertUnits();
+        }
+
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+
+        // Populate the unit selects based on current category
+        function populateUnitSelects() {
+            const units = Object.keys(unitCategories[currentCategory]);
+            
+            // Clear existing options
+            fromUnitSelect.innerHTML = '';
+            toUnitSelect.innerHTML = '';
+            
+            // Add units to selects
+            units.forEach(unit => {
+                const fromOption = document.createElement('option');
+                fromOption.value = unit;
+                fromOption.textContent = formatUnitName(unit);
+                
+                const toOption = document.createElement('option');
+                toOption.value = unit;
+                toOption.textContent = formatUnitName(unit);
+                
+                fromUnitSelect.appendChild(fromOption);
+                toUnitSelect.appendChild(toOption);
+            });
+            
+            // Set default selections
+            if (currentCategory === 'temperature') {
+                fromUnitSelect.value = 'celsius';
+                toUnitSelect.value = 'fahrenheit';
+            } else {
+                fromUnitSelect.value = units[0];
+                toUnitSelect.value = units[1];
+            }
+        }
+
+        // Format unit name for display
+        function formatUnitName(unit) {
+            return unit
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/([a-z])([A-Z])/g, '$1 $2')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                .join(' ');
+        }
+
+        // Convert units based on input
+        function convertUnits() {
+            const fromUnit = fromUnitSelect.value;
+            const toUnit = toUnitSelect.value;
+            const inputValue = parseFloat(fromValueInput.value) || 0;
+            
+            let result;
+            
+            // Handle temperature conversion separately
+            if (currentCategory === 'temperature') {
+                result = convertTemperature(inputValue, fromUnit, toUnit);
+            } else {
+                // Convert to base unit first, then to target unit
+                const baseValue = inputValue / unitCategories[currentCategory][fromUnit];
+                result = baseValue * unitCategories[currentCategory][toUnit];
+            }
+            
+            // Update the result field
+            toValueInput.value = result.toFixed(6);
+            
+            // Update the results container
+            updateResults(inputValue, fromUnit);
+        }
+
+        // Convert temperature units
+        function convertTemperature(value, fromUnit, toUnit) {
+            if (fromUnit === toUnit) return value;
+            
+            // Convert to Celsius first
+            let celsius;
+            switch (fromUnit) {
+                case 'celsius':
+                    celsius = value;
+                    break;
+                case 'fahrenheit':
+                    celsius = (value - 32) * 5/9;
+                    break;
+                case 'kelvin':
+                    celsius = value - 273.15;
+                    break;
+            }
+            
+            // Convert from Celsius to target unit
+            switch (toUnit) {
+                case 'celsius':
+                    return celsius;
+                case 'fahrenheit':
+                    return (celsius * 9/5) + 32;
+                case 'kelvin':
+                    return celsius + 273.15;
+            }
+        }
+
+        // Swap the from and to units
+        function swapUnits() {
+            const tempUnit = fromUnitSelect.value;
+            fromUnitSelect.value = toUnitSelect.value;
+            toUnitSelect.value = tempUnit;
+            convertUnits();
+        }
+
+        // Update the results container with common conversions
+        function updateResults(value, fromUnit) {
+            const units = unitCategories[currentCategory];
+            resultsContainer.innerHTML = '';
+            
+            Object.keys(units).forEach(unit => {
+                if (unit !== fromUnit) {
+                    let result;
+                    
+                    if (currentCategory === 'temperature') {
+                        result = convertTemperature(value, fromUnit, unit);
+                    } else {
+                        const baseValue = value / units[fromUnit];
+                        result = baseValue * units[unit];
+                    }
+                    
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'result-item';
+                    resultItem.innerHTML = `
+                        <span>${formatUnitName(unit)}</span>
+                        <span>${result.toFixed(6)}</span>
+                    `;
+                    
+                    resultsContainer.appendChild(resultItem);
+                }
+            });
+        }
+
+        // Initialize the converter when the page loads
+        window.onload = initConverter;
+    </script>
+</body>
+</html>
