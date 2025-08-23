@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            color: white;
+        }
+        
+        .dark-mode header {
+            color: #f0f0f0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .tool-container {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .calculator {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .display-container {
+            position: relative;
+        }
+        
+        .display {
+            background-color: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: right;
+            font-size: 2rem;
+            font-weight: bold;
+            min-height: 80px;
+            overflow-x: auto;
+            white-space: nowrap;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .display {
+            background-color: #334155;
+            border-color: #475569;
+            color: #f0f0f0;
+        }
+        
+        .expression {
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            opacity: 0.8;
+        }
+        
+        .dark-mode .expression {
+            color: #cbd5e1;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 15px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+        
+        .btn-number {
+            background-color: #f8f9fa;
+            color: #333;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .btn-number {
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .btn-operator {
+            background-color: #e9ecef;
+            color: #4776E6;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .btn-operator {
+            background-color: #475569;
+            color: #7c3aed;
+        }
+        
+        .btn-equals {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+        }
+        
+        .btn-clear {
+            background-color: #ff6b6b;
+            color: white;
+        }
+        
+        .btn-memory {
+            background-color: #20c997;
+            color: white;
+        }
+        
+        .btn-scientific {
+            background-color: #6f42c1;
+            color: white;
+        }
+        
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-wide {
+            grid-column: span 2;
+        }
+        
+        .memory-functions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .scientific-functions {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .instructions {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions h3 {
+            color: #8E54E9;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4776E6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions li:before {
+            color: #8E54E9;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding: 20px;
+            opacity: 0.8;
+        }
+        
+        .dark-mode footer {
+            color: #cbd5e1;
+        }
+        
+        @media (max-width: 768px) {
+            .buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 1rem;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+            
+            header p {
+                font-size: 1rem;
+            }
+            
+            .memory-functions, .scientific-functions {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .buttons {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .btn {
+                padding: 10px;
+                font-size: 0.9rem;
+            }
+            
+            .display {
+                font-size: 1.5rem;
+                min-height: 60px;
+            }
+            
+            .memory-functions, .scientific-functions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="index.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Tools
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <header>
+            <h1>Calculator</h1>
+            <p>A collection of handy web tools for everyday use</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="tool-header">
+                <h2><i class="fas fa-calculator"></i> Calculator</h2>
+                <div class="tool-actions">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            
+            <div class="calculator">
+                <div class="display-container">
+                    <div class="expression" id="expression"></div>
+                    <div class="display" id="display">0</div>
+                </div>
+                
+                <div class="memory-functions">
+                    <button class="btn btn-memory" onclick="memoryClear()">MC</button>
+                    <button class="btn btn-memory" onclick="memoryRecall()">MR</button>
+                    <button class="btn btn-memory" onclick="memoryAdd()">M+</button>
+                    <button class="btn btn-memory" onclick="memorySubtract()">M-</button>
+                </div>
+                
+                <div class="scientific-functions">
+                    <button class="btn btn-scientific" onclick="scientificFunction('square')">x²</button>
+                    <button class="btn btn-scientific" onclick="scientificFunction('sqrt')">√</button>
+                    <button class="btn btn-scientific" onclick="scientificFunction('sin')">sin</button>
+                    <button class="btn btn-scientific" onclick="scientificFunction('cos')">cos</button>
+                </div>
+                
+                <div class="buttons">
+                    <button class="btn btn-clear" onclick="clearDisplay()">C</button>
+                    <button class="btn btn-operator" onclick="backspace()">⌫</button>
+                    <button class="btn btn-operator" onclick="appendToDisplay('%')">%</button>
+                    <button class="btn btn-operator" onclick="appendToDisplay('/')">/</button>
+                    
+                    <button class="btn btn-number" onclick="appendToDisplay('7')">7</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('8')">8</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('9')">9</button>
+                    <button class="btn btn-operator" onclick="appendToDisplay('*')">×</button>
+                    
+                    <button class="btn btn-number" onclick="appendToDisplay('4')">4</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('5')">5</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('6')">6</button>
+                    <button class="btn btn-operator" onclick="appendToDisplay('-')">-</button>
+                    
+                    <button class="btn btn-number" onclick="appendToDisplay('1')">1</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('2')">2</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('3')">3</button>
+                    <button class="btn btn-operator" onclick="appendToDisplay('+')">+</button>
+                    
+                    <button class="btn btn-number btn-wide" onclick="appendToDisplay('0')">0</button>
+                    <button class="btn btn-number" onclick="appendToDisplay('.')">.</button>
+                    <button class="btn btn-equals" onclick="calculate()">=</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use the Calculator</h3>
+            <ul>
+                <li>Click on the numbers to enter values</li>
+                <li>Use the operators (+, -, ×, /) to perform calculations</li>
+                <li>Press the equals (=) button to see the result</li>
+                <li>Use the clear (C) button to reset the calculator</li>
+                <li>The backspace (⌫) button removes the last digit</li>
+                <li>The percentage (%) button calculates percentages</li>
+                <li>Memory functions: MC (Memory Clear), MR (Memory Recall), M+ (Memory Add), M- (Memory Subtract)</li>
+                <li>Scientific functions: x² (Square), √ (Square Root), sin (Sine), cos (Cosine)</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Wander Tools | All Rights Reserved</p>
+    </footer>
+
+    <script>
+        let displayValue = '0';
+        let expressionText = '';
+        let memory = 0;
+        const display = document.getElementById('display');
+        const expression = document.getElementById('expression');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        
+        // Check for saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            document.body.classList.add('dark-mode');
+            darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        function updateDisplay() {
+            display.textContent = displayValue;
+            expression.textContent = expressionText;
+        }
+        
+        function appendToDisplay(value) {
+            if (displayValue === '0' && value !== '.') {
+                displayValue = value;
+            } else {
+                // Prevent multiple decimal points
+                if (value === '.' && displayValue.includes('.')) return;
+                
+                displayValue += value;
+            }
+            updateDisplay();
+        }
+        
+        function clearDisplay() {
+            displayValue = '0';
+            expressionText = '';
+            updateDisplay();
+        }
+        
+        function backspace() {
+            if (displayValue.length === 1) {
+                displayValue = '0';
+            } else {
+                displayValue = displayValue.slice(0, -1);
+            }
+            updateDisplay();
+        }
+        
+        function calculate() {
+            try {
+                // Replace × with * for evaluation
+                let calculationExpression = displayValue.replace(/×/g, '*');
+                // Handle percentage calculations
+                calculationExpression = calculationExpression.replace(/(\d+)%/g, function(match, p1) {
+                    return p1 / 100;
+                });
+                
+                expressionText = displayValue + ' =';
+                const result = eval(calculationExpression);
+                displayValue = formatResult(result);
+                updateDisplay();
+            } catch (error) {
+                displayValue = 'Error';
+                updateDisplay();
+                setTimeout(() => {
+                    displayValue = '0';
+                    expressionText = '';
+                    updateDisplay();
+                }, 1500);
+            }
+        }
+        
+        function formatResult(result) {
+            // Format the result to avoid too long numbers
+            return parseFloat(result.toPrecision(12)).toString();
+        }
+        
+        // Memory functions
+        function memoryClear() {
+            memory = 0;
+        }
+        
+        function memoryRecall() {
+            displayValue = memory.toString();
+            updateDisplay();
+        }
+        
+        function memoryAdd() {
+            memory += parseFloat(displayValue);
+        }
+        
+        function memorySubtract() {
+            memory -= parseFloat(displayValue);
+        }
+        
+        // Scientific functions
+        function scientificFunction(func) {
+            const value = parseFloat(displayValue);
+            let result;
+            
+            switch(func) {
+                case 'square':
+                    result = value * value;
+                    expressionText = `${value}² =`;
+                    break;
+                case 'sqrt':
+                    if (value < 0) {
+                        displayValue = 'Error';
+                        updateDisplay();
+                        setTimeout(() => {
+                            displayValue = '0';
+                            expressionText = '';
+                            updateDisplay();
+                        }, 1500);
+                        return;
+                    }
+                    result = Math.sqrt(value);
+                    expressionText = `√${value} =`;
+                    break;
+                case 'sin':
+                    result = Math.sin(value * Math.PI / 180); // Convert to radians
+                    expressionText = `sin(${value}°) =`;
+                    break;
+                case 'cos':
+                    result = Math.cos(value * Math.PI / 180); // Convert to radians
+                    expressionText = `cos(${value}°) =`;
+                    break;
+            }
+            
+            displayValue = formatResult(result);
+            updateDisplay();
+        }
+        
+        // Dark mode functionality
+        darkModeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+        
+        // Keyboard support
+        document.addEventListener('keydown', function(event) {
+            if (/[0-9]/.test(event.key)) {
+                appendToDisplay(event.key);
+            } else if (event.key === '+' || event.key === '-' || event.key === '*' || event.key === '/') {
+                appendToDisplay(event.key);
+            } else if (event.key === '.') {
+                appendToDisplay('.');
+            } else if (event.key === 'Enter' || event.key === '=') {
+                calculate();
+            } else if (event.key === 'Escape') {
+                clearDisplay();
+            } else if (event.key === 'Backspace') {
+                backspace();
+            } else if (event.key === '%') {
+                appendToDisplay('%');
+            }
+        });
+        
+        // Initialize display
+        updateDisplay();
+    </script>
+</body>
+</html>
