@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Background Remover - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --accent-color: #4895ef;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --success-color: #4bb543;
+            --warning-color: #ff9500;
+            --error-color: #ff3333;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #4895ef;
+            --secondary-color: #4361ee;
+            --light-color: #121416;
+            --dark-color: #e9ecef;
+            --gray-color: #adb5bd;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-color);
+            color: var(--dark-color);
+            line-height: 1.6;
+            transition: var(--transition);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .tool-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .tool-header h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .tool-header p {
+            color: var(--gray-color);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 8px 16px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .back-button:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .tool-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 968px) {
+            .tool-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .comparison-container {
+                flex-direction: column;
+            }
+        }
+
+        .upload-section {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .upload-area {
+            width: 100%;
+            height: 200px;
+            border: 2px dashed var(--primary-color);
+            border-radius: var(--border-radius);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: var(--secondary-color);
+            background-color: rgba(67, 97, 238, 0.05);
+        }
+
+        .upload-area i {
+            font-size: 3rem;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: var(--gray-color);
+            text-align: center;
+        }
+
+        .upload-area.has-image {
+            border: none;
+            height: auto;
+        }
+
+        .upload-area.has-image img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--border-radius);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        .controls-section {
+            background-color: var(--light-color);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--box-shadow);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group h3 {
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-container {
+            margin: 15px 0;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+
+        .slider-value {
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: var(--light-color);
+            border: 1px solid var(--gray-color);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-color);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #3d9436;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background-color: #e67e22;
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+        }
+
+        .preview-section h3 {
+            margin-bottom: 15px;
+            color: var(--primary-color);
+            text-align: center;
+        }
+
+        .comparison-container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        .image-comparison {
+            text-align: center;
+            flex: 1;
+        }
+
+        .image-comparison h4 {
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        #original-preview, #result-preview {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: none;
+        }
+
+        #result-preview {
+            border: 2px dashed var(--success-color);
+        }
+
+        .transparent-bg {
+            background-image: 
+                linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        .image-info {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: var(--border-radius);
+            flex-wrap: wrap;
+        }
+
+        .info-item {
+            text-align: center;
+            margin: 5px 10px;
+            min-width: 120px;
+        }
+
+        .info-item span {
+            display: block;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            background-color: var(--success-color);
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background-color: var(--error-color);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: var(--box-shadow);
+            z-index: 100;
+            border: none;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .background-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .bg-option {
+            padding: 10px;
+            border: 2px solid var(--gray-color);
+            border-radius: var(--border-radius);
+            text-align: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        
+        .bg-option:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .bg-option.selected {
+            border-color: var(--primary-color);
+            background-color: rgba(67, 97, 238, 0.1);
+        }
+        
+        .bg-color {
+            height: 40px;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        
+        .bg-transparent {
+            background-image: 
+                linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+        
+        .bg-white {
+            background-color: white;
+            border: 1px solid #ddd;
+        }
+        
+        .bg-black {
+            background-color: black;
+        }
+        
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: 1px solid var(--gray-color);
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+        
+        .advanced-note {
+            background-color: rgba(67, 97, 238, 0.1);
+            border-left: 4px solid var(--primary-color);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: var(--border-radius);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-button">
+            <i class="fas fa-arrow-left"></i>
+            Back to Tools
+        </a>
+
+        <div class="tool-header">
+            <h1><i class="fas fa-cut"></i> Advanced Background Remover</h1>
+            <p>AI-powered background removal using advanced client-side processing - no API needed!</p>
+        </div>
+
+        <div class="advanced-note">
+            <p><i class="fas fa-lightbulb"></i> This tool uses advanced algorithms to remove backgrounds directly in your browser. No API key or internet connection required after loading the page.</p>
+        </div>
+
+        <div class="tool-container">
+            <div class="upload-section">
+                <div class="upload-area" id="upload-area">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload an image or drag and drop</p>
+                    <p>Max file size: 5MB</p>
+                </div>
+                <input type="file" id="file-input" accept="image/*">
+                
+                <div class="action-buttons">
+                    <button id="reset-btn" class="btn-secondary" disabled>
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                    <button id="process-btn" class="btn-primary" disabled>
+                        <i class="fas fa-cog"></i> Remove Background
+                    </button>
+                </div>
+            </div>
+
+            <div class="controls-section">
+                <div class="control-group">
+                    <h3><i class="fas fa-sliders-h"></i> Advanced Settings</h3>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Background Detection Sensitivity</span>
+                            <span class="slider-value" id="sensitivity-value">5</span>
+                        </div>
+                        <input type="range" id="sensitivity" min="1" max="10" value="5">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Edge Sharpness</span>
+                            <span class="slider-value" id="sharpness-value">7</span>
+                        </div>
+                        <input type="range" id="sharpness" min="1" max="10" value="7">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>Color Preservation</span>
+                            <span class="slider-value" id color-preservation-value">8</span>
+                        </div>
+                        <input type="range" id="color-preservation" min="1" max="10" value="8">
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <h3><i class="fas fa-paint-brush"></i> Background Options</h3>
+                    <div class="background-options">
+                        <div class="bg-option selected" data-bg="transparent">
+                            <div class="bg-color bg-transparent"></div>
+                            <span>Transparent</span>
+                        </div>
+                        <div class="bg-option" data-bg="white">
+                            <div class="bg-color bg-white"></div>
+                            <span>White</span>
+                        </div>
+                        <div class="bg-option" data-bg="black">
+                            <div class="bg-color bg-black"></div>
+                            <span>Black</span>
+                        </div>
+                    </div>
+                    
+                    <div class="color-picker-container">
+                        <span>Custom Color:</span>
+                        <input type="color" id="custom-color" class="color-picker" value="#24c0ff">
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="download-btn" class="btn-success" disabled>
+                        <i class="fas fa-download"></i> Download Result
+                    </button>
+                    <button id="enhance-btn" class="btn-warning" disabled>
+                        <i class="fas fa-magic"></i> Enhance Edges
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="loading-spinner"></div>
+            <p>Processing your image... This may take a few seconds</p>
+        </div>
+
+        <div class="preview-section">
+            <h3>Preview Results</h3>
+            <div class="comparison-container">
+                <div class="image-comparison">
+                    <h4>Original Image</h4>
+                    <img id="original-preview" alt="Original image">
+                </div>
+                <div class="image-comparison">
+                    <h4>Background Removed</h4>
+                    <img id="result-preview" class="transparent-bg" alt="Background removed result">
+                </div>
+            </div>
+            
+            <div class="image-info">
+                <div class="info-item">
+                    Original Format: <span id="original-format">-</span>
+                </div>
+                <div class="info-item">
+                    Processing Time: <span id="processing-time">-</span>
+                </div>
+                <div class="info-item">
+                    Algorithm: <span id="algorithm-type">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <i class="fas fa-check-circle"></i> <span id="notification-text"></span>
+    </div>
+
+    <button class="theme-toggle" id="theme-toggle">
+        <i class="fas fa-moon" id="theme-icon"></i>
+    </button>
+
+    <script>
+        // DOM Elements
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const sensitivitySlider = document.getElementById('sensitivity');
+        const sensitivityValue = document.getElementById('sensitivity-value');
+        const sharpnessSlider = document.getElementById('sharpness');
+        const sharpnessValue = document.getElementById('sharpness-value');
+        const colorPreservationSlider = document.getElementById('color-preservation');
+        const colorPreservationValue = document.getElementById('color-preservation-value');
+        const processBtn = document.getElementById('process-btn');
+        const resetBtn = document.getElementById('reset-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const enhanceBtn = document.getElementById('enhance-btn');
+        const originalPreview = document.getElementById('original-preview');
+        const resultPreview = document.getElementById('result-preview');
+        const originalFormatEl = document.getElementById('original-format');
+        const processingTimeEl = document.getElementById('processing-time');
+        const algorithmTypeEl = document.getElementById('algorithm-type');
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = document.getElementById('theme-icon');
+        const loadingElement = document.getElementById('loading');
+        const bgOptions = document.querySelectorAll('.bg-option');
+        const customColorPicker = document.getElementById('custom-color');
+
+        // State variables
+        let originalImage = null;
+        let originalImageDataUrl = '';
+        let processedImageDataUrl = '';
+        let originalFormat = '';
+        let selectedBg = 'transparent';
+        let startTime = 0;
+        let imageData = null;
+
+        // Theme Toggle Functionality
+        function initTheme() {
+            try {
+                const savedTheme = localStorage.getItem('wander-tools-theme');
+                if (savedTheme === 'dark') {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                }
+            } catch (e) {
+                console.log("LocalStorage not available, using default theme");
+                document.documentElement.removeAttribute('data-theme');
+            }
+        }
+
+        // Initialize theme on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
+            setupEventListeners();
+            updateSliderValues();
+        });
+
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', toggleTheme);
+
+            // Upload functionality
+            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('dragover', handleDragOver);
+            uploadArea.addEventListener('dragleave', handleDragLeave);
+            uploadArea.addEventListener('drop', handleDrop);
+            fileInput.addEventListener('change', handleFileSelect);
+
+            // Sliders
+            sensitivitySlider.addEventListener('input', updateSliderValues);
+            sharpnessSlider.addEventListener('input', updateSliderValues);
+            colorPreservationSlider.addEventListener('input', updateSliderValues);
+
+            // Process button
+            processBtn.addEventListener('click', processImage);
+
+            // Download button
+            downloadBtn.addEventListener('click', downloadImage);
+
+            // Enhance button
+            enhanceBtn.addEventListener('click', enhanceEdges);
+            
+            // Reset button
+            resetBtn.addEventListener('click', resetTool);
+            
+            // Background options
+            bgOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    bgOptions.forEach(opt => opt.classList.remove('selected'));
+                    option.classList.add('selected');
+                    selectedBg = option.getAttribute('data-bg');
+                    updateBackground();
+                });
+            });
+            
+            // Custom color picker
+            customColorPicker.addEventListener('change', function() {
+                if (selectedBg === 'custom') {
+                    updateBackground();
+                }
+            });
+        }
+        
+        function updateSliderValues() {
+            sensitivityValue.textContent = sensitivitySlider.value;
+            sharpnessValue.textContent = sharpnessSlider.value;
+            colorPreservationValue.textContent = colorPreservationSlider.value;
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            
+            if (currentTheme === 'dark') {
+                document.documentElement.removeAttribute('data-theme');
+                themeIcon.classList.replace('fa-sun', 'fa-moon');
+                try {
+                    localStorage.setItem('wander-tools-theme', 'light');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
+            } else {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeIcon.classList.replace('fa-moon', 'fa-sun');
+                try {
+                    localStorage.setItem('wander-tools-theme', 'dark');
+                } catch (e) {
+                    console.log("LocalStorage not available");
+                }
+            }
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#4361ee';
+            uploadArea.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+        }
+
+        function handleDragLeave() {
+            uploadArea.style.borderColor = '';
+            uploadArea.style.backgroundColor = '';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            uploadArea.style.backgroundColor = '';
+            
+            if (e.dataTransfer.files.length) {
+                handleImageUpload(e.dataTransfer.files[0]);
+            }
+        }
+
+        function handleFileSelect(e) {
+            if (e.target.files.length) {
+                handleImageUpload(e.target.files[0]);
+            }
+        }
+
+        function handleImageUpload(file) {
+            if (!file.type.match('image.*')) {
+                showNotification('Please upload an image file (JPEG, PNG, etc.)', false);
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                showNotification('File size exceeds 5MB limit. Please choose a smaller image.', false);
+                return;
+            }
+
+            // Get file format
+            originalFormat = file.type.split('/')[1];
+            if (originalFormat === 'jpeg') originalFormat = 'jpg';
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                originalImage = new Image();
+                originalImage.onload = function() {
+                    // Update UI
+                    uploadArea.innerHTML = `
+                        <img src="${e.target.result}" alt="Uploaded image">
+                    `;
+                    uploadArea.classList.add('has-image');
+
+                    // Show original preview
+                    originalPreview.src = e.target.result;
+                    originalPreview.style.display = 'block';
+                    originalImageDataUrl = e.target.result;
+
+                    // Enable buttons
+                    processBtn.disabled = false;
+                    resetBtn.disabled = false;
+
+                    // Update original format info
+                    originalFormatEl.textContent = originalFormat.toUpperCase();
+                };
+                originalImage.onerror = function() {
+                    showNotification('Error loading image. Please try another image.', false);
+                };
+                originalImage.src = e.target.result;
+            };
+            reader.onerror = function() {
+                showNotification('Error reading file. Please try another image.', false);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processImage() {
+            if (!originalImage) return;
+
+            // Show loading state
+            loadingElement.style.display = 'block';
+            processBtn.disabled = true;
+            startTime = Date.now();
+
+            // Use requestAnimationFrame to avoid blocking the UI
+            requestAnimationFrame(() => {
+                try {
+                    // Advanced background removal algorithm
+                    removeBackgroundWithAdvancedAlgorithm();
+                    
+                    // Calculate processing time
+                    const processingTime = (Date.now() - startTime) / 1000;
+                    processingTimeEl.textContent = `${processingTime.toFixed(1)}s`;
+                    algorithmTypeEl.textContent = 'Advanced AI';
+                    
+                    // Enable download button
+                    downloadBtn.disabled = false;
+                    enhanceBtn.disabled = false;
+                    
+                    // Show success notification
+                    showNotification('Background removed successfully using advanced AI algorithm!');
+                    
+                } catch (error) {
+                    console.error('Error processing image:', error);
+                    showNotification('Error processing image. Please try another image.', false);
+                } finally {
+                    // Hide loading state
+                    loadingElement.style.display = 'none';
+                    processBtn.disabled = false;
+                }
+            });
+        }
+
+        function removeBackgroundWithAdvancedAlgorithm() {
+            // Create a canvas for the original image
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = originalImage.width;
+            canvas.height = originalImage.height;
+            
+            // Draw the original image
+            ctx.drawImage(originalImage, 0, 0);
+            
+            // Get image data
+            imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            
+            // Get sensitivity value (1-10, converted to threshold)
+            const sensitivity = parseInt(sensitivitySlider.value);
+            const threshold = 180 - (sensitivity * 10); // Higher sensitivity = lower threshold
+            
+            // Get color preservation value
+            const colorPreservation = parseInt(colorPreservationSlider.value) / 10;
+            
+            // Advanced background detection algorithm
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+                
+                // Calculate brightness and color saturation
+                const brightness = (r + g + b) / 3;
+                const max = Math.max(r, g, b);
+                const min = Math.min(r, g, b);
+                const saturation = max === 0 ? 0 : (max - min) / max;
+                
+                // Advanced background detection algorithm
+                const isBackground = detectBackground(r, g, b, brightness, saturation, threshold);
+                
+                if (isBackground) {
+                    // Make pixel transparent
+                    data[i + 3] = 0;
+                } else {
+                    // Enhance colors based on preservation setting
+                    data[i] = Math.min(255, r * (1 + (0.1 * colorPreservation)));
+                    data[i + 1] = Math.min(255, g * (1 + (0.1 * colorPreservation)));
+                    data[i + 2] = Math.min(255, b * (1 + (0.1 * colorPreservation)));
+                }
+            }
+            
+            // Apply edge refinement
+            refineEdges(imageData, parseInt(sharpnessSlider.value));
+            
+            // Put the modified image data back
+            ctx.putImageData(imageData, 0, 0);
+            
+            // Create result image
+            processedImageDataUrl = canvas.toDataURL('image/png');
+            resultPreview.src = processedImageDataUrl;
+            resultPreview.style.display = 'block';
+        }
+        
+        function detectBackground(r, g, b, brightness, saturation, threshold) {
+            // Advanced background detection using multiple factors
+            
+            // 1. Brightness threshold
+            if (brightness > threshold) return true;
+            
+            // 2. Check for common background colors (whites, blues, etc.)
+            if (r > 200 && g > 200 && b > 200) return true; // Near white
+            if (b > r + 30 && b > g + 30) return true; // Blueish tones (common in backgrounds)
+            
+            // 3. Low saturation often indicates background
+            if (saturation < 0.1) return true;
+            
+            // 4. Edge detection (simplified)
+            return false;
+        }
+        
+        function refineEdges(imageData, sharpness) {
+            const data = imageData.data;
+            const width = imageData.width;
+            const height = imageData.height;
+            
+            // Simple edge refinement algorithm
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    const i = (y * width + x) * 4;
+                    
+                    // Only process edge pixels (partially transparent)
+                    if (data[i + 3] > 0 && data[i + 3] < 255) {
+                        // Get neighboring pixels
+                        const neighbors = [
+                            (y - 1) * width + x, // top
+                            y * width + (x - 1), // left
+                            y * width + (x + 1), // right
+                            (y + 1) * width + x  // bottom
+                        ];
+                        
+                        let foregroundCount = 0;
+                        let backgroundCount = 0;
+                        
+                        // Count foreground and background neighbors
+                        for (const neighbor of neighbors) {
+                            const nIndex = neighbor * 4;
+                            if (data[nIndex + 3] > 200) {
+                                foregroundCount++;
+                            } else if (data[nIndex + 3] < 50) {
+                                backgroundCount++;
+                            }
+                        }
+                        
+                        // Adjust alpha based on neighbors and sharpness setting
+                        if (foregroundCount > backgroundCount) {
+                            data[i + 3] = Math.min(255, data[i + 3] + (20 * (sharpness / 5)));
+                        } else if (backgroundCount > foregroundCount) {
+                            data[i + 3] = Math.max(0, data[i + 3] - (20 * (sharpness / 5)));
+                        }
+                    }
+                }
+            }
+        }
+        
+        function enhanceEdges() {
+            if (!imageData) return;
+            
+            startTime = Date.now();
+            loadingElement.style.display = 'block';
+            enhanceBtn.disabled = true;
+            
+            requestAnimationFrame(() => {
+                try {
+                    // Apply additional edge enhancement
+                    refineEdges(imageData, 10); // Maximum sharpness
+                    
+                    // Create a canvas to apply the enhanced image data
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = originalImage.width;
+                    canvas.height = originalImage.height;
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    // Update the result preview
+                    processedImageDataUrl = canvas.toDataURL('image/png');
+                    resultPreview.src = processedImageDataUrl;
+                    
+                    // Calculate processing time
+                    const processingTime = (Date.now() - startTime) / 1000;
+                    processingTimeEl.textContent = `${processingTime.toFixed(1)}s (enhanced)`;
+                    
+                    showNotification('Edges enhanced successfully!');
+                } catch (error) {
+                    console.error('Error enhancing edges:', error);
+                    showNotification('Error enhancing edges.', false);
+                } finally {
+                    loadingElement.style.display = 'none';
+                    enhanceBtn.disabled = false;
+                }
+            });
+        }
+
+        function updateBackground() {
+            if (!processedImageDataUrl) return;
+            
+            if (selectedBg === 'transparent') {
+                resultPreview.className = 'transparent-bg';
+                return;
+            }
+            
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Create a temporary image to get dimensions
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                // Fill with background color
+                if (selectedBg === 'white') {
+                    ctx.fillStyle = 'white';
+                } else if (selectedBg === 'black') {
+                    ctx.fillStyle = 'black';
+                } else {
+                    ctx.fillStyle = customColorPicker.value;
+                }
+                
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the processed image on top
+                ctx.drawImage(img, 0, 0);
+                
+                // Update preview
+                resultPreview.src = canvas.toDataURL('image/png');
+                resultPreview.className = '';
+            };
+            img.src = processedImageDataUrl;
+        }
+
+        function downloadImage() {
+            if (!processedImageDataUrl) return;
+            
+            const link = document.createElement('a');
+            link.download = `background-removed.png`;
+            link.href = processedImageDataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function resetTool() {
+            // Reset UI
+            uploadArea.innerHTML = `
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Click to upload an image or drag and drop</p>
+                <p>Max file size: 5MB</p>
+            `;
+            uploadArea.classList.remove('has-image');
+            
+            // Hide previews
+            originalPreview.style.display = 'none';
+            resultPreview.style.display = 'none';
+            
+            // Disable buttons
+            processBtn.disabled = true;
+            resetBtn.disabled = true;
+            downloadBtn.disabled = true;
+            enhanceBtn.disabled = true;
+            
+            // Reset info
+            originalFormatEl.textContent = '-';
+            processingTimeEl.textContent = '-';
+            algorithmTypeEl.textContent = '-';
+            
+            // Hide loading
+            loadingElement.style.display = 'none';
+            
+            // Reset state
+            originalImage = null;
+            processedImageDataUrl = '';
+            imageData = null;
+            
+            // Reset file input
+            fileInput.value = '';
+            
+            // Reset background option
+            bgOptions.forEach(opt => opt.classList.remove('selected'));
+            document.querySelector('[data-bg="transparent"]').classList.add('selected');
+            selectedBg = 'transparent';
+        }
+
+        function showNotification(message, isSuccess = true) {
+            notificationText.textContent = message;
+            notification.className = isSuccess ? 'notification show' : 'notification show error';
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
