@@ -195,16 +195,6 @@
             padding: 0;
         }
 
-        .ratio-toggle {
-            display: flex;
-            align-items: center;
-            margin-top: 10px;
-        }
-
-        .ratio-toggle input {
-            margin-right: 8px;
-        }
-
         .action-buttons {
             display: flex;
             gap: 15px;
@@ -457,81 +447,124 @@
         function initTheme() {
             try {
                 // localStorage availability check
-                const savedTheme = localStorage.getItem('theme');
+                const savedTheme = localStorage.getItem('wander-tools-theme');
                 if (savedTheme === 'dark') {
                     document.documentElement.setAttribute('data-theme', 'dark');
                     themeIcon.classList.replace('fa-moon', 'fa-sun');
+                } else {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
                 }
             } catch (e) {
                 console.log("LocalStorage not available, using default theme");
+                // ডিফল্টভাবে light theme ব্যবহার করুন
+                document.documentElement.removeAttribute('data-theme');
             }
         }
 
         // Initialize theme on page load
-        initTheme();
-
-        themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
+        document.addEventListener('DOMContentLoaded', function() {
+            initTheme();
             
-            if (currentTheme === 'dark') {
-                document.documentElement.removeAttribute('data-theme');
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
-                try {
-                    localStorage.setItem('theme', 'light');
-                } catch (e) {
-                    console.log("LocalStorage not available");
+            // Event listeners যোগ করুন
+            setupEventListeners();
+        });
+
+        function setupEventListeners() {
+            // Theme toggle
+            themeToggle.addEventListener('click', () => {
+                const currentTheme = document.documentElement.getAttribute('data-theme');
+                
+                if (currentTheme === 'dark') {
+                    document.documentElement.removeAttribute('data-theme');
+                    themeIcon.classList.replace('fa-sun', 'fa-moon');
+                    try {
+                        localStorage.setItem('wander-tools-theme', 'light');
+                    } catch (e) {
+                        console.log("LocalStorage not available");
+                    }
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    themeIcon.classList.replace('fa-moon', 'fa-sun');
+                    try {
+                        localStorage.setItem('wander-tools-theme', 'dark');
+                    } catch (e) {
+                        console.log("LocalStorage not available");
+                    }
                 }
-            } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
-                themeIcon.classList.replace('fa-moon', 'fa-sun');
-                try {
-                    localStorage.setItem('theme', 'dark');
-                } catch (e) {
-                    console.log("LocalStorage not available");
+            });
+
+            // Upload functionality
+            uploadArea.addEventListener('click', () => {
+                fileInput.click();
+            });
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '#4361ee';
+                uploadArea.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.style.borderColor = '';
+                uploadArea.style.backgroundColor = '';
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.style.borderColor = '';
+                uploadArea.style.backgroundColor = '';
+                
+                if (e.dataTransfer.files.length) {
+                    handleImageUpload(e.dataTransfer.files[0]);
                 }
-            }
-        });
+            });
 
-        // Upload functionality
-        uploadArea.addEventListener('click', () => {
-            fileInput.click();
-        });
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length) {
+                    handleImageUpload(e.target.files[0]);
+                }
+            });
 
-        uploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '#4361ee';
-            uploadArea.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
-        });
+            // Dimension controls - independent adjustment
+            widthInput.addEventListener('input', () => {
+                widthRange.value = widthInput.value;
+                checkAspectRatioWarnings();
+            });
 
-        uploadArea.addEventListener('dragleave', () => {
-            uploadArea.style.borderColor = '';
-            uploadArea.style.backgroundColor = '';
-        });
+            heightInput.addEventListener('input', () => {
+                heightRange.value = heightInput.value;
+                checkAspectRatioWarnings();
+            });
 
-        uploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            uploadArea.style.borderColor = '';
-            uploadArea.style.backgroundColor = '';
-            
-            if (e.dataTransfer.files.length) {
-                handleImageUpload(e.dataTransfer.files[0]);
-            }
-        });
+            widthRange.addEventListener('input', () => {
+                widthInput.value = widthRange.value;
+                checkAspectRatioWarnings();
+            });
 
-        fileInput.addEventListener('change', (e) => {
-            if (e.target.files.length) {
-                handleImageUpload(e.target.files[0]);
-            }
-        });
+            heightRange.addEventListener('input', () => {
+                heightInput.value = heightRange.value;
+                checkAspectRatioWarnings();
+            });
+
+            // Process image
+            processBtn.addEventListener('click', processImage);
+
+            // Download image
+            downloadBtn.addEventListener('click', downloadImage);
+
+            // Reset functionality
+            resetBtn.addEventListener('click', resetTool);
+        }
 
         function handleImageUpload(file) {
             if (!file.type.match('image.*')) {
-                alert('Please upload an image file');
+                alert('Please upload an image file (JPEG, PNG, etc.)');
                 return;
             }
 
             if (file.size > 5 * 1024 * 1024) {
-                alert('File size exceeds 5MB limit');
+                alert('File size exceeds 5MB limit. Please choose a smaller image.');
                 return;
             }
 
@@ -571,31 +604,16 @@
                     // Check aspect ratio warnings
                     checkAspectRatioWarnings();
                 };
+                originalImage.onerror = function() {
+                    alert('Error loading image. Please try another image.');
+                };
                 originalImage.src = e.target.result;
+            };
+            reader.onerror = function() {
+                alert('Error reading file. Please try another image.');
             };
             reader.readAsDataURL(file);
         }
-
-        // Dimension controls - independent adjustment
-        widthInput.addEventListener('input', () => {
-            widthRange.value = widthInput.value;
-            checkAspectRatioWarnings();
-        });
-
-        heightInput.addEventListener('input', () => {
-            heightRange.value = heightInput.value;
-            checkAspectRatioWarnings();
-        });
-
-        widthRange.addEventListener('input', () => {
-            widthInput.value = widthRange.value;
-            checkAspectRatioWarnings();
-        });
-
-        heightRange.addEventListener('input', () => {
-            heightInput.value = heightRange.value;
-            checkAspectRatioWarnings();
-        });
 
         // Check if dimensions match original aspect ratio
         function checkAspectRatioWarnings() {
@@ -614,4 +632,111 @@
                     heightWarning.style.display = 'flex';
                 } else {
                     widthWarning.style.display = 'none';
-                    heightWarni
+                    heightWarning.style.display = 'none';
+                }
+                
+                // Update aspect ratio display
+                aspectRatioEl.textContent = `${newWidth}:${newHeight}`;
+            }
+        }
+
+        // Process image
+        function processImage() {
+            if (!originalImage) return;
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const newWidth = parseInt(widthInput.value) || originalWidth;
+            const newHeight = parseInt(heightInput.value) || originalHeight;
+            
+            // Validate dimensions
+            if (newWidth <= 0 || newHeight <= 0) {
+                alert('Please enter valid dimensions (greater than 0)');
+                return;
+            }
+            
+            if (newWidth > 5000 || newHeight > 5000) {
+                alert('Maximum dimension size is 5000px');
+                return;
+            }
+            
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+            
+            // Draw image with the custom dimensions
+            ctx.drawImage(originalImage, 0, 0, newWidth, newHeight);
+            
+            // Update preview
+            imagePreview.src = canvas.toDataURL('image/jpeg', 0.9);
+            imagePreview.style.display = 'block';
+            processedImage = canvas.toDataURL('image/jpeg', 0.9);
+            
+            // Enable download button
+            downloadBtn.disabled = false;
+            
+            // Update info
+            newDimensionsEl.textContent = `${newWidth}×${newHeight}px`;
+            
+            // Show notification
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Download image
+        function downloadImage() {
+            if (!processedImage) return;
+            
+            const link = document.createElement('a');
+            link.download = 'resized-image.jpg';
+            link.href = processedImage;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Reset functionality
+        function resetTool() {
+            // Reset UI
+            uploadArea.innerHTML = `
+                <i class="fas fa-cloud-upload-alt"></i>
+                <p>Click to upload an image or drag and drop</p>
+                <p>Max file size: 5MB</p>
+            `;
+            uploadArea.classList.remove('has-image');
+            
+            // Reset inputs
+            widthInput.value = '';
+            heightInput.value = '';
+            widthRange.value = 800;
+            heightRange.value = 600;
+            
+            // Hide warnings
+            widthWarning.style.display = 'none';
+            heightWarning.style.display = 'none';
+            
+            // Hide preview
+            imagePreview.style.display = 'none';
+            
+            // Disable buttons
+            processBtn.disabled = true;
+            resetBtn.disabled = true;
+            downloadBtn.disabled = true;
+            
+            // Reset info
+            originalSizeEl.textContent = '-';
+            newDimensionsEl.textContent = '-';
+            aspectRatioEl.textContent = '-';
+            
+            // Reset state
+            originalImage = null;
+            processedImage = null;
+            
+            // Reset file input
+            fileInput.value = '';
+        }
+    </script>
+</body>
+</html>
