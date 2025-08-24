@@ -487,8 +487,8 @@
             border-radius: 6px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 5px;
+            justify-content: space-between;
+            padding: 5px 10px;
             cursor: pointer;
             transition: transform 0.2s;
             font-size: 0.8rem;
@@ -499,6 +499,20 @@
         
         .scheme-color:hover {
             transform: translateY(-3px);
+        }
+        
+        .scheme-copy-btn {
+            background: rgba(255, 255, 255, 0.3);
+            border: none;
+            border-radius: 3px;
+            color: white;
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 0.7rem;
+        }
+        
+        .scheme-copy-btn:hover {
+            background: rgba(255, 255, 255, 0.5);
         }
         
         .stats {
@@ -635,6 +649,29 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: #4caf50;
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -649,7 +686,7 @@
         </div>
         
         <header>
-            <h1>Color Code Converter</h1>
+            <h1>Color Code Generator/h1>
             <p>Convert between different color code formats for your design projects</p>
         </header>
         
@@ -843,6 +880,11 @@
         <p>© 2023 Wander Tools | All Rights Reserved</p>
     </footer>
 
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Color copied to clipboard!</span>
+    </div>
+
     <script>
         // DOM Elements
         const colorInput = document.getElementById('colorInput');
@@ -865,6 +907,8 @@
         const errorMessage = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
         const conversionBtns = document.querySelectorAll('.conversion-btn');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
         
         // Current color state
         let currentColor = {
@@ -1143,16 +1187,29 @@
             const colorElement = document.createElement('div');
             colorElement.className = 'scheme-color';
             colorElement.style.backgroundColor = color;
-            colorElement.textContent = color;
-            colorElement.title = label;
+            colorElement.innerHTML = `
+                <span>${color}</span>
+                <button class="scheme-copy-btn" title="Copy ${color}">
+                    <i class="fas fa-copy"></i>
+                </button>
+            `;
             
             // Add click to select functionality
-            colorElement.addEventListener('click', () => {
-                colorInput.value = color;
-                currentInputType = 'hex';
-                conversionBtns.forEach(b => b.classList.remove('active'));
-                document.querySelector('[data-type="hex"]').classList.add('active');
-                convertColor();
+            colorElement.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('scheme-copy-btn')) {
+                    colorInput.value = color;
+                    currentInputType = 'hex';
+                    conversionBtns.forEach(b => b.classList.remove('active'));
+                    document.querySelector('[data-type="hex"]').classList.add('active');
+                    convertColor();
+                }
+            });
+            
+            // Add copy functionality to the copy button
+            const copyBtn = colorElement.querySelector('.scheme-copy-btn');
+            copyBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                copyToClipboard(color, `Color ${color}`);
             });
             
             schemeElement.appendChild(colorElement);
@@ -1288,19 +1345,73 @@
             hideError();
         }
         
-        // Copy to clipboard
-        function copyToClipboard(text, format) {
-            navigator.clipboard.writeText(text).then(() => {
-                // Show feedback
-                const originalText = copyAllBtn.innerHTML;
-                copyAllBtn.innerHTML = `<i class="fas fa-check"></i> Copied ${format}!`;
+        // Copy to clipboard with fallback
+        async function copyToClipboard(text, format) {
+            try {
+                // Try using the modern Clipboard API first
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    showToast(`${format} copied to clipboard!`);
+                    return;
+                }
                 
-                setTimeout(() => {
-                    copyAllBtn.innerHTML = originalText;
-                }, 2000);
-            }).catch(err => {
-                showError('Failed to copy: ' + err);
-            });
+                // Fallback for older browsers or insecure contexts
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                
+                // Make the textarea out of viewport
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                
+                // Select and copy
+                textArea.focus();
+                textArea.select();
+                
+                let successful = false;
+                try {
+                    successful = document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                }
+                
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    showToast(`${format} copied to clipboard!`);
+                } else {
+                    showError('Failed to copy. Please manually select and copy the text.');
+                    // Automatically select the text for manual copying
+                    const tempInput = document.createElement('input');
+                    tempInput.value = text;
+                    document.body.appendChild(tempInput);
+                    tempInput.select();
+                    document.body.removeChild(tempInput);
+                }
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showError('Failed to copy: ' + err.message);
+                
+                // Fallback: Create a temporary input element and select the text
+                const tempInput = document.createElement('input');
+                tempInput.value = text;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                
+                try {
+                    const successful = document.execCommand('copy');
+                    if (successful) {
+                        showToast(`${format} copied to clipboard!`);
+                    } else {
+                        showError('Please manually copy the text: ' + text);
+                    }
+                } catch (fallbackErr) {
+                    showError('Please manually copy the text: ' + text);
+                }
+                
+                document.body.removeChild(tempInput);
+            }
         }
         
         // Copy all formats
@@ -1318,6 +1429,16 @@
         // Hide error message
         function hideError() {
             errorMessage.classList.remove('visible');
+        }
+        
+        // Show toast message
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.add('visible');
+            
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
         }
         
         // Utility functions
