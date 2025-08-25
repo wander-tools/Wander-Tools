@@ -691,6 +691,32 @@
             transform: translateY(0);
         }
         
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading-spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4776E6;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        .dark-mode .loading-spinner {
+            border: 4px solid #334155;
+            border-top: 4px solid #8E54E9;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
         @media (max-width: 768px) {
             .converter-options {
                 justify-content: center;
@@ -727,6 +753,11 @@
             </div>
             
             <div class="currency-converter">
+                <div class="loading" id="loadingIndicator">
+                    <div class="loading-spinner"></div>
+                    <p>Fetching exchange rates...</p>
+                </div>
+                
                 <div class="converter-options">
                     <button class="option-btn active" data-option="convert">
                         <i class="fas fa-sync-alt"></i> Convert
@@ -911,6 +942,10 @@
     </div>
 
     <script>
+        // API Key and configuration
+        const API_KEY = '7a6df232f11760789d482cf600e7f4ae';
+        const BASE_URL = 'https://api.exchangerate.host';
+        
         // DOM Elements
         const amountInput = document.getElementById('amountInput');
         const fromCurrency = document.getElementById('fromCurrency');
@@ -932,28 +967,7 @@
         const darkModeToggle = document.getElementById('darkModeToggle');
         const toast = document.getElementById('toast');
         const toastMessage = document.getElementById('toastMessage');
-        
-        // Exchange rates data (simulated - in a real app, you would fetch from an API)
-        const exchangeRates = {
-            USD: 1,
-            EUR: 0.85,
-            GBP: 0.75,
-            JPY: 110.25,
-            CAD: 1.25,
-            AUD: 1.35,
-            BDT: 109.50, // Bangladeshi Taka
-            INR: 74.50,
-            PKR: 175.50,
-            LKR: 200.25,
-            NPR: 119.30,
-            MYR: 4.20,
-            SGD: 1.35,
-            CNY: 6.45,
-            AED: 3.67,
-            SAR: 3.75,
-            QAR: 3.64,
-            KWD: 0.30
-        };
+        const loadingIndicator = document.getElementById('loadingIndicator');
         
         // Currency data with flags and names
         const currencyData = {
@@ -990,7 +1004,6 @@
                 btn.addEventListener('click', () => {
                     optionBtns.forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
-                    // In a real app, this would switch between different views
                     showToast(`${btn.textContent.trim()} view activated`);
                 });
             });
@@ -1011,6 +1024,65 @@
             convertCurrency();
         }
         
+        // Fetch exchange rates from API
+        async function fetchExchangeRate(from, to) {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${BASE_URL}/convert?access_key=${API_KEY}&from=${from}&to=${to}&amount=1`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error.info || 'Failed to fetch exchange rate');
+                }
+                
+                hideLoading();
+                return data.result;
+            } catch (error) {
+                hideLoading();
+                console.error('Error fetching exchange rate:', error);
+                showError('Failed to fetch exchange rate. Please try again later.');
+                return null;
+            }
+        }
+        
+        // Fetch latest rates for multiple currencies
+        async function fetchLatestRates(base = 'BDT') {
+            try {
+                showLoading();
+                
+                // Get all currency codes except the base
+                const symbols = Object.keys(currencyData)
+                    .filter(code => code !== base)
+                    .join(',');
+                
+                const response = await fetch(`${BASE_URL}/latest?access_key=${API_KEY}&base=${base}&symbols=${symbols}`);
+                
+                if (!response.ok) {
+                    throw new Error(`API request failed with status ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error.info || 'Failed to fetch exchange rates');
+                }
+                
+                hideLoading();
+                return data.rates;
+            } catch (error) {
+                hideLoading();
+                console.error('Error fetching latest rates:', error);
+                showError('Failed to fetch exchange rates. Please try again later.');
+                return null;
+            }
+        }
+        
         // Toggle dark mode
         function toggleDarkMode() {
             document.body.classList.toggle('dark-mode');
@@ -1025,7 +1097,7 @@
         }
         
         // Convert currency
-        function convertCurrency() {
+        async function convertCurrency() {
             try {
                 hideError();
                 
@@ -1038,17 +1110,20 @@
                     return;
                 }
                 
-                // Get exchange rates (simulated)
-                const fromRate = exchangeRates[from];
-                const toRate = exchangeRates[to];
+                // Get exchange rate from API
+                const rate = await fetchExchangeRate(from, to);
+                
+                if (rate === null) {
+                    return; // Error already handled
+                }
                 
                 // Calculate conversion
-                const result = (amount / fromRate) * toRate;
+                const result = amount * rate;
                 
                 // Update UI
                 conversionAmount.textContent = result.toFixed(2);
                 conversionText.textContent = `${amount} ${from} = ${result.toFixed(2)} ${to}`;
-                rateInfo.textContent = `Exchange Rate: 1 ${from} = ${(toRate / fromRate).toFixed(4)} ${to}`;
+                rateInfo.textContent = `Exchange Rate: 1 ${from} = ${rate.toFixed(4)} ${to}`;
                 
                 // Show result container
                 resultContainer.style.display = 'block';
@@ -1078,36 +1153,52 @@
         }
         
         // Render popular currencies
-        function renderPopularCurrencies() {
-            popularCurrencies.innerHTML = '';
-            
-            // Get popular currencies with BDT (top 6 by popularity)
-            const popular = Object.entries(currencyData)
-                .filter(([code]) => code !== 'BDT')
-                .sort((a, b) => a[1].popularity - b[1].popularity)
-                .slice(0, 6);
-            
-            popular.forEach(([code, data]) => {
-                const currencyElement = document.createElement('div');
-                currencyElement.className = 'currency-card';
-                currencyElement.innerHTML = `
-                    <div class="currency-flag">${data.flag}</div>
-                    <div class="currency-details">
-                        <div class="currency-name">${code} - ${data.name}</div>
-                        <div class="currency-value">1 BDT = ${(exchangeRates[code] / exchangeRates['BDT']).toFixed(4)} ${code}</div>
-                    </div>
-                `;
+        async function renderPopularCurrencies() {
+            try {
+                popularCurrencies.innerHTML = '';
                 
-                // Add click event to set as target currency
-                currencyElement.addEventListener('click', () => {
-                    fromCurrency.value = 'BDT';
-                    toCurrency.value = code;
-                    convertCurrency();
-                    showToast(`${data.name} selected`);
+                // Get latest rates for BDT
+                const rates = await fetchLatestRates('BDT');
+                
+                if (rates === null) {
+                    return; // Error already handled
+                }
+                
+                // Get popular currencies with BDT (top 6 by popularity)
+                const popular = Object.entries(currencyData)
+                    .filter(([code]) => code !== 'BDT')
+                    .sort((a, b) => a[1].popularity - b[1].popularity)
+                    .slice(0, 6);
+                
+                popular.forEach(([code, data]) => {
+                    const rate = rates[code];
+                    
+                    if (rate) {
+                        const currencyElement = document.createElement('div');
+                        currencyElement.className = 'currency-card';
+                        currencyElement.innerHTML = `
+                            <div class="currency-flag">${data.flag}</div>
+                            <div class="currency-details">
+                                <div class="currency-name">${code} - ${data.name}</div>
+                                <div class="currency-value">1 BDT = ${rate.toFixed(4)} ${code}</div>
+                            </div>
+                        `;
+                        
+                        // Add click event to set as target currency
+                        currencyElement.addEventListener('click', () => {
+                            fromCurrency.value = 'BDT';
+                            toCurrency.value = code;
+                            convertCurrency();
+                            showToast(`${data.name} selected`);
+                        });
+                        
+                        popularCurrencies.appendChild(currencyElement);
+                    }
                 });
-                
-                popularCurrencies.appendChild(currencyElement);
-            });
+            } catch (error) {
+                console.error('Error rendering popular currencies:', error);
+                showError('Failed to load popular currencies');
+            }
         }
         
         // Reset converter
@@ -1118,6 +1209,18 @@
             resultContainer.style.display = 'none';
             hideError();
             renderPopularCurrencies();
+        }
+        
+        // Show loading indicator
+        function showLoading() {
+            loadingIndicator.style.display = 'block';
+            convertBtn.disabled = true;
+        }
+        
+        // Hide loading indicator
+        function hideLoading() {
+            loadingIndicator.style.display = 'none';
+            convertBtn.disabled = false;
         }
         
         // Show error message
