@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="/favicon.png" sizes="32x32" type="image/png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wander Tools - Your Complete Online Toolkit</title>
+    <title>Wander Tools - Free Online Tools: PDF Converter, Image Tools, SEO Tools</title>
+    <meta name="description" content="Free online tools all in one place. Convert PDF to Word, resize images, remove backgrounds, compress files, SEO tools, currency converter and more. Your complete online toolkit.">
+    <meta name="keywords" content="wander tools, pdf converter, image converter, all in one tools, background remover, image compressor, image resizer, pdf to word, word to pdf, image to pdf, seo tools, currency exchange rate, free online tools, file converter, web tools, developer tools, text tools, color tools">
+    <meta name="author" content="Wander Tools">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://wandertools.com">
+    <meta property="og:title" content="Wander Tools - Your Complete Online Toolkit">
+    <meta property="og:description" content="Free online tools all in one place. Convert, calculate, compress, and simplify your everyday tasks.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://wandertools.com">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
@@ -58,7 +68,7 @@
             padding: 0 20px;
         }
 
-        /* New Header Styles */
+        /* Header Styles */
         .header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
             color: white;
@@ -91,6 +101,7 @@
         .nav-links {
             display: flex;
             gap: 25px;
+            align-items: center;
         }
         
         .nav-links a {
@@ -141,6 +152,7 @@
             font-weight: 700;
             margin-bottom: 1rem;
             max-width: 700px;
+            line-height: 1.3;
         }
         
         .header-content p {
@@ -148,6 +160,15 @@
             margin-bottom: 2rem;
             max-width: 700px;
             opacity: 0.9;
+            line-height: 1.5;
+        }
+        
+        .header-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            justify-content: center;
         }
         
         .cta-button {
@@ -165,6 +186,25 @@
         .cta-button:hover {
             transform: translateY(-3px);
             box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+        }
+        
+        .download-button {
+            display: inline-block;
+            padding: 12px 30px;
+            background-color: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .download-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+            background-color: rgba(255, 255, 255, 0.3);
         }
         
         .header-search-container {
@@ -199,17 +239,242 @@
 
         /* Theme Toggle */
         .theme-toggle {
-            background: none;
+            background: rgba(255, 255, 255, 0.2);
             border: none;
             color: white;
             font-size: 1.2rem;
             cursor: pointer;
             transition: var(--transition);
             margin-left: 20px;
+            padding: 8px 12px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .theme-toggle:hover {
             transform: rotate(30deg);
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Email Link */
+        .email-link {
+            color: white;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .email-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Dropdown Menu - Fixed for dark mode */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-button {
+            color: white;
+            background: none;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            min-width: 200px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            top: 100%;
+            left: 0;
+            background-color: white;
+        }
+
+        [data-theme="dark"] .dropdown-content {
+            background-color: #2d2d2d;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+        }
+
+        .dropdown-content a {
+            color: var(--dark-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: var(--transition);
+            font-size: 0.9rem;
+            background-color: white;
+        }
+
+        [data-theme="dark"] .dropdown-content a {
+            color: #e9ecef;
+            background-color: #2d2d2d;
+        }
+
+        .dropdown-content a:hover {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        [data-theme="dark"] .dropdown-content a:hover {
+            background-color: rgba(72, 149, 239, 0.2);
+            color: var(--primary-color);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Download Apps Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: var(--light-color);
+            margin: 10% auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            animation: modalopen 0.3s;
+        }
+
+        @keyframes modalopen {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .close-button {
+            color: var(--gray-color);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-button:hover {
+            color: var(--dark-color);
+        }
+
+        .modal-title {
+            margin-bottom: 20px;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .download-options {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .download-option {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background-color: rgba(67, 97, 238, 0.1);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--dark-color);
+        }
+
+        .download-option:hover {
+            background-color: rgba(67, 97, 238, 0.2);
+            transform: translateX(5px);
+        }
+
+        .download-option i {
+            margin-right: 15px;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+        }
+
+        .download-option span {
+            font-weight: 500;
+        }
+
+        /* Ad Section */
+        .ad-section {
+            background-color: rgba(0, 0, 0, 0.03);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+            border: 1px dashed rgba(0, 0, 0, 0.1);
+            display: none; /* Hidden by default */
+        }
+
+        .ad-section.active {
+            display: block;
+        }
+
+        .ad-container {
+            width: 100%;
+            max-width: 728px;
+            margin: 0 auto;
+            min-height: 90px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+        }
+
+        .ad-placeholder {
+            color: var(--gray-color);
+            font-style: italic;
+            text-align: center;
+        }
+
+        .ad-label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Responsive ad sizes */
+        @media (min-width: 1200px) {
+            .ad-container { max-width: 728px; }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1199px) {
+            .ad-container { max-width: 468px; }
+        }
+        
+        @media (max-width: 767px) {
+            .ad-container { max-width: 300px; }
         }
 
         /* Main Content Styles */
@@ -339,12 +604,100 @@
             background-color: var(--secondary-color);
         }
 
+        /* Feedback Section Styles */
+        .feedback-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 3rem 0;
+            margin: 3rem 0 0;
+        }
+        
+        .feedback-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .feedback-title {
+            text-align: center;
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+        }
+        
+        .feedback-form {
+            background-color: white;
+            padding: 2rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+        }
+        
+        textarea.form-control {
+            min-height: 150px;
+            resize: vertical;
+        }
+        
+        .submit-button {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: var(--border-radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            display: inline-block;
+        }
+        
+        .submit-button:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+        
+        [data-theme="dark"] .feedback-section {
+            background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
+        }
+        
+        [data-theme="dark"] .feedback-form {
+            background-color: rgb(30, 30, 30);
+            border: 1px solid #444;
+        }
+        
+        [data-theme="dark"] .form-control {
+            background-color: #333;
+            border-color: #555;
+            color: #eee;
+        }
+
         /* Footer Styles */
         footer {
             background-color: var(--footer-bg);
             color: var(--footer-text);
             padding: 3rem 0 1rem;
-            margin-top: 3rem;
+            margin-top: 0;
         }
 
         .footer-content {
@@ -416,6 +769,11 @@
             100% { background-color: transparent; }
         }
 
+        /* Smooth scrolling for anchor links */
+        html {
+            scroll-behavior: smooth;
+        }
+
         /* Responsive Styles */
         @media (max-width: 768px) {
             .header-top {
@@ -425,6 +783,8 @@
             
             .nav-links {
                 gap: 15px;
+                flex-wrap: wrap;
+                justify-content: center;
             }
             
             .header-content h2 {
@@ -435,8 +795,21 @@
                 font-size: 1.1rem;
             }
             
+            .header-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
             .tools-grid {
                 grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            }
+
+            .dropdown-content {
+                left: -50px;
+            }
+            
+            .feedback-form {
+                padding: 1.5rem;
             }
         }
 
@@ -457,11 +830,20 @@
             .tools-grid {
                 grid-template-columns: 1fr;
             }
+
+            .contact-info {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .feedback-form {
+                padding: 1rem;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- New Header Section -->
+    <!-- Header Section -->
     <header class="header">
         <div class="container">
             <div class="header-top">
@@ -473,12 +855,30 @@
                 <nav class="nav-links">
                     <a href="#">Home</a>
                     <a href="#home">Tools</a>
+                    
+                    <!-- Dropdown Menu -->
+                    <div class="dropdown">
+                        <button class="dropdown-button">Categories <i class="fas fa-chevron-down"></i></button>
+                        <div class="dropdown-content">
+                            <a href="#image-tools">Image Tools</a>
+                            <a href="#file-tools">File Tools</a>
+                            <a href="#seo-tools">SEO & Web Tools</a>
+                            <a href="#math-tools">Math & Utility Tools</a>
+                            <a href="#text-tools">Text Tools</a>
+                            <a href="#developer-tools">Developer Tools</a>
+                            <a href="#color-tools">Color Tools</a>
+                        </div>
+                    </div>
+                    
+                    <a href="#feedback">Feedback</a>
                     <a href="#contact">Contact</a>
                 </nav>
                 
                 <div class="contact-info">
-                    <i class="fas fa-envelope"></i>
-                    <span>wander.tools.site@gmail.com</span>
+                    <a href="mailto:wander.tools.site@gmail.com" class="email-link">
+                        <i class="fas fa-envelope"></i>
+                        <span>wander.tools.site@gmail.com</span>
+                    </a>
                     <button class="theme-toggle" id="themeToggle">
                         <i class="fas fa-moon" id="themeIcon"></i>
                     </button>
@@ -488,7 +888,11 @@
             <div class="header-content">
                 <h2>Your Daily Tools, All in One Place</h2>
                 <p>Convert, calculate, compress, and simplify your everyday tasks - fast and free.</p>
-                <a href="#home" class="cta-button">Explore Tools</a>
+                
+                <div class="header-buttons">
+                    <a href="#home" class="cta-button">Explore Tools</a>
+                    <a href="#" class="download-button" id="downloadButton">Download Apps</a>
+                </div>
                 
                 <div class="header-search-container">
                     <input type="text" class="header-search-bar" placeholder="Search a tool..." id="headerSearchInput">
@@ -498,6 +902,36 @@
             </div>
         </div>
     </header>
+
+    <!-- Download Apps Modal -->
+    <div id="downloadModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModal">&times;</span>
+            <h3 class="modal-title"><i class="fas fa-download"></i> Download Our Apps</h3>
+            <div class="download-options">
+                <a href="wander-tools.apk" class="download-option" download>
+                    <i class="fab fa-android"></i>
+                    <span>Download Android App</span>
+                </a>
+                <a href="path/to/ios-app.ipa" class="download-option" download>
+                    <i class="fab fa-apple"></i>
+                    <span>Download iOS App</span>
+                </a>
+                <a href="path/to/android-pad-app.apk" class="download-option" download>
+                    <i class="fas fa-tablet-alt"></i>
+                    <span>Download Android Pad App</span>
+                </a>
+                <a href="path/to/ipad-app.ipa" class="download-option" download>
+                    <i class="fas fa-tablet-alt"></i>
+                    <span>Download iPad App</span>
+                </a>
+                <a href="path/to/windows-app.exe" class="download-option" download>
+                    <i class="fab fa-windows"></i>
+                    <span>Download Windows Application</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     <main class="container">
         <section id="home">
@@ -718,7 +1152,31 @@
         </section>
     </main>
 
-    <footer>
+    <!-- New Feedback Section -->
+    <section class="feedback-section" id="feedback">
+        <div class="feedback-container">
+            <h2 class="feedback-title">Share Your Feedback</h2>
+            <div class="feedback-form">
+                <form id="feedbackForm">
+                    <div class="form-group">
+                        <label for="name">Your Name (Optional)</label>
+                        <input type="text" id="name" class="form-control" placeholder="Enter your name">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Your Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Your Feedback</label>
+                        <textarea id="message" class="form-control" placeholder="Tell us what you think about our tools or suggest improvements..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Send Your Feedback</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <footer id="contact">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
@@ -728,6 +1186,7 @@
                         <a href="https://www.facebook.com/shahadot.wp"><i class="fab fa-facebook-f"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
                         <a href="#"><i class="fab fa-github"></i></a>
                     </div>
                 </div>
@@ -738,25 +1197,24 @@
                         <li><a href="#image-tools">Image Tools</a></li>
                         <li><a href="#file-tools">File Tools</a></li>
                         <li><a href="#seo-tools">SEO Tools</a></li>
-                    </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Categories</h3>
-                    <ul>
-                        <li><a href="#math-tools">Math Tools</a></li>
                         <li><a href="#text-tools">Text Tools</a></li>
-                        <li><a href="#developer-tools">Developer Tools</a></li>
-                        <li><a href="#color-tools">Color Tools</a></li>
+                        <li><a href="#feedback">Feedback</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
                     <h3>Support</h3>
                     <ul>
-                        <li><a href="#contact">Contact Us</a></li>
-                        <li><a href="#faq">FAQ</a></li>
-                        <li><a href="#privacy">Privacy Policy</a></li>
-                        <li><a href="#terms">Terms of Service</a></li>
+                        <li><a href="#">Help Center</a></li>
+                        <li><a href="#">FAQ</a></li>
+                        <li><a href="#feedback">Contact Us</a></li>
+                        <li><a href="#">Privacy Policy</a></li>
+                        <li><a href="#">Terms of Service</a></li>
                     </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <p>Email: wander.tools.site@gmail.com</p>
+                    <p>Follow us on social media for updates and new tools.</p>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -769,177 +1227,192 @@
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
-        
-        // Check for saved theme preference or use preferred color scheme
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-        
-        if (savedTheme === 'dark' || (!savedTheme && systemPrefersDark)) {
-            document.documentElement.setAttribute('data-theme', 'dark');
+        const body = document.body;
+
+        // Check for saved theme preference or respect OS preference
+        const savedTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        if (savedTheme === 'dark') {
+            body.setAttribute('data-theme', 'dark');
             themeIcon.classList.replace('fa-moon', 'fa-sun');
         }
-        
-        // Toggle theme on button click
+
         themeToggle.addEventListener('click', () => {
-            const currentTheme = document.documentElement.getAttribute('data-theme');
-            
-            if (currentTheme === 'dark') {
-                document.documentElement.removeAttribute('data-theme');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.removeAttribute('data-theme');
                 themeIcon.classList.replace('fa-sun', 'fa-moon');
                 localStorage.setItem('theme', 'light');
             } else {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                body.setAttribute('data-theme', 'dark');
                 themeIcon.classList.replace('fa-moon', 'fa-sun');
                 localStorage.setItem('theme', 'dark');
             }
         });
-        
+
         // Search Functionality
         const headerSearchInput = document.getElementById('headerSearchInput');
         const searchResults = document.getElementById('searchResults');
         
-        // All tools data for search
+        // Sample tool data for search
         const tools = [
-            { name: 'Image Resizer', category: 'Image Tools', link: '#image-tools', icon: 'fa-expand' },
-            { name: 'Image Format Converter', category: 'Image Tools', link: '#image-tools', icon: 'fa-exchange-alt' },
-            { name: 'Background Remover', category: 'Image Tools', link: '#image-tools', icon: 'fa-cut' },
-            { name: 'Image Compressor', category: 'Image Tools', link: '#image-tools', icon: 'fa-compress-alt' },
-            { name: 'PDF to Word', category: 'File Tools', link: '#file-tools', icon: 'fa-file-pdf' },
-            { name: 'Word to PDF', category: 'File Tools', link: '#file-tools', icon: 'fa-file-word' },
-            { name: 'Image to PDF', category: 'File Tools', link: '#file-tools', icon: 'fa-file-image' },
-            { name: 'ZIP Extractor', category: 'File Tools', link: '#file-tools', icon: 'fa-file-archive' },
-            { name: 'Meta Tag Generator', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-tags' },
-            { name: 'Domain WHOIS Lookup', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-search' },
-            { name: 'URL Shortener', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-link' },
-            { name: 'QR Code Generator', category: 'SEO & Web Tools', link: '#seo-tools', icon: 'fa-qrcode' },
-            { name: 'Calculator', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-calculator' },
-            { name: 'Unit Converter', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-ruler-combined' },
-            { name: 'Currency Converter', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-money-bill-wave' },
-            { name: 'Age Calculator', category: 'Math & Utility Tools', link: '#math-tools', icon: 'fa-birthday-cake' },
-            { name: 'Word Counter', category: 'Text Tools', link: '#text-tools', icon: 'fa-sort-numeric-up' },
-            { name: 'Case Converter', category: 'Text Tools', link: '#text-tools', icon: 'fa-text-height' },
-            { name: 'Lorem Ipsum Generator', category: 'Text Tools', link: '#text-tools', icon: 'fa-paragraph' },
-            { name: 'Text Encryption/Decryption', category: 'Text Tools', link: '#text-tools', icon: 'fa-lock' },
-            { name: 'JSON Formatter/Validator', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-code' },
-            { name: 'Base64 Encoder/Decoder', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-key' },
-            { name: 'Regex Tester', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-regex' },
-            { name: 'UUID Generator', category: 'Developer Tools', link: '#developer-tools', icon: 'fa-fingerprint' },
-            { name: 'Color Picker', category: 'Color Tools', link: '#color-tools', icon: 'fa-eye-dropper' },
-            { name: 'Color Code Generator', category: 'Color Tools', link: '#color-tools', icon: 'fa-barcode' },
-            { name: 'Color Combinator', category: 'Color Tools', link: '#color-tools', icon: 'fa-object-group' },
-            { name: 'Color Palettes Generator', category: 'Color Tools', link: '#color-tools', icon: 'fa-swatchbook' }
+            { name: "Image Resizer", category: "Image Tools", url: "image-resizer.html" },
+            { name: "Image Format Converter", category: "Image Tools", url: "image-converter.html" },
+            { name: "Background Remover", category: "Image Tools", url: "background-remover.html" },
+            { name: "Image Compressor", category: "Image Tools", url: "image-compressor.html" },
+            { name: "PDF to Word", category: "File Tools", url: "pdf-to-word.html" },
+            { name: "Word to PDF", category: "File Tools", url: "word-to-pdf.html" },
+            { name: "Image to PDF", category: "File Tools", url: "image-to-pdf.html" },
+            { name: "ZIP Extractor", category: "File Tools", url: "zip-extractor.html" },
+            { name: "Meta Tag Generator", category: "SEO & Web Tools", url: "meta-tag-generator.html" },
+            { name: "Domain WHOIS Lookup", category: "SEO & Web Tools", url: "domain-whois-lookup.html" },
+            { name: "URL Shortener", category: "SEO & Web Tools", url: "url-shortener.html" },
+            { name: "QR Code Generator", category: "SEO & Web Tools", url: "qr-code-generator.html" },
+            { name: "Calculator", category: "Math & Utility Tools", url: "calculator.html" },
+            { name: "Unit Converter", category: "Math & Utility Tools", url: "unit-converter.html" },
+            { name: "Currency Converter", category: "Math & Utility Tools", url: "currency-converter.html" },
+            { name: "Age Calculator", category: "Math & Utility Tools", url: "age-calculator.html" },
+            { name: "Word Counter", category: "Text Tools", url: "word-counter.html" },
+            { name: "Case Converter", category: "Text Tools", url: "case-converter.html" },
+            { name: "Lorem Ipsum Generator", category: "Text Tools", url: "lorem-ipsum.html" },
+            { name: "Text Encryption", category: "Text Tools", url: "text-encryption.html" },
+            { name: "JSON Formatter", category: "Developer Tools", url: "json-formatter.html" },
+            { name: "Base64 Converter", category: "Developer Tools", url: "base64-converter.html" },
+            { name: "Regex Tester", category: "Developer Tools", url: "regex-tester.html" },
+            { name: "UUID Generator", category: "Developer Tools", url: "uuid-generator.html" },
+            { name: "Color Picker", category: "Color Tools", url: "color-picker.html" },
+            { name: "Color Code Generator", category: "Color Tools", url: "color-code-generator.html" },
+            { name: "Color Combinator", category: "Color Tools", url: "color-combinator.html" },
+            { name: "Color Palettes", category: "Color Tools", url: "color-palettes.html" }
         ];
-        
-        // Header search functionality
+
         headerSearchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
+            const query = this.value.toLowerCase();
+            searchResults.innerHTML = '';
             
-            if (searchTerm.length === 0) {
+            if (query.length < 2) {
                 searchResults.style.display = 'none';
                 return;
             }
             
             const filteredTools = tools.filter(tool => 
-                tool.name.toLowerCase().includes(searchTerm) || 
-                tool.category.toLowerCase().includes(searchTerm)
-            ).slice(0, 5);
+                tool.name.toLowerCase().includes(query) || 
+                tool.category.toLowerCase().includes(query)
+            );
             
-            displaySearchResults(filteredTools);
-        });
-        
-        // Handle Enter key press in search
-        headerSearchInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                const searchTerm = this.value.toLowerCase().trim();
-                
-                if (searchTerm.length === 0) return;
-                
-                // Find the first matching tool
-                const matchedTool = tools.find(tool => 
-                    tool.name.toLowerCase().includes(searchTerm) || 
-                    tool.category.toLowerCase().includes(searchTerm)
-                );
-                
-                if (matchedTool) {
-                    // Navigate to the tool's section
-                    navigateToSection(matchedTool.link);
-                }
-            }
-        });
-        
-        // Display search results
-        function displaySearchResults(results) {
-            if (results.length === 0) {
-                searchResults.innerHTML = '<div class="search-result-item">No tools found matching your search</div>';
+            if (filteredTools.length > 0) {
                 searchResults.style.display = 'block';
-                return;
-            }
-            
-            searchResults.innerHTML = '';
-            
-            results.forEach(tool => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'search-result-item';
-                resultItem.innerHTML = `
-                    <strong><i class="fas ${tool.icon}"></i> ${tool.name}</strong>
-                    <span>${tool.category}</span>
-                `;
-                
-                resultItem.addEventListener('click', () => {
-                    navigateToSection(tool.link);
+                filteredTools.forEach(tool => {
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.innerHTML = `
+                        <strong>${tool.name}</strong>
+                        <span>${tool.category}</span>
+                    `;
+                    resultItem.addEventListener('click', () => {
+                        window.location.href = tool.url;
+                    });
+                    searchResults.appendChild(resultItem);
                 });
-                
-                searchResults.appendChild(resultItem);
-            });
-            
-            searchResults.style.display = 'block';
-        }
-        
-        // Navigate to section with highlight effect
-        function navigateToSection(sectionId) {
-            const targetElement = document.querySelector(sectionId);
-            
-            if (targetElement) {
-                // Add highlight class for visual feedback
-                targetElement.classList.add('highlight');
-                
-                // Scroll to the section
-                targetElement.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
-                });
-                
-                // Update URL
-                history.pushState(null, null, sectionId);
-                
-                // Remove highlight after animation completes
-                setTimeout(() => {
-                    targetElement.classList.remove('highlight');
-                }, 2000);
-                
-                // Hide search results and clear input
+            } else {
                 searchResults.style.display = 'none';
-                headerSearchInput.value = '';
             }
-        }
-        
+        });
+
         // Close search results when clicking outside
         document.addEventListener('click', function(e) {
             if (!headerSearchInput.contains(e.target) && !searchResults.contains(e.target)) {
                 searchResults.style.display = 'none';
             }
         });
-        
-        // Smooth scrolling for anchor links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function(e) {
-                if (this.getAttribute('href') === '#') return;
-                
-                e.preventDefault();
-                const targetId = this.getAttribute('href');
-                navigateToSection(targetId);
+
+        // Highlight section when navigating from search
+        function highlightSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.classList.add('highlight');
+                setTimeout(() => {
+                    section.classList.remove('highlight');
+                }, 2000);
+            }
+        }
+
+        // Download Apps Modal Functionality
+        const downloadButton = document.getElementById('downloadButton');
+        const downloadModal = document.getElementById('downloadModal');
+        const closeModal = document.getElementById('closeModal');
+
+        downloadButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            downloadModal.style.display = 'block';
+        });
+
+        closeModal.addEventListener('click', function() {
+            downloadModal.style.display = 'none';
+        });
+
+        window.addEventListener('click', function(e) {
+            if (e.target === downloadModal) {
+                downloadModal.style.display = 'none';
+            }
+        });
+
+        // Ad visibility based on scroll
+        window.addEventListener('scroll', function() {
+            const adSections = document.querySelectorAll('.ad-section');
+            adSections.forEach(section => {
+                const rect = section.getBoundingClientRect();
+                if (rect.top < window.innerHeight && rect.bottom > 0) {
+                    section.classList.add('active');
+                }
             });
         });
+
+        // Fixed Feedback Form Functionality
+        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            
+            const name = document.getElementById('name').value || 'Anonymous';
+            const email = document.getElementById('email').value;
+            const message = document.getElementById('message').value;
+            
+            // Using template literals with proper newline characters
+            const subject = `Feedback from ${name} - Wander Tools`;
+            const body = `Name: ${name}\nEmail: ${email}\n\nFeedback:\n${message}`;
+            
+            // Open default mail client with pre-filled email
+            window.location.href = `mailto:wander.tools.site@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Reset form
+            document.getElementById('feedbackForm').reset();
+            
+            // Show confirmation message
+            alert('Thank you for your feedback! Your email client will open to send your message.');
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                
+                const targetId = this.getAttribute('href');
+                if (targetId === '#') return;
+                
+                const targetElement = document.querySelector(targetId);
+                if (targetElement) {
+                    // Calculate the offset based on header height
+                    const headerOffset = 100;
+                    const elementPosition = targetElement.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    
+                    window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Initial check for ad visibility
+        window.dispatchEvent(new Event('scroll'));
     </script>
 </body>
 </html>
