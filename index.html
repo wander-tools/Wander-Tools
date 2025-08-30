@@ -844,7 +844,6 @@
 </head>
 <body>
     <!-- Header Section -->
-    <section id=header>
     <header class="header">
         <div class="container">
             <div class="header-top">
@@ -854,7 +853,7 @@
                 </div>
                 
                 <nav class="nav-links">
-                    <a href="#header">Home</a>
+                    <a href="#">Home</a>
                     <a href="#home">Tools</a>
                     
                     <!-- Dropdown Menu -->
@@ -903,7 +902,6 @@
             </div>
         </div>
     </header>
-    </section>
 
     <!-- Download Apps Modal -->
     <div id="downloadModal" class="modal">
@@ -1195,7 +1193,7 @@
                 <div class="footer-column">
                     <h3>Quick Links</h3>
                     <ul>
-                        <li><a href="#header">Home</a></li>
+                        <li><a href="#">Home</a></li>
                         <li><a href="#image-tools">Image Tools</a></li>
                         <li><a href="#file-tools">File Tools</a></li>
                         <li><a href="#seo-tools">SEO Tools</a></li>
@@ -1368,7 +1366,7 @@
             });
         });
 
-        // Fixed Feedback Form Functionality
+        // Fixed Feedback Form Functionality - All devices will automatically open email client
         document.getElementById('feedbackForm').addEventListener('submit', function(event) {
             event.preventDefault();
             
@@ -1380,14 +1378,64 @@
             const subject = `Feedback from ${name} - Wander Tools`;
             const body = `Name: ${name}\nEmail: ${email}\n\nFeedback:\n${message}`;
             
-            // Open default mail client with pre-filled email
-            window.location.href = `mailto:wander.tools.site@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            // Create mailto link
+            const mailtoLink = `mailto:wander.tools.site@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+            
+            // Try to open email client using multiple methods for maximum compatibility
+            let emailOpened = false;
+            
+            // Method 1: window.open (works on most devices)
+            try {
+                const newWindow = window.open(mailtoLink, '_blank');
+                if (newWindow && !newWindow.closed) {
+                    emailOpened = true;
+                    // Close the window after a short delay
+                    setTimeout(() => {
+                        if (!newWindow.closed) {
+                            newWindow.close();
+                        }
+                    }, 500);
+                }
+            } catch (e) {
+                console.error('Window.open method failed:', e);
+            }
+            
+            // Method 2: window.location.href (fallback)
+            if (!emailOpened) {
+                try {
+                    window.location.href = mailtoLink;
+                    emailOpened = true;
+                } catch (e) {
+                    console.error('Location.href method failed:', e);
+                }
+            }
+            
+            // Method 3: Create a hidden link and click it
+            if (!emailOpened) {
+                try {
+                    const link = document.createElement('a');
+                    link.href = mailtoLink;
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    emailOpened = true;
+                } catch (e) {
+                    console.error('Hidden link method failed:', e);
+                }
+            }
+            
+            // Show a message based on success
+            setTimeout(() => {
+                if (emailOpened) {
+                    alert('Thank you for your feedback! Your email client is opening to send your message.');
+                } else {
+                    alert('Thank you for your feedback! Please send your message to wander.tools.site@gmail.com');
+                }
+            }, 300);
             
             // Reset form
             document.getElementById('feedbackForm').reset();
-            
-            // Show confirmation message
-            alert('Thank you for your feedback! Your email client will open to send your message.');
         });
 
         // Smooth scrolling for navigation links
