@@ -1,0 +1,31 @@
+{
+  "name": "advanced-word-counter",
+  "version": "1.0.0",
+  "description": "A comprehensive word counting tool with advanced text analysis features",
+  "main": "index.html",
+  "scripts": {
+    "start": "python3 -m http.server 8000",
+    "serve": "python3 -m http.server 8000"
+  },
+  "keywords": [
+    "word-counter",
+    "text-analysis",
+    "writing-tools",
+    "statistics",
+    "javascript",
+    "html",
+    "css"
+  ],
+  "author": "Advanced Word Counter Tool",
+  "license": "MIT",
+  "devDependencies": {},
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-username/advanced-word-counter.git"
+  },
+  "bugs": {
+    "url": "https://github.com/your-username/advanced-word-counter/issues"
+  },
+  "homepage": "https://github.com/your-username/advanced-word-counter#readme"
+}
