@@ -1,0 +1,9 @@
+This is a sample text for testing the advanced word counter tool. 
+
+The word counter should be able to analyze this text and provide comprehensive statistics including word count, character count, sentence count, and paragraph count.
+
+It should also identify the most common words, calculate reading time, and provide advanced metrics like average words per sentence and average characters per word.
+
+This is the second paragraph to test paragraph counting functionality. The tool should be able to distinguish between different paragraphs and provide accurate counts.
+
+Finally, this is the third paragraph with some additional words to make the analysis more interesting and comprehensive.
