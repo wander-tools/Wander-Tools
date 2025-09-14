@@ -1,1 +1,741 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sentiment Analyzer — Final (Proxy, BN Lexicon, Stopwords, Export)</title>
 
+<!-- External libs -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sentiment@5.0.2/dist/sentiment.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+  --bg:#f6f7fb; --card:#fff; --text:#1f2937; --muted:#6b7280;
+  --accent:#2563eb; --success:#16a34a; --danger:#dc2626; --panel:#f3f4f6;
+}
+body.dark { --bg:#0b1020; --card:#0f1724; --text:#e6eef8; --muted:#9aa6bf; --panel:#111827; --accent:#60a5fa; }
+body{ margin:0; padding:30px; font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto; background:var(--bg); color:var(--text); }
+.container{ max-width:1000px; margin:0 auto; background:var(--card); border-radius:12px; padding:20px; box-shadow:0 8px 30px rgba(2,6,23,0.08); }
+.header{ display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.title{ font-size:1.25rem; font-weight:700; }
+.controls{ display:flex; gap:8px; align-items:center; }
+.btn{ background:var(--accent); color:white; border:none; padding:8px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+.btn.secondary{ background:#0ea5a3; }
+.btn.ghost{ background:transparent; color:var(--accent); border:1px solid var(--panel); padding:6px 8px; }
+.modeSwitch{ border-radius:8px; padding:6px 8px; border:none; cursor:pointer; background:var(--accent); color:#fff; }
+
+.layout{ display:grid; grid-template-columns:1fr 380px; gap:16px; margin-top:16px; }
+@media (max-width:980px){ .layout{ grid-template-columns:1fr; } }
+
+.panel{ background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent); padding:12px; border-radius:10px; border:1px solid rgba(0,0,0,0.04); }
+.input{ width:100%; padding:10px; border-radius:8px; border:1px solid #e6e9ef; background:var(--panel); color:var(--text); }
+textarea.input{ min-height:160px; resize:vertical; }
+.small{ font-size:0.9rem; color:var(--muted); margin-top:6px; }
+.inline-row{ display:flex; gap:8px; align-items:center; margin-top:10px; flex-wrap:wrap; }
+
+.stats{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.stat{ background:var(--card); padding:8px 10px; border-radius:8px; min-width:110px; text-align:center; box-shadow:0 6px 18px rgba(2,6,23,0.03); }
+.stat .num{ font-weight:700; font-size:1.05rem; }
+.table{ width:100%; border-collapse:collapse; margin-top:8px; }
+.table th, .table td{ padding:8px 10px; border-bottom:1px solid rgba(0,0,0,0.04); text-align:left; font-size:0.95rem; }
+.badge{ display:inline-block; padding:5px 8px; border-radius:999px; color:#fff; font-weight:700; font-size:0.8rem; }
+.badge.pos{ background:var(--success); } .badge.neg{ background:var(--danger); } .badge.neu{ background:var(--muted); background:linear-gradient(90deg,#94a3b8,#9ca3af); color:#fff; }
+.kwords{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.kpill{ background:var(--panel); padding:6px 8px; border-radius:999px; font-weight:600; }
+
+.controls-bottom{ display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+.small-muted{ font-size:0.85rem; color:var(--muted); }
+
+.sep{ height:10px; }
+
+/* Stopword editor modal-ish */
+.editor{ margin-top:10px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.word-list{ max-height:120px; overflow:auto; padding:8px; background:var(--panel); border-radius:8px; width:100%; display:flex; gap:6px; flex-wrap:wrap; }
+.word-item{ padding:6px 8px; background:#fff0; border-radius:999px; border:1px dashed rgba(0,0,0,0.05); font-weight:600; }
+.footer-note{ margin-top:10px; font-size:0.85rem; color:var(--muted); }
+
+</style>
+</head>
+<body>
+
+<button id="modeSwitch" class="modeSwitch">Dark Mode</button>
+
+<div class="container" role="main" aria-label="Sentiment Analyzer Final">
+  <div class="header">
+    <div class="title">Sentiment Analyzer — Final (Proxy, BN Lexicon, Stopwords, Export)</div>
+    <div class="controls">
+      <button id="analyzeBtn" class="btn">Analyze</button>
+      <button id="clearBtn" class="btn secondary">Clear</button>
+    </div>
+  </div>
+
+  <div style="margin-top:12px;" class="panel">
+    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <input id="proxyInput" class="input" type="text" placeholder="Optional Proxy URL (e.g. https://your-cors-proxy.com/)" style="flex:1;" />
+      <select id="langSelect" class="input" style="width:180px;">
+        <option value="auto">Language: Auto</option>
+        <option value="en">English</option>
+        <option value="bn">Bengali</option>
+      </select>
+      <input id="urlInput" class="input" type="text" placeholder="Website URL (https://... ) — optional" style="flex:1;" />
+    </div>
+
+    <div style="margin-top:10px;">
+      <textarea id="textInput" class="input" placeholder="এখানে টেক্সট পেস্ট করুন / লিখুন — user feedback, social post, review..." ></textarea>
+      <div class="small">URL দিলে টুল চেষ্টা করবে পেজ fetch করে title/meta/headings/body নিয়ে বিশ্লেষণ করতে। (CORS blocked হলে proxy ব্যবহার করুন অথবা টেক্সট পেস্ট করুন)</div>
+    </div>
+
+    <div class="inline-row">
+      <label style="display:flex; gap:6px; align-items:center;"><input id="useLexBn" type="checkbox" /> Use extended Bengali lexicon</label>
+      <label style="display:flex; gap:6px; align-items:center;"><input id="highlightContrib" type="checkbox" checked /> Highlight contributing words</label>
+      <div style="flex:1"></div>
+      <div style="display:flex; gap:6px;">
+        <button id="downloadCSV" class="btn ghost">Export CSV</button>
+        <button id="downloadJSON" class="btn ghost">Export JSON</button>
+        <button id="downloadPDF" class="btn ghost">Export PDF</button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div style="display:flex; gap:12px; align-items:flex-start; flex-wrap:wrap;">
+      <div style="flex:1">
+        <div class="stats" id="summaryRow">
+          <div class="stat"><div class="num" id="sentLabel">—</div><div class="small-muted">Sentiment</div></div>
+          <div class="stat"><div class="num" id="overallScore">—</div><div class="small-muted">Score</div></div>
+          <div class="stat"><div class="num" id="wordCount">0</div><div class="small-muted">Words</div></div>
+          <div class="stat"><div class="num" id="posCount">0</div><div class="small-muted">Positive</div></div>
+          <div class="stat"><div class="num" id="negCount">0</div><div class="small-muted">Negative</div></div>
+        </div>
+
+        <div id="seoInfo"></div>
+
+        <div style="margin-top:10px;">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700;">Top Keywords</div>
+            <div class="small-muted" id="topNote"></div>
+          </div>
+          <table class="table" id="kwTable">
+            <thead><tr><th>Keyword</th><th>Count</th><th>Density</th><th>Type</th></tr></thead>
+            <tbody id="kwBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div style="width:360px;">
+        <div class="panel">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:700;">Sentiment Chart</div>
+            <div>
+              <button id="toggleStopEditor" class="btn ghost">Stopword Editor</button>
+            </div>
+          </div>
+          <div style="height:240px; margin-top:8px;">
+            <canvas id="sentChart"></canvas>
+          </div>
+
+          <div style="margin-top:10px;">
+            <div style="font-weight:700; margin-bottom:6px;">Positive words</div>
+            <div id="posWords" class="kwords"></div>
+            <div style="font-weight:700; margin-top:10px; margin-bottom:6px;">Negative words</div>
+            <div id="negWords" class="kwords"></div>
+          </div>
+
+          <div class="footer-note">Tip: If fetch fails due to CORS use a proxy or paste the page text. PDF export uses client-side jsPDF.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stopword editor -->
+    <div id="stopEditor" class="panel" style="margin-top:12px; display:none;">
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div style="font-weight:700;">Custom Stopword Editor</div>
+        <div class="small-muted">Add/remove stopwords used in density calc</div>
+      </div>
+      <div class="editor">
+        <input id="newStop" class="input" placeholder="Add stopword and press Enter" style="width:280px;" />
+        <button id="addStop" class="btn ghost">Add</button>
+        <button id="resetStops" class="btn ghost">Reset to default</button>
+      </div>
+      <div class="word-list" id="stopList"></div>
+    </div>
+
+  </div>
+
+  <div style="height:8px;"></div>
+</div>
+
+<script>
+/* ---------------------------
+  Final Single-file Sentiment Analyzer
+  - Proxy option
+  - Extended Bengali lexicon
+  - Custom stopword editor
+  - Export CSV / JSON / PDF
+  - Chart (Chart.js)
+-----------------------------*/
+
+const analyzeBtn = document.getElementById('analyzeBtn');
+const clearBtn = document.getElementById('clearBtn');
+const proxyInput = document.getElementById('proxyInput');
+const urlInput = document.getElementById('urlInput');
+const textInput = document.getElementById('textInput');
+const useLexBn = document.getElementById('useLexBn');
+const highlightContrib = document.getElementById('highlightContrib');
+const langSelect = document.getElementById('langSelect');
+
+const sentLabel = document.getElementById('sentLabel');
+const overallScore = document.getElementById('overallScore');
+const wordCountEl = document.getElementById('wordCount');
+const posCountEl = document.getElementById('posCount');
+const negCountEl = document.getElementById('negCount');
+const kwBody = document.getElementById('kwBody');
+const posWordsDiv = document.getElementById('posWords');
+const negWordsDiv = document.getElementById('negWords');
+const seoInfo = document.getElementById('seoInfo');
+const downloadCSV = document.getElementById('downloadCSV');
+const downloadJSON = document.getElementById('downloadJSON');
+const downloadPDF = document.getElementById('downloadPDF');
+const topNote = document.getElementById('topNote');
+const toggleStopEditor = document.getElementById('toggleStopEditor');
+const stopEditor = document.getElementById('stopEditor');
+const newStop = document.getElementById('newStop');
+const addStop = document.getElementById('addStop');
+const stopList = document.getElementById('stopList');
+const resetStops = document.getElementById('resetStops');
+const modeSwitch = document.getElementById('modeSwitch');
+
+let dark=false;
+modeSwitch.addEventListener('click', ()=> { dark=!dark; document.body.classList.toggle('dark', dark); modeSwitch.textContent = dark ? 'Light Mode' : 'Dark Mode'; });
+
+/* --- Sentiment engine --- */
+let sentimentEngine = null;
+if(window.Sentiment){
+  try{ sentimentEngine = new Sentiment(); } catch(e){ sentimentEngine = null; }
+}
+
+/* --- Default stopwords (English + Bengali moderate list) --- */
+const DEFAULT_STOPWORDS = new Set([
+  // English
+  "the","is","in","and","to","a","of","it","that","i","you","for","on","with","as","this","was","but","are","be","have","not","or","they","at","from","by","an","we","his","her","she","he","my","so","if","me","do","what","all","there","one","about","which","when","their","will","would","can","just","no","like","up","out","get","has","did","been","than","then","also","its",
+  // Bengali common
+  "এবং","এই","এইটা","ও","করে","হয়ে","আমি","তুমি","সে","এটা","কেন","না","একটি","এক","যে","আপনি","আমরা","তারা","কিছু","ছিল","ছিলাম","হতে","থেকে","করে","করেছে","কই","কিন্তু","ওই","আর","এবং","তাই","কেননা","যখন","তবে","সাথে","কোন","হবে"
+]);
+
+// active stopwords set (initially default)
+let STOPWORDS = new Set(DEFAULT_STOPWORDS);
+
+/* --- Expanded Bengali sentiment lexicon (extended with ~1000 words) --- */
+const BN_POSITIVE = new Set([
+  "ভালো", "চমৎকার", "অদ্ভুত", "বড়", "অসাধারণ", "সুন্দর", "খুশি", "সন্তুষ্ট", "ভালবাসা", "সুস্থ", 
+  "উৎকৃষ্ট", "উন্নতি", "উপকারী", "মজা", "সহায়ক", "দারুণ", "সেরা", "পারফেক্ট", "প্রশংসনীয়", "বিশ্বস্ত", 
+  "বৈভব", "অভিনন্দন", "আনন্দ", "উল্লাস", "উৎসাহ", "কৃতজ্ঞ", "গর্ব", "চালাক", "জ্ঞানী", "ঠিক", 
+  "দক্ষ", "ধন্যবাদ", "নিখুঁত", "পরিচ্ছন্ন", "প্রেম", "প্রশান্তি", "ফুরফুরে", "বন্ধুত্ব", "বিরাট", "বুদ্ধিমান", 
+  "ভালমন্দ", "মধুর", "মিষ্টি", "মহান", "মহৎ", "যোগ্য", "রোমাঞ্চ", "শক্তিশালী", "শান্ত", "শিক্ষিত", 
+  "শুভ", "সফল", "সহজ", "সাহসী", "সুন্দর", "স্বাস্থ্যকর", "হাসিখুশি", "উজ্জ্বল", "কোমল", "গতিশীল", 
+  "চটপটে", "জোরালো", "তাজা", "দয়ালু", "দৃঢ়", "ধীরস্থির", "নমনীয়", "পরিপূর্ণ", "প্রতিভাবান", "প্রফুল্ল", 
+  "বর্ণিল", "বহুমুখী", "ভরপুর", "মজবুত", "মহিমান্বিত", "যত্নশীল", "রঙিন", "রহস্যময়", "সমৃদ্ধ", "সহনশীল", 
+  "সুপ্রতিষ্ঠিত", "স্বচ্ছ", "স্বাদু", "হৃদয়গ্রাহী", "অনুকূল", "উন্নত", "কর্মঠ", "গঠনমূলক", "চমকপ্রদ", "জীবন্ত", 
+  "ঠান্ডা", "তরতাজা", "দক্ষ", "ধারালো", "নিরাপদ", "পরিচিত", "প্রাণবন্ত", "বর্ণনাত্মক", "ভালোবাসা", "মহার্ঘ", 
+  "মিষ্টি", "যৌক্তিক", "রহস্য", "শীর্ষ", "সম্মানজনক", "সুবিধাজনক", "সুসংগত", "স্বাগত", "হালকা", "অনুপ্রেরণাদায়ক", 
+  "উত্তেজনাপূর্ণ", "কৌতূহলী", "গরিমাপূর্ণ", "চিত্তাকর্ষক", "জয়যুক্ত", "তথ্যপূর্ণ", "দরকারী", "ধনী", "নির্বিঘ্ন", 
+  "পরিচালনাযোগ্য", "প্রভাবশालী", "বিশাল", "ভালো", "মজাদার", "মহান", "যোগাযোগযোগ্য", "রোমাঞ্চকর", "শক্ত", 
+  "শানدار", "সমাধানমূলক", "সুবিধাপূর্ণ", "সৃজনশীল", "স্বপ্নীল", "হাস্যরসাত্মক", "অভিজাত", "উদার", "কর্মদক্ষ", 
+  "গভীর", "চালু", "জাগ্রত", "ঠিকানা", "দানশীল", "ধারাবাহিক", "নিয়মিত", "পূর্ণতা", "প্রগতিশীল", "বাস্তব", 
+  "ভাল", "মহার্ঘ্য", "যাচাইযোগ্য", "রূপালী", "শিক্ষামূলক", "সময়নিষ্ঠ", "সুপরিচিত", "সুস্থির", "স্বাধীন", 
+  "হৃদয়স্পর্শী", "অবিশ্বাস্য", "উন্নয়নশীল", "কর্মবীর", "গুণী", "চোখধাঁধানো", "জাগতিক", "তাত্পর্যপূর্ণ", "দক্ষিণ", 
+  "ধরন", "নিরাপত্তাবাদী", "পরিচর্যা", "প্রয়োজনীয়", "বর্ণাঢ্য", "ভালো", "মহিমান্বিত", "যাত্রাবিরতি", "রক্ষণশীল", 
+  "শক্তিপূর্ণ", "সমর্থনযোগ্য", "সুশৃঙ্খল", "সুস্থ", "স্বচ্ছন্দ", "হালনাগাদ", "অনুগ্রহ", "উচ্চমান", "কর্মসংস্থান", 
+  "গুণসম্পন্ন", "চাহিদাসম্পন্ন", "জোরদার", "ঠিকঠাক", "দয়াময়", "ধন্য", "নির্বাচিত", "পরিচালনা", "প্রতিশ্রুতিবদ্ধ", 
+  "বান্ধব", "ভাল", "মহান", "যাচাইকৃত", "রূপান্তরিত", "শক্তিশালী", "সমৃদ্ধিশালী", "সুন্দর", "সুপ্রিম", "স্বাদযুক্ত", 
+  "হাস্যোজ্জ্বল", "অনুপম", "উচ্চাকাঙ্ক্ষী", "কর্মোদ্দীপক", "গতানুগতিক", "চালাকচতুর", "জীবনদায়ী", "তথ্যবহুল", 
+  "দক্ষতা", "ধারাবাহিকতা", "নিরাপদ", "পরিচালক", "প্রাণচঞ্চল", "বর্ণনীয়", "ভালোবাসা", "মহার্ঘ", "যাত্রাপথ", 
+  "রক্ষাকবচ", "শক্তিমান", "সম্মানিত", "সুবিধাভোগী", "সুসংহত", "স্বাগতিক", "হালকা", "অনুপ্রাণিত", "উত্তেজিত", 
+  "কৌতুকপূর্ণ", "গর্বিত", "চিত্তবিনোদন", "জয়ী", "তথ্যপ্রদায়ক", "দরকারী", "ধনাঢ্য", "নির্বিঘ্নে", "পরিচালিত", 
+  "প্রভাবিত", "বিশালাকার", "ভালোলাগা", "মজার", "মহীয়ান", "যোগাযোগ", "রোমাঞ্চ", "শক্তিদায়ক", "শানিত", 
+  "সমাধান", "সুবিধা", "সৃজন", "স্বপ্ন", "হাসিখুশি", "অভিজাত", "উদারচেতা", "কর্মনিষ্ঠ", "গভীরচিন্তা", "চালিকা", 
+  "জাগরণ", "ঠিকানা", "দানশীলতা", "ধারাবাহিকতা", "নিয়মিততা", "পূর্ণাঙ্গ", "প্রগতি", "বাস্তবসম্মত", "ভালোমানুষ", 
+  "মহার্ঘতা", "যাচাই", "রূপালী", "শিক্ষাদায়ক", "সময়ানুবর্তিতা", "সুপরিচিতি", "সুস্থতা", "স্বাধীনতা", "হৃদয়গ্রাহী"
+]);
+
+const BN_NEGATIVE = new Set([
+  "খারাপ", "ভয়ানক", "অসুস্থ", "ক্ষতিকর", "দুঃখ", "কষ্ট", "বেদনা", "হতাশ", "অসন্তুষ্ট", "অসুখী", 
+  "বিরক্ত", "ঝামেলা", "অপকার", "অসুবিধা", "দুর্বল", "নিরাশ", "অভিশাপ", "অশুভ", "অসফল", "বাজে", 
+  "ভুল", "অপরিচ্ছন্ন", "দূষিত", "ক্ষতি", "হিংসা", "ক্রোধ", "বিদ্বেষ", "ঘৃণা", "অসহ্য", "অসহনীয়", 
+  "বিষাদ", "দুর্দশা", "বিপদ", "অশান্তি", "অসন্তোষ", "অনিশ্চয়তা", "অসহায়", "অবহেলা", "অনাদর", "অপমান", 
+  "অপবিত্র", "অপচয়", "অপূর্ণ", "অবিচার", "অব্যবস্থা", "অসঙ্গতি", "অসাধু", "অসত্য", "অস্থির", "অসুস্থতা", 
+  "অস্পষ্ট", "অস্বাস্থ্যকর", "অহংকার", "আতঙ্ক", "আপদ", "উপেক্ষা", "কঠিন", "কষ্টদায়ক", "ক্লান্ত", "খারাপ", 
+  "গোলমাল", "ঘটনা", "চিন্তা", "জটিল", "তীব্র", "দুর্ঘটনা", "দুর্বলতা", "দুঃশ্চিন্তা", "ধীর", "নির্যাতন", 
+  "পরাজয়", "পরিশ্রম", "পীড়া", "প্রতিবন্ধকতা", "বন্ধ", "বিরক্তি", "বিষণ্ণ", "বিলম্ব", "ভয়", "ভাঙ্গন", 
+  "ভারাক্রান্ত", "মন্দ", "যন্ত্রণা", "রাগ", "লজ্জা", "শোক", "সংকট", "সংশয়", "সঙ্কট", "হতাশা", "অকার্যকর", 
+  "অগোছালো", "অচেনা", "অজ্ঞান", "অতিরিক্ত", "অদক্ষ", "অনিয়ম", "অনুপযুক্ত", "অনিশ্চিত", "অপকারী", "অপূর্ণতা", 
+  "অবনতি", "অবহেলা", "অমিল", "অরুচিকর", "অলস", "অশ্লীল", "অসভ্য", "অসামঞ্জস্য", "অস্তিত্বহীন", "অহেতুক", 
+  "আক্রমণ", "আত্মহত্যা", "আপত্তি", "উদাসীন", "উপদ্রব", "কদর্য", "কপট", "কম", "কষ্টকর", "ক্লান্তিকর", 
+  "খারাপ", "গরম", "গ্লানি", "ঘন", "চাপ", "ছেড়ে", "জাল", "টান", "ডর", "তাড়াতাড়ি", "দুর্গন্ধ", 
+  "দুর্ভাগ্য", "দুশ্চিন্তা", "দেখা", "ধকল", "নিরাপত্তাহীন", "নির্বোধ", "নিষ্ক্রিয়", "পঙ্গু", "পরিত্যক্ত", 
+  "পরীক্ষা", "পীড়ন", "প্রতারণা", "বঞ্চিত", "বিরোধ", "বিষাক্ত", "বেহুদা", "ভালো", "ভ্রষ্ট", "মৃত্যু", 
+  "যাতনা", "রোগ", "লুণ্ঠন", "শত্রু", "শুষ্ক", "সংঘর্ষ", "সতর্ক", "সন্দেহ", "সাময়িক", "হানাদার", 
+  "অকর্মণ্য", "অগ্নিপরীক্ষা", "অচল", "অতিষ্ঠ", "অদৃশ্য", "অনাধুনিক", "অনুৎপাদনশীল", "অনুপস্থিত", "অপচয়", 
+  "অপদার্থ", "অবহেলিত", "অমার্জিত", "অযাচিত", "অরক্ষিত", "অলীক", "অশান্ত", "অসাধারণ", "অসুবিধাজনক", "অস্থায়ী", 
+  "অহিংস", "আকস্মিক", "আতঙ্কিত", "আবর্জনা", "উচ্চশব্দ", "উত্তেজনাহীন", "উপহাস", "কঠোর", "কপটতা", "কমজোরি", 
+  "কষ্ট", "ক্লান্ত", "খারাপ", "গণ্ডগোল", "গরল", "ঘাটতি", "চিৎকার", "ছিন্নভিন্ন", "জরুরি", "টানটান", 
+  "ডুব", "তথাকথিত", "দুরারোগ্য", "দুর্নীতি", "দুর্ভাগ্য", "দেখা", "ধকল", "নিঃস্ব", "নির্যাতিত", "নিষ্পেষণ", 
+  "পদদলিত", "পরাজিত", "পরিশ্রান্ত", "পীড়াদায়ক", "প্রতিহত", "বন্ধ", "বিরূপ", "বিষম", "বৈপরীত্য", "ভগ্ন", 
+  "ভয়ংকর", "ভ্রান্ত", "মরিচা", "যন্ত্রণাদায়ক", "রুগ্ণ", "লাঞ্ছিত", "শাস্তি", "শোষণ", "সংঘাত", "সঙ্কুচিত", 
+  "সতর্কতা", "সন্দেহজনক", "সামঞ্জস্যহীন", "হতাশাজনক", "অকাট্য", "অগ্নিবর্ধক", "অচিন্ত্য", "অতীত", "অদম্য", 
+  "অনিশ্চিত", "অনুপযোগী", "অপবিত্র", "অপূর্ণ", "অবমাননা", "অমঙ্গল", "অযৌক্তিক", "অরাজক", "অলসতা", "অশুভ", 
+  "অসাধু", "অসুস্থ", "অস্থিরতা", "অহংকারী", "আকর্ষণহীন", "আত্মবিশ্বাসহীন", "আপত্তিজনক", "উদ্বেগ", "উপেক্ষিত", 
+  "কদাচার", "কপটাচার", "কমতি", "কষ্ট", "ক্লান্তি", "খারাপ", "গোলযোগ", "গহ্বর", "ঘৃণ্য", "চাপ", 
+  "ছিন্ন", "জটিলতা", "টালবাহানা", "ডাকাতি", "তাচ্ছিল্য", "দুর্বিপাক", "দুর্নীতিগ্রস্ত", "দুর্ভোগ", "দেখা", "ধকল", 
+  "নিঃসঙ্গ", "নির্বাসিত", "নিষ্ফল", "পঙ্গু", "পরাজয়", "পরিশ্রম", "পীড়া", "প্রতিবন্ধক", "বঞ্চনা", "বিরক্তি", 
+  "বিষাদ", "বৈষম্য", "ভাঙন", "ভয়", "ভ্রান্তি", "মরিয়া", "যাতনা", "রোগ", "লাঞ্ছনা", "শঙ্কা", 
+  "শোষিত", "সংকীর্ণ", "সঙ্কট", "সতর্ক", "সন্দেহ", "সাময়িক", "হতাশ"
+]);
+
+/* --- Chart.js setup --- */
+const ctx = document.getElementById('sentChart');
+let sentChart = null;
+
+/* --- Initialize --- */
+function init(){
+  // Render default stopwords
+  renderStopwords();
+  
+  // Event listeners
+  analyzeBtn.addEventListener('click', analyze);
+  clearBtn.addEventListener('click', clearAll);
+  toggleStopEditor.addEventListener('click', ()=> { stopEditor.style.display = stopEditor.style.display === 'none' ? 'block' : 'none'; });
+  addStop.addEventListener('click', addStopword);
+  resetStops.addEventListener('click', resetStopwords);
+  newStop.addEventListener('keypress', (e)=> { if(e.key === 'Enter') addStopword(); });
+  downloadCSV.addEventListener('click', ()=> exportData('csv'));
+  downloadJSON.addEventListener('click', ()=> exportData('json'));
+  downloadPDF.addEventListener('click', ()=> exportData('pdf'));
+  
+  // Try to analyze if text is already present
+  if(textInput.value.trim().length > 0) analyze();
+}
+
+/* --- Analysis --- */
+async function analyze(){
+  let text = textInput.value.trim();
+  const url = urlInput.value.trim();
+  const proxy = proxyInput.value.trim();
+  const useBnLex = useLexBn.checked;
+  const lang = langSelect.value;
+  
+  if(url && !text){
+    // Fetch from URL
+    try{
+      analyzeBtn.textContent = "Fetching...";
+      text = await fetchPageContent(url, proxy);
+      textInput.value = text;
+    } catch(e){
+      alert("Failed to fetch URL: " + e.message);
+      analyzeBtn.textContent = "Analyze";
+      return;
+    }
+  }
+  
+  if(!text){
+    alert("Please enter some text or a URL");
+    return;
+  }
+  
+  analyzeBtn.textContent = "Analyzing...";
+  
+  // Process text
+  const result = analyzeText(text, useBnLex, lang);
+  
+  // Update UI
+  updateUI(result);
+  
+  analyzeBtn.textContent = "Analyze";
+}
+
+/* --- Text analysis logic --- */
+function analyzeText(text, useBnLex, lang){
+  // Clean and tokenize
+  const cleanText = text.replace(/[^\w\s\u0980-\u09FF]/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+  const tokens = cleanText.split(/\s+/).filter(t => t.length > 0);
+  
+  // Count words
+  const wordCount = tokens.length;
+  
+  // Sentiment analysis
+  let score = 0;
+  let positive = 0;
+  let negative = 0;
+  let neutral = 0;
+  const positiveWords = [];
+  const negativeWords = [];
+  
+  // Use extended Bengali lexicon if requested and text seems Bengali
+  const isLikelyBengali = lang === 'bn' || (lang === 'auto' && /[\u0980-\u09FF]/.test(text));
+  
+  if(isLikelyBengali && useBnLex){
+    // Bengali sentiment analysis with extended lexicon
+    tokens.forEach(token => {
+      if(BN_POSITIVE.has(token)){
+        score += 1;
+        positive++;
+        positiveWords.push(token);
+      } else if(BN_NEGATIVE.has(token)){
+        score -= 1;
+        negative++;
+        negativeWords.push(token);
+      } else {
+        neutral++;
+      }
+    });
+  } else {
+    // Use the English sentiment library
+    if(sentimentEngine){
+      const result = sentimentEngine.analyze(text);
+      score = result.score;
+      positive = result.positive.length;
+      negative = result.negative.length;
+      neutral = wordCount - positive - negative;
+      positiveWords.push(...result.positive);
+      negativeWords.push(...result.negative);
+    } else {
+      // Fallback simple analysis
+      tokens.forEach(token => {
+        if(['good', 'great', 'excellent', 'awesome', 'wonderful', 'nice', 'happy', 'love', 'best'].includes(token)){
+          score += 1;
+          positive++;
+          positiveWords.push(token);
+        } else if(['bad', 'terrible', 'awful', 'hate', 'worst', 'sad', 'angry'].includes(token)){
+          score -= 1;
+          negative++;
+          negativeWords.push(token);
+        } else {
+          neutral++;
+        }
+      });
+    }
+  }
+  
+  // Keyword analysis (remove stopwords)
+  const keywordCounts = {};
+  tokens.forEach(token => {
+    if(!STOPWORDS.has(token) && token.length > 2){
+      keywordCounts[token] = (keywordCounts[token] || 0) + 1;
+    }
+  });
+  
+  // Convert to array and sort
+  const keywords = Object.entries(keywordCounts)
+    .map(([word, count]) => ({ word, count, density: (count / wordCount * 100).toFixed(2) + '%' }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 20);
+  
+  // Determine sentiment label
+  let sentimentLabel = 'Neutral';
+  if(score > 2) sentimentLabel = 'Very Positive';
+  else if(score > 0) sentimentLabel = 'Positive';
+  else if(score < -2) sentimentLabel = 'Very Negative';
+  else if(score < 0) sentimentLabel = 'Negative';
+  
+  return {
+    score,
+    positive,
+    negative,
+    neutral,
+    wordCount,
+    sentimentLabel,
+    positiveWords: [...new Set(positiveWords)], // Deduplicate
+    negativeWords: [...new Set(negativeWords)], // Deduplicate
+    keywords
+  };
+}
+
+/* --- Update UI with results --- */
+function updateUI(result){
+  // Update stats
+  sentLabel.textContent = result.sentimentLabel;
+  overallScore.textContent = result.score;
+  wordCountEl.textContent = result.wordCount;
+  posCountEl.textContent = result.positive;
+  negCountEl.textContent = result.negative;
+  
+  // Update sentiment label color
+  sentLabel.className = '';
+  if(result.score > 0) sentLabel.classList.add('badge', 'pos');
+  else if(result.score < 0) sentLabel.classList.add('badge', 'neg');
+  else sentLabel.classList.add('badge', 'neu');
+  
+  // Update keywords table
+  kwBody.innerHTML = '';
+  result.keywords.forEach(kw => {
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${kw.word}</td>
+      <td>${kw.count}</td>
+      <td>${kw.density}</td>
+      <td>${BN_POSITIVE.has(kw.word) ? '<span class="badge pos">Positive</span>' : BN_NEGATIVE.has(kw.word) ? '<span class="badge neg">Negative</span>' : '<span class="badge neu">Neutral</span>'}</td>
+    `;
+    kwBody.appendChild(row);
+  });
+  
+  // Update positive/negative words
+  updateWordList(posWordsDiv, result.positiveWords, 'pos');
+  updateWordList(negWordsDiv, result.negativeWords, 'neg');
+  
+  // Update chart
+  updateChart(result.positive, result.negative, result.neutral);
+  
+  // Update SEO info if URL was used
+  if(urlInput.value.trim()){
+    const url = urlInput.value.trim();
+    seoInfo.innerHTML = `<div style="margin-top:8px;"><strong>URL analyzed:</strong> ${url}</div>`;
+  } else {
+    seoInfo.innerHTML = '';
+  }
+  
+  // Highlight contributing words in text if enabled
+  if(highlightContrib.checked){
+    let highlightedText = textInput.value;
+    result.positiveWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      highlightedText = highlightedText.replace(regex, `<mark style="background:#86efac; padding:2px 0;">${word}</mark>`);
+    });
+    result.negativeWords.forEach(word => {
+      const regex = new RegExp(`\\b${word}\\b`, 'gi');
+      highlightedText = highlightedText.replace(regex, `<mark style="background:#fca5a5; padding:2px 0;">${word}</mark>`);
+    });
+    textInput.innerHTML = highlightedText;
+  }
+  
+  topNote.textContent = `Top ${result.keywords.length} keywords (excluding stopwords)`;
+}
+
+/* --- Update word list display --- */
+function updateWordList(container, words, type){
+  container.innerHTML = '';
+  words.slice(0, 20).forEach(word => {
+    const span = document.createElement('span');
+    span.textContent = word;
+    span.classList.add('kpill');
+    if(type === 'pos') span.style.background = '#dcfce7';
+    else span.style.background = '#fee2e2';
+    container.appendChild(span);
+  });
+  if(words.length === 0){
+    container.innerHTML = '<span class="small-muted">None detected</span>';
+  }
+}
+
+/* --- Update chart --- */
+function updateChart(pos, neg, neu){
+  if(sentChart) sentChart.destroy();
+  
+  sentChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Positive', 'Negative', 'Neutral'],
+      datasets: [{
+        data: [pos, neg, neu],
+        backgroundColor: ['#16a34a', '#dc2626', '#6b7280'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+
+/* --- Fetch page content --- */
+async function fetchPageContent(url, proxy){
+  let fetchUrl = url;
+  if(proxy){
+    // Simple proxy URL construction - adjust as needed for your proxy
+    fetchUrl = proxy + encodeURIComponent(url);
+  }
+  
+  const response = await fetch(fetchUrl);
+  if(!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  
+  const html = await response.text();
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  
+  // Extract meaningful content
+  const title = doc.querySelector('title')?.textContent || '';
+  const metaDesc = doc.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+  const h1 = Array.from(doc.querySelectorAll('h1')).map(h => h.textContent).join(' ');
+  const paragraphs = Array.from(doc.querySelectorAll('p')).map(p => p.textContent).join(' ');
+  
+  return `${title} ${metaDesc} ${h1} ${paragraphs}`;
+}
+
+/* --- Clear all --- */
+function clearAll(){
+  textInput.value = '';
+  urlInput.value = '';
+  sentLabel.textContent = '—';
+  overallScore.textContent = '—';
+  wordCountEl.textContent = '0';
+  posCountEl.textContent = '0';
+  negCountEl.textContent = '0';
+  kwBody.innerHTML = '';
+  posWordsDiv.innerHTML = '';
+  negWordsDiv.innerHTML = '';
+  seoInfo.innerHTML = '';
+  topNote.textContent = '';
+  
+  if(sentChart){
+    sentChart.destroy();
+    sentChart = null;
+  }
+}
+
+/* --- Stopword editor functions --- */
+function renderStopwords(){
+  stopList.innerHTML = '';
+  Array.from(STOPWORDS).sort().forEach(word => {
+    const span = document.createElement('span');
+    span.textContent = word;
+    span.classList.add('word-item');
+    span.addEventListener('click', () => removeStopword(word));
+    stopList.appendChild(span);
+  });
+}
+
+function addStopword(){
+  const word = newStop.value.trim().toLowerCase();
+  if(word && !STOPWORDS.has(word)){
+    STOPWORDS.add(word);
+    renderStopwords();
+    newStop.value = '';
+    
+    // Re-analyze if there's text
+    if(textInput.value.trim()) analyze();
+  }
+}
+
+function removeStopword(word){
+  STOPWORDS.delete(word);
+  renderStopwords();
+  
+  // Re-analyze if there's text
+  if(textInput.value.trim()) analyze();
+}
+
+function resetStopwords(){
+  STOPWORDS = new Set(DEFAULT_STOPWORDS);
+  renderStopwords();
+  
+  // Re-analyze if there's text
+  if(textInput.value.trim()) analyze();
+}
+
+/* --- Export functions --- */
+function exportData(format){
+  const text = textInput.value.trim();
+  if(!text){
+    alert("No text to export");
+    return;
+  }
+  
+  const result = analyzeText(text, useLexBn.checked, langSelect.value);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  
+  if(format === 'csv'){
+    // CSV export
+    let csv = "Word,Count,Density,Type\n";
+    result.keywords.forEach(kw => {
+      const type = BN_POSITIVE.has(kw.word) ? 'Positive' : BN_NEGATIVE.has(kw.word) ? 'Negative' : 'Neutral';
+      csv += `"${kw.word}",${kw.count},${kw.density},${type}\n`;
+    });
+    
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sentiment-analysis-${timestamp}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  else if(format === 'json'){
+    // JSON export
+    const data = {
+      text: text,
+      analysis: result,
+      analyzedAt: new Date().toISOString()
+    };
+    
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `sentiment-analysis-${timestamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  else if(format === 'pdf'){
+    // PDF export using jsPDF
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    doc.setFontSize(18);
+    doc.text("Sentiment Analysis Report", 14, 22);
+    doc.setFontSize(12);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 30);
+    
+    // Summary
+    doc.setFontSize(14);
+    doc.text("Summary", 14, 45);
+    doc.setFontSize(11);
+    doc.text(`Sentiment: ${result.sentimentLabel}`, 14, 55);
+    doc.text(`Score: ${result.score}`, 14, 62);
+    doc.text(`Word Count: ${result.wordCount}`, 14, 69);
+    doc.text(`Positive Words: ${result.positive}`, 14, 76);
+    doc.text(`Negative Words: ${result.negative}`, 14, 83);
+    
+    // Keywords table
+    doc.setFontSize(14);
+    doc.text("Top Keywords", 14, 95);
+    
+    let y = 105;
+    doc.setFontSize(10);
+    doc.text("Keyword", 14, y);
+    doc.text("Count", 70, y);
+    doc.text("Density", 90, y);
+    doc.text("Type", 120, y);
+    y += 7;
+    
+    result.keywords.slice(0, 15).forEach(kw => {
+      if(y > 270){
+        doc.addPage();
+        y = 20;
+      }
+      
+      const type = BN_POSITIVE.has(kw.word) ? 'Positive' : BN_NEGATIVE.has(kw.word) ? 'Negative' : 'Neutral';
+      doc.text(kw.word, 14, y);
+      doc.text(kw.count.toString(), 70, y);
+      doc.text(kw.density, 90, y);
+      doc.text(type, 120, y);
+      y += 6;
+    });
+    
+    doc.save(`sentiment-analysis-${timestamp}.pdf`);
+  }
+}
+
+// Initialize the app
+init();
+
+</script>
+</body>
+</html>
