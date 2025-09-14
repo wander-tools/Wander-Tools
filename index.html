@@ -421,62 +421,6 @@
             font-weight: 500;
         }
 
-        /* Ad Section */
-        .ad-section {
-            background-color: rgba(0, 0, 0, 0.03);
-            border-radius: var(--border-radius);
-            padding: 10px;
-            margin-bottom: 2rem;
-            text-align: center;
-            border: 1px dashed rgba(0, 0, 0, 0.1);
-            display: none; /* Hidden by default */
-        }
-
-        .ad-section.active {
-            display: block;
-        }
-
-        .ad-container {
-            width: 100%;
-            max-width: 728px;
-            margin: 0 auto;
-            min-height: 90px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 10px;
-        }
-
-        .ad-placeholder {
-            color: var(--gray-color);
-            font-style: italic;
-            text-align: center;
-        }
-
-        .ad-label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--gray-color);
-            margin-bottom: 10px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* Responsive ad sizes */
-        @media (min-width: 1200px) {
-            .ad-container { max-width: 728px; }
-        }
-        
-        @media (min-width: 768px) and (max-width: 1199px) {
-            .ad-container { max-width: 468px; }
-        }
-        
-        @media (max-width: 767px) {
-            .ad-container { max-width: 300px; }
-        }
-
         /* Main Content Styles */
         .main-title {
             text-align: center;
@@ -862,6 +806,7 @@
                         <div class="dropdown-content">
                             <a href="#image-tools">Image Tools</a>
                             <a href="#file-tools">File Tools</a>
+                            <a href="#analytics-tools">Analytics Tools</a>
                             <a href="#seo-tools">SEO & Web Tools</a>
                             <a href="#math-tools">Math & Utility Tools</a>
                             <a href="#text-tools">Text Tools</a>
@@ -1001,6 +946,46 @@
             </div>
         </section>
 
+        <!-- Analytics Tools Section -->
+        <section id="analytics-tools" class="category-section">
+            <h3 class="section-title">
+                <i class="fas fa-chart-line"></i>
+                Analytics Tools
+            </h3>
+            <div class="tools-grid">
+                <div class="tool-card">
+                    <h3><i class="fas fa-file-csv"></i> CSV/Excel Analyzer</h3>
+                    <p>Analyze and visualize data from CSV and Excel files with powerful tools.</p>
+                    <a href="csv-excel-analyzer.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fas fa-search-dollar"></i> Keyword Density & SEO Analyzer</h3>
+                    <p>Analyze keyword density and SEO metrics for URLs or text content.</p>
+                    <a href="keyword-seo-analyzer.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fas fa-smile"></i> Sentiment Analyzer</h3>
+                    <p>Analyze text sentiment to determine positive, negative, or neutral tone.</p>
+                    <a href="sentiment-analyzer.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fas fa-server"></i> Log File / IP Analyzer</h3>
+                    <p>Analyze server log files and IP addresses for insights and patterns.</p>
+                    <a href="log-ip-analyzer.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fas fa-book-reader"></i> Readability & Word Frequency Analyzer</h3>
+                    <p>Analyze text readability scores and word frequency patterns.</p>
+                    <a href="readability-analyzer.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
+                    <h3><i class="fab fa-youtube"></i> YouTube Channel Analyzer</h3>
+                    <p>Analyze YouTube channel performance, statistics, and engagement metrics.</p>
+                    <a href="youtube-analyzer.html">Use Tool</a>
+                </div>
+            </div>
+        </section>
+
         <!-- SEO & Web Tools Section -->
         <section id="seo-tools" class="category-section">
             <h3 class="section-title">
@@ -1136,7 +1121,7 @@
                 <div class="tool-card">
                     <h3><i class="fas fa-barcode"></i> Color Code Generator</h3>
                     <p>Convert between HEX, RGB, HSL and other color formats.</p>
-                    <a href="color-code-generator.html">Use Tool</a>
+                    <a href="color-code-generator.html">极速赛车开奖直播</a>
                 </div>
                 <div class="tool-card">
                     <h3><i class="fas fa-object-group"></i> Color Combinator</h3>
@@ -1196,6 +1181,7 @@
                         <li><a href="#header">Home</a></li>
                         <li><a href="#image-tools">Image Tools</a></li>
                         <li><a href="#file-tools">File Tools</a></li>
+                        <li><a href="#analytics-tools">Analytics Tools</a></li>
                         <li><a href="#seo-tools">SEO Tools</a></li>
                         <li><a href="#text-tools">Text Tools</a></li>
                         <li><a href="#feedback">Feedback</a></li>
@@ -1262,6 +1248,12 @@
             { name: "Word to PDF", category: "File Tools", url: "word-to-pdf.html" },
             { name: "Image to PDF", category: "File Tools", url: "image-to-pdf.html" },
             { name: "ZIP Extractor", category: "File Tools", url: "zip-extractor.html" },
+            { name: "CSV/Excel Analyzer", category: "Analytics Tools", url: "csv-excel-analyzer.html" },
+            { name: "Keyword Density & SEO Analyzer", category: "Analytics Tools", url: "keyword-seo-analyzer.html" },
+            { name: "Sentiment Analyzer", category: "Analytics Tools", url: "sentiment-analyzer.html" },
+            { name: "Log File / IP Analyzer", category: "Analytics Tools", url: "log-ip-analyzer.html" },
+            { name: "Readability & Word Frequency Analyzer", category: "Analytics Tools", url: "readability-analyzer.html" },
+            { name: "YouTube Channel Analyzer", category: "Analytics Tools", url: "youtube-analyzer.html" },
             { name: "Meta Tag Generator", category: "SEO & Web Tools", url: "meta-tag-generator.html" },
             { name: "Domain WHOIS Lookup", category: "SEO & Web Tools", url: "domain-whois-lookup.html" },
             { name: "URL Shortener", category: "SEO & Web Tools", url: "url-shortener.html" },
@@ -1353,17 +1345,6 @@
             if (e.target === downloadModal) {
                 downloadModal.style.display = 'none';
             }
-        });
-
-        // Ad visibility based on scroll
-        window.addEventListener('scroll', function() {
-            const adSections = document.querySelectorAll('.ad-section');
-            adSections.forEach(section => {
-                const rect = section.getBoundingClientRect();
-                if (rect.top < window.innerHeight && rect.bottom > 0) {
-                    section.classList.add('active');
-                }
-            });
         });
 
         // Fixed Feedback Form Functionality - All devices will automatically open email client
@@ -1460,9 +1441,6 @@
                 }
             });
         });
-
-        // Initial check for ad visibility
-        window.dispatchEvent(new Event('scroll'));
     </script>
 </body>
 </html>
