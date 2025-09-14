@@ -1,1 +1,632 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyword Density & SEO Analyzer Tool</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --bg-color: #f7f7f7;
+            --card-bg: #fff;
+            --text-color: #333;
+            --button-bg: #4CAF50;
+            --button-hover: #45a049;
+            --primary-color: #2575fc;
+            --border-color: #ddd;
+            --progress-bg: #ddd;
+            --progress-fill: #4CAF50;
+            --table-header: #f2f2f2;
+            --table-row: #f9f9f9;
+            --error-color: #ff4d4d;
+        }
+        body.dark {
+            --bg-color: #181818;
+            --card-bg: #242424;
+            --text-color: #eee;
+            --primary-color: #4AA8FF;
+            --border-color: #444;
+            --progress-bg: #333;
+            --table-header: #333;
+            --table-row: #2a2a2a;
+            --error-color: #ff6b6b;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-color);
+            margin: 0;
+            padding: 50px 0 20px;
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s, color 0.3s;
+            color: var(--text-color);
+        }
+        .container {
+            background: var(--card-bg);
+            width: 100%;
+            max-width: 900px;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            transition: background 0.3s, color 0.3s;
+            margin-bottom: 20px;
+        }
+        h1, h2, h3 {
+            color: var(--text-color);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: var(--text-color);
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .tab.active {
+            border-bottom: 3px solid var(--primary-color);
+            font-weight: bold;
+        }
+        .input-section {
+            display: none;
+        }
+        .input-section.active {
+            display: block;
+        }
+        textarea, input[type="url"] {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            font-size: 16px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+        }
+        textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+        #analyzeBtn {
+            background: var(--button-bg);
+            color: white;
+            width: 100%;
+            margin-top: 10px;
+        }
+        #analyzeBtn:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+        }
+        #modeSwitch {
+            position: fixed;
+            top: 15px;
+            right: 20px;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        #modeSwitch:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+        }
+        .results-section {
+            margin-top: 30px;
+        }
+        .seo-data {
+            background: var(--table-row);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+        .seo-data-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .seo-data-item:last-child {
+            border-bottom: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: var(--table-header);
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: var(--table-row);
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 30px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .error {
+            color: var(--error-color);
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: rgba(255, 77, 77, 0.1);
+            display: none;
+        }
+        .proxy-warning {
+            font-size: 14px;
+            color: #ff9800;
+            margin-top: 5px;
+        }
+        @media (max-width: 900px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+            .tab {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button id="modeSwitch">Dark Mode</button>
+
+<div class="container">
+    <h1>Keyword Density & SEO Analyzer Tool</h1>
+    
+    <div class="tab-container">
+        <button class="tab active" data-tab="text">Analyze Text</button>
+        <button class="tab" data-tab="url">Analyze URL</button>
+    </div>
+    
+    <div id="textInput" class="input-section active">
+        <textarea id="textContent" placeholder="Paste your text content here..."></textarea>
+    </div>
+    
+    <div id="urlInput" class="input-section">
+        <input type="url" id="urlContent" placeholder="Enter website URL (e.g., https://example.com)">
+        <div class="proxy-warning">Note: Some websites may block analysis due to security restrictions.</div>
+    </div>
+    
+    <button id="analyzeBtn">Analyze Content</button>
+    
+    <div id="loading" class="loading">Analyzing content, please wait...</div>
+    <div id="error" class="error"></div>
+    
+    <div id="results" class="results-section" style="display: none;">
+        <h2>SEO Data</h2>
+        <div id="seoData" class="seo-data"></div>
+        
+        <h2>Keyword Density Analysis</h2>
+        <div id="keywordTable"></div>
+        
+        <h2>Keyword Distribution</h2>
+        <div class="chart-container">
+            <canvas id="keywordChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<script>
+// DOM Elements
+const modeSwitch = document.getElementById('modeSwitch');
+const tabs = document.querySelectorAll('.tab');
+const inputSections = document.querySelectorAll('.input-section');
+const textContent = document.getElementById('textContent');
+const urlContent = document.getElementById('urlContent');
+const analyzeBtn = document.getElementById('analyzeBtn');
+const loading = document.getElementById('loading');
+const error = document.getElementById('error');
+const results = document.getElementById('results');
+const seoDataElement = document.getElementById('seoData'); // Fixed variable name conflict
+const keywordTable = document.getElementById('keywordTable');
+const keywordChart = document.getElementById('keywordChart');
+
+// State variables
+let darkMode = false;
+let chart = null;
+
+// List of CORS proxies to try (fallback mechanism)
+const corsProxies = [
+    'https://api.allorigins.win/raw?url=',
+    'https://corsproxy.io/?',
+    'https://api.codetabs.com/v1/proxy?quest='
+];
+
+// Common stopwords to exclude from analysis
+const stopwords = new Set([
+    'a', 'an', 'the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by', 
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 
+    'did', 'will', 'would', 'shall', 'should', 'could', 'can', 'may', 'might', 'must', 
+    'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'me', 
+    'him', 'her', 'us', 'them', 'my', 'your', 'his', 'its', 'our', 'their', 'mine', 'yours', 
+    'hers', 'ours', 'theirs', 'who', 'whom', 'whose', 'which', 'what', 'where', 'when', 
+    'why', 'how', 'all', 'any', 'both', 'each', 'few', 'more', 'most', 'other', 'some', 
+    'such', 'no', 'nor', 'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very', 'just', 
+    'now', 'out', 's', 't', 'don', 'aren', 'couldn', 'didn', 'doesn', 'hadn', 'hasn', 
+    'haven', 'isn', 'mightn', 'mustn', 'needn', 'shan', 'shouldn', 'wasn', 'weren', 'won', 'wouldn'
+]);
+
+// Dark/Light mode toggle
+modeSwitch.addEventListener('click', () => {
+    darkMode = !darkMode;
+    document.body.classList.toggle('dark', darkMode);
+    modeSwitch.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+    
+    // Refresh chart if it exists to match theme
+    if (chart) {
+        chart.destroy();
+        createChart(keywordChart, chart.data);
+    }
+});
+
+// Tab switching
+tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+        const tabId = tab.getAttribute('data-tab');
+        
+        // Update active tab
+        tabs.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        
+        // Show corresponding input section
+        inputSections.forEach(section => section.classList.remove('active'));
+        document.getElementById(`${tabId}Input`).classList.add('active');
+    });
+});
+
+// Analyze button click handler
+analyzeBtn.addEventListener('click', async () => {
+    // Reset previous results
+    hideError();
+    results.style.display = 'none';
+    
+    const textTabActive = document.querySelector('.tab.active').getAttribute('data-tab') === 'text';
+    let content = '';
+    
+    if (textTabActive) {
+        content = textContent.value.trim();
+        if (!content) {
+            showError('Please enter some text to analyze.');
+            return;
+        }
+        analyzeContent(content);
+    } else {
+        const url = urlContent.value.trim();
+        if (!url) {
+            showError('Please enter a URL to analyze.');
+            return;
+        }
+        if (!isValidUrl(url)) {
+            showError('Please enter a valid URL (including http:// or https://).');
+            return;
+        }
+        
+        loading.style.display = 'block';
+        try {
+            const response = await fetchContentFromUrl(url);
+            analyzeContent(response.content, response.seoData);
+        } catch (err) {
+            showError('Failed to fetch URL content: ' + err.message);
+            loading.style.display = 'none';
+        }
+    }
+});
+
+// Validate URL format
+function isValidUrl(url) {
+    try {
+        new URL(url);
+        return true;
+    } catch (e) {
+        return false;
+    }
+}
+
+// Fetch content from URL with multiple proxy fallbacks
+async function fetchContentFromUrl(url) {
+    let lastError = null;
+    
+    // Try each proxy in sequence
+    for (const proxy of corsProxies) {
+        try {
+            const proxyUrl = proxy + encodeURIComponent(url);
+            const response = await fetchWithTimeout(proxyUrl, {
+                timeout: 10000 // 10 second timeout
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            
+            const html = await response.text();
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(html, 'text/html');
+            
+            // Extract SEO data
+            const seoData = {
+                title: doc.querySelector('title')?.innerText || 'Not found',
+                description: doc.querySelector('meta[name="description"]')?.getAttribute('content') || 'Not found',
+                keywords: doc.querySelector('meta[name="keywords"]')?.getAttribute('content') || 'Not found',
+                h1: Array.from(doc.querySelectorAll('h1')).map(h => h.textContent.trim()),
+                h2: Array.from(doc.querySelectorAll('h2')).map(h => h.textContent.trim()),
+                h3: Array.from(doc.querySelectorAll('h3')).map(h => h.textContent.trim())
+            };
+            
+            // Extract body text content
+            const bodyText = doc.body.textContent || '';
+            
+            return {
+                content: bodyText,
+                seoData: seoData
+            };
+        } catch (err) {
+            lastError = err;
+            console.warn(`Proxy ${proxy} failed: ${err.message}`);
+            // Continue to next proxy
+        }
+    }
+    
+    // If all proxies failed
+    throw new Error(`All CORS proxies failed. Last error: ${lastError?.message || 'Unknown error'}`);
+}
+
+// Fetch with timeout utility function
+function fetchWithTimeout(url, options = {}) {
+    const { timeout = 8000, ...fetchOptions } = options;
+    
+    return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => {
+            reject(new Error('Request timed out'));
+        }, timeout);
+        
+        fetch(url, fetchOptions)
+            .then(response => {
+                clearTimeout(timer);
+                resolve(response);
+            })
+            .catch(err => {
+                clearTimeout(timer);
+                reject(err);
+            });
+    });
+}
+
+// Main analysis function
+function analyzeContent(content, seoData = null) {
+    loading.style.display = 'block';
+    
+    // Use setTimeout to allow the UI to update before processing
+    setTimeout(() => {
+        try {
+            // Process text: convert to lowercase, remove non-alphanumeric, split into words
+            const words = content.toLowerCase()
+                .replace(/[^\w\s]/g, ' ')
+                .split(/\s+/)
+                .filter(word => word.length > 1 && !stopwords.has(word));
+            
+            // Count word frequencies
+            const wordCounts = {};
+            words.forEach(word => {
+                wordCounts[word] = (wordCounts[word] || 0) + 1;
+            });
+            
+            // Convert to array and sort by frequency
+            const wordArray = Object.entries(wordCounts)
+                .map(([word, count]) => ({ word, count, density: (count / words.length) * 100 }))
+                .sort((a, b) => b.count - a.count);
+            
+            // Display results
+            displaySeoData(seoData, content);
+            displayKeywordTable(wordArray);
+            createChart(keywordChart, wordArray.slice(0, 10));
+            
+            results.style.display = 'block';
+        } catch (err) {
+            showError('Error analyzing content: ' + err.message);
+        } finally {
+            loading.style.display = 'none';
+        }
+    }, 100);
+}
+
+// Display SEO data - FIXED FUNCTION
+function displaySeoData(seoData, content) {
+    if (!seoData) {
+        // For text input, we don't have SEO data
+        seoData = {
+            title: 'N/A (Text Input)',
+            description: 'N/A (Text Input)',
+            keywords: 'N/A (Text Input)',
+            h1: ['N/A (Text Input)'],
+            h2: ['N/A (Text Input)'],
+            h3: ['N/A (Text Input)']
+        };
+    }
+    
+    // Limit the length of displayed content to prevent UI issues
+    const limitText = (text, maxLength = 100) => {
+        if (!text || text === 'Not found') return text;
+        return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+    };
+    
+    const seoHtml = `
+        <div class="seo-data-item"><strong>Title:</strong> ${limitText(seoData.title)}</div>
+        <div class="seo-data-item"><strong>Meta Description:</strong> ${limitText(seoData.description)}</div>
+        <div class="seo-data-item"><strong>Meta Keywords:</strong> ${limitText(seoData.keywords)}</div>
+        <div class="seo-data-item"><strong>H1 Headings (${seoData.h1.length}):</strong> ${seoData.h1.length > 0 ? seoData.h1.map(h => limitText(h, 50)).join('; ') : 'None found'}</div>
+        <div class="seo-data-item"><strong>H2 Headings (${seoData.h2.length}):</strong> ${seoData.h2.length > 0 ? seoData.h2.map(h => limitText(h, 50)).join('; ') : 'None found'}</div>
+        <div class="seo-data-item"><strong>H3 Headings (${seoData.h3.length}):</strong> ${seoData.h3.length > 0 ? seoData.h3.map(h => limitText(h, 50)).join('; ') : 'None found'}</div>
+    `;
+    
+    seoDataElement.innerHTML = seoHtml;
+}
+
+// Display keyword table
+function displayKeywordTable(keywords) {
+    // Show only top 20 keywords to prevent UI overload
+    const topKeywords = keywords.slice(0, 20);
+    
+    const tableHtml = `
+        <table>
+            <thead>
+                <tr>
+                    <th>Keyword</th>
+                    <th>Count</th>
+                    <th>Density %</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${topKeywords.map(k => `
+                    <tr>
+                        <td>${k.word}</td>
+                        <td>${k.count}</td>
+                        <td>${k.density.toFixed(2)}%</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${keywords.length > 20 ? `<p>Showing top 20 of ${keywords.length} keywords. For full analysis, use text input.</p>` : ''}
+    `;
+    
+    keywordTable.innerHTML = tableHtml;
+}
+
+// Create chart visualization
+function createChart(canvas, data) {
+    const ctx = canvas.getContext('2d');
+    
+    // Destroy previous chart if it exists
+    if (chart) {
+        chart.destroy();
+    }
+    
+    // Prepare chart data
+    const labels = data.map(item => item.word);
+    const counts = data.map(item => item.count);
+    
+    // Get colors based on theme
+    const textColor = darkMode ? '#eee' : '#666';
+    const gridColor = darkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    
+    // Create chart
+    chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Keyword Frequency',
+                data: counts,
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.7)',
+                    'rgba(54, 162, 235, 0.7)',
+                    'rgba(255, 206, 86, 0.7)',
+                    'rgba(75, 192, 192, 0.7)',
+                    'rgba(153, 102, 255, 0.7)',
+                    'rgba(255, 159, 64, 0.7)',
+                    'rgba(199, 199, 199, 0.7)',
+                    'rgba(83, 102, 255, 0.7)',
+                    'rgba(40, 159, 64, 0.7)',
+                    'rgba(210, 99, 132, 0.7)'
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                    'rgba(199, 199, 199, 1)',
+                    'rgba(83, 102, 255, 1)',
+                    'rgba(40, 159, 64, 1)',
+                    'rgba(210, 99, 132, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
+                },
+                x: {
+                    grid: {
+                        color: gridColor
+                    },
+                    ticks: {
+                        color: textColor
+                    }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        color: textColor
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Error handling
+function showError(message) {
+    error.textContent = message;
+    error.style.display = 'block';
+}
+
+function hideError() {
+    error.style.display = 'none';
+}
+</script>
+</body>
+</html>
