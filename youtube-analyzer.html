@@ -16,11 +16,38 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
         
+        :root {
+            --bg-primary: #0f2027;
+            --bg-secondary: #203a43;
+            --bg-tertiary: #2c5364;
+            --text-primary: #fff;
+            --text-secondary: #ccc;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --input-bg: rgba(255, 255, 255, 0.1);
+            --accent-color: #ff4d4d;
+            --shadow-color: rgba(0, 0, 0, 0.2);
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .light-mode {
+            --bg-primary: #f0f2f5;
+            --bg-secondary: #e4e7eb;
+            --bg-tertiary: #d1d9e0;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --card-bg: rgba(0, 0, 0, 0.05);
+            --input-bg: rgba(0, 0, 0, 0.07);
+            --accent-color: #ff3333;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --border-color: rgba(0, 0, 0, 0.1);
+        }
+        
         body {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #fff;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-secondary), var(--bg-tertiary));
+            color: var(--text-primary);
             min-height: 100vh;
             padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
         }
         
         .container {
@@ -32,7 +59,8 @@
             text-align: center;
             padding: 20px 0;
             margin-bottom: 30px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
         }
         
         .logo {
@@ -45,12 +73,35 @@
         
         .logo i {
             font-size: 28px;
-            color: #ff4d4d;
+            color: var(--accent-color);
         }
         
         .logo h1 {
             font-size: 24px;
             font-weight: 700;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: 20px;
+            right: 0;
+            background: var(--card-bg);
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-primary);
+            font-size: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            background: var(--input-bg);
+            transform: scale(1.1);
         }
         
         .hero {
@@ -64,7 +115,7 @@
         }
         
         .hero p {
-            color: #ccc;
+            color: var(--text-secondary);
             max-width: 600px;
             margin: 0 auto 25px;
             line-height: 1.6;
@@ -74,7 +125,7 @@
             display: flex;
             max-width: 600px;
             margin: 0 auto;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 5px 15px var(--shadow-color);
             border-radius: 50px;
             overflow: hidden;
         }
@@ -83,18 +134,18 @@
             flex: 1;
             padding: 15px 20px;
             border: none;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--input-bg);
+            color: var(--text-primary);
             font-size: 16px;
         }
         
         .search-box input::placeholder {
-            color: #bbb;
+            color: var(--text-secondary);
         }
         
         .search-box button {
             padding: 15px 25px;
-            background: #ff4d4d;
+            background: var(--accent-color);
             color: white;
             border: none;
             cursor: pointer;
@@ -118,7 +169,7 @@
         }
         
         .channel-info {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 30px;
@@ -147,7 +198,7 @@
         }
         
         .channel-details p {
-            color: #ccc;
+            color: var(--text-secondary);
             font-size: 14px;
             line-height: 1.5;
             display: -webkit-box;
@@ -164,7 +215,7 @@
         }
         
         .stat-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
             text-align: center;
@@ -178,13 +229,13 @@
         
         .stat-card i {
             font-size: 30px;
-            color: #ff4d4d;
+            color: var(--accent-color);
             margin-bottom: 15px;
         }
         
         .stat-card h4 {
             font-size: 14px;
-            color: #bbb;
+            color: var(--text-secondary);
             margin-bottom: 10px;
         }
         
@@ -207,7 +258,7 @@
         }
         
         .chart-container {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
             min-height: 400px;
@@ -233,8 +284,8 @@
         }
         
         .chart-filter select, .chart-filter button {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
+            background: var(--input-bg);
+            color: var(--text-primary);
             border: none;
             padding: 8px 15px;
             border-radius: 5px;
@@ -247,19 +298,29 @@
             appearance: none;
             -webkit-appearance: none;
             -moz-appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
             background-repeat: no-repeat;
             background-position: right 10px center;
             background-size: 12px;
             padding-right: 35px;
             background-color: rgba(30, 30, 30, 0.9);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 1px solid var(--border-color);
+        }
+        
+        .light-mode .chart-filter select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23333' viewBox='0 0 16 16'%3E%3Cpath d='M8 12L2 6h12L8 12z'/%3E%3C/svg%3E");
+            background-color: rgba(240, 240, 240, 0.9);
         }
         
         .chart-filter select option {
             background-color: #1e1e1e;
             color: white;
             padding: 10px;
+        }
+        
+        .light-mode .chart-filter select option {
+            background-color: #f0f0f0;
+            color: #333;
         }
         
         .chart-filter button.active {
@@ -301,7 +362,7 @@
             font-size: 22px;
             margin-bottom: 20px;
             padding-bottom: 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid var(--border-color);
         }
         
         .videos {
@@ -311,7 +372,7 @@
         }
         
         .video-card {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             border-radius: 10px;
             overflow: hidden;
             transition: transform 0.3s;
@@ -383,7 +444,7 @@
         .video-stats {
             display: flex;
             justify-content: space-between;
-            color: #bbb;
+            color: var(--text-secondary);
             font-size: 14px;
         }
         
@@ -396,7 +457,7 @@
         .loading i {
             font-size: 40px;
             margin-bottom: 15px;
-            color: #ff4d4d;
+            color: var(--accent-color);
             animation: spin 1s linear infinite;
         }
         
@@ -407,7 +468,7 @@
         
         .error {
             background: rgba(255, 77, 77, 0.1);
-            border-left: 4px solid #ff4d4d;
+            border-left: 4px solid var(--accent-color);
             padding: 15px;
             border-radius: 4px;
             margin: 20px 0;
@@ -434,6 +495,10 @@
             border-radius: 10px;
             overflow: hidden;
             position: relative;
+        }
+        
+        .light-mode .modal-content {
+            background: #f0f0f0;
         }
         
         .modal-close {
@@ -471,8 +536,8 @@
             text-align: center;
             margin-top: 60px;
             padding: 20px;
-            color: #bbb;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+            border-top: 1px solid var(--border-color);
         }
         
         .metrics-grid {
@@ -483,7 +548,7 @@
         }
         
         .metric-box {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
             text-align: center;
@@ -491,14 +556,14 @@
         
         .metric-box h4 {
             font-size: 16px;
-            color: #bbb;
+            color: var(--text-secondary);
             margin-bottom: 10px;
         }
         
         .metric-value {
             font-size: 24px;
             font-weight: 700;
-            color: #ff4d4d;
+            color: var(--accent-color);
         }
         
         .metric-change {
@@ -546,6 +611,13 @@
             .chart-canvas-container {
                 height: 250px;
             }
+            
+            .theme-toggle {
+                position: relative;
+                top: unset;
+                right: unset;
+                margin: 10px auto;
+            }
         }
         
         @media (max-width: 480px) {
@@ -584,6 +656,9 @@
                 <i class="fab fa-youtube"></i>
                 <h1>Advanced YouTube Analytics</h1>
             </div>
+            <button class="theme-toggle" id="theme-toggle">
+                <i class="fas fa-moon"></i>
+            </button>
         </header>
         
         <section class="hero">
@@ -743,10 +818,44 @@
         const videoModal = document.getElementById('video-modal');
         const modalClose = document.getElementById('modal-close');
         const videoPlayer = document.getElementById('video-player');
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeIcon = themeToggle.querySelector('i');
         
         let growthChart, earningsChart;
         let growthChartType = 'line';
         let earningsChartType = 'line';
+        
+        // Theme toggle functionality
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            if (document.body.classList.contains('light-mode')) {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'light');
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'dark');
+            }
+            
+            // Update charts if they exist
+            if (growthChart) {
+                growthChart.destroy();
+                generateGrowthData(currentChannel);
+            }
+            if (earningsChart) {
+                earningsChart.destroy();
+                generateEarningsData(currentChannel);
+            }
+        });
+        
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            document.body.classList.add('light-mode');
+            themeIcon.classList.remove('fa-moon');
+            themeIcon.classList.add('fa-sun');
+        }
         
         // Search button click event
         searchBtn.addEventListener('click', () => {
@@ -990,6 +1099,9 @@
                 growthChart.destroy();
             }
             
+            const gridColor = document.body.classList.contains('light-mode') ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            const ticksColor = document.body.classList.contains('light-mode') ? '#666' : '#ccc';
+            
             growthChart = new Chart(ctx, {
                 type: growthChartType,
                 data: {
@@ -999,127 +1111,78 @@
                             label: 'Subscribers',
                             data: subsData,
                             borderColor: '#ff4d4d',
-                            backgroundColor: growthChartType === 'bar' ? 'rgba(255, 77, 77, 0.7)' : 'rgba(255, 77, 77, 0.1)',
-                            fill: growthChartType === 'line',
-                            tension: 0.4,
+                            backgroundColor: growthChartType === 'bar' ? 'rgba(255, 77, 77, 0.5)' : 'transparent',
                             borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
+                            tension: 0.3,
+                            fill: growthChartType === 'line'
                         },
                         {
                             label: 'Views',
                             data: viewsData,
-                            borderColor: '#4d94ff',
-                            backgroundColor: growthChartType === 'bar' ? 'rgba(77, 148, 255, 0.7)' : 'rgba(77, 148, 255, 0.1)',
-                            fill: growthChartType === 'line',
-                            tension: 0.4,
+                            borderColor: '#36a2eb',
+                            backgroundColor: growthChartType === 'bar' ? 'rgba(54, 162, 235, 0.5)' : 'transparent',
                             borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 6
-                        },
-                        {
-                            label: 'Engagement Rate %',
-                            data: engagementData,
-                            borderColor: '#2ecc71',
-                            backgroundColor: growthChartType === 'bar' ? 'rgba(46, 204, 113, 0.7)' : 'rgba(46, 204, 113, 0.1)',
-                            fill: false,
-                            tension: 0.4,
-                            borderWidth: 2,
-                            pointRadius: 3,
-                            pointHoverRadius: 6,
-                            borderDash: [5, 5]
+                            tension: 0.3,
+                            fill: growthChartType === 'line'
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: ticksColor,
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return (value / 1000).toFixed(1) + 'K';
                                     }
-                                    if (context.parsed.y !== null) {
-                                        if (label.includes('Engagement')) {
-                                            label += context.parsed.y + '%';
-                                        } else {
-                                            label += formatNumber(context.parsed.y);
-                                        }
-                                    }
-                                    return label;
+                                    return value;
                                 }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: ticksColor
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#bbb'
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#bbb',
-                                callback: function(value) {
-                                    return formatNumber(value);
-                                }
-                            }
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
                 }
             });
             
             // Update legend
-            const legendContainer = document.getElementById('growth-legend');
-            legendContainer.innerHTML = `
+            const legend = document.getElementById('growth-legend');
+            legend.innerHTML = `
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #ff4d4d"></div>
                     <span>Subscribers</span>
                 </div>
                 <div class="legend-item">
-                    <div class="legend-color" style="background-color: #4d94ff"></div>
+                    <div class="legend-color" style="background-color: #36a2eb"></div>
                     <span>Views</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-color" style="background-color: #2ecc71"></div>
-                    <span>Engagement Rate %</span>
                 </div>
             `;
         }
         
-        // Function to generate realistic growth data with trends
-        function generateRealisticGrowthData(currentValue, months, growthRate, volatility) {
-            const data = [];
-            let value = currentValue * Math.pow(1 - growthRate, months);
-            
-            for (let i = 0; i < months; i++) {
-                // Apply growth with some randomness
-                const monthlyGrowth = growthRate + (Math.random() * volatility - volatility/2);
-                value = value * (1 + monthlyGrowth);
-                data.push(Math.round(value));
-            }
-            
-            return data;
-        }
-        
         // Function to generate earnings data and chart
         function generateEarningsData(channel) {
-            const subs = parseInt(channel.statistics.subscriberCount);
             const views = parseInt(channel.statistics.viewCount);
+            const subs = parseInt(channel.statistics.subscriberCount);
             
             const range = parseInt(document.getElementById('earnings-chart-range').value);
             const months = range;
@@ -1132,38 +1195,14 @@
                 labels.push(date.toLocaleString('default', { month: 'short', year: '2-digit' }));
             }
             
-            // Calculate base earnings
-            const baseEarnings = calculateEarningsNumber(views, subs);
+            // Calculate estimated earnings
+            const monthlyEarnings = calculateEarnings(views, subs, false);
             
-            // Generate earnings data with seasonality and growth
+            // Generate earnings data with some variation
             const earningsData = [];
             for (let i = 0; i < months; i++) {
-                // Apply seasonality (Q4 has higher earnings)
-                let seasonality = 1;
-                if (i >= 9 && i <= 11) seasonality = 1.4; // Oct-Dec
-                else if (i >= 6 && i <= 8) seasonality = 1.1; // Jul-Sep
-                
-                // Apply growth over time
-                const growth = 1 + (i * 0.03);
-                
-                // Add some randomness
-                const randomness = 0.9 + (Math.random() * 0.2);
-                
-                const monthlyEarnings = baseEarnings * seasonality * growth * randomness;
-                earningsData.push(monthlyEarnings);
-            }
-            
-            // Generate projected earnings (next 6 months)
-            const projectedLabels = [...labels];
-            const projectedEarnings = [...earningsData];
-            
-            for (let i = 0; i < 6; i++) {
-                const date = new Date();
-                date.setMonth(date.getMonth() + i + 1);
-                projectedLabels.push(date.toLocaleString('default', { month: 'short', year: '2-digit' }));
-                
-                const nextEarnings = projectedEarnings[projectedEarnings.length - 1] * (1.03 + Math.random() * 0.02);
-                projectedEarnings.push(nextEarnings);
+                const variation = 0.8 + (Math.random() * 0.4); // 0.8 to 1.2
+                earningsData.push(Math.round(monthlyEarnings * variation));
             }
             
             // Create or update earnings chart
@@ -1172,123 +1211,110 @@
                 earningsChart.destroy();
             }
             
-            const isProjectionView = earningsChartType === 'line';
-            const displayLabels = isProjectionView ? projectedLabels : labels;
-            const displayData = isProjectionView ? projectedEarnings : earningsData;
+            const gridColor = document.body.classList.contains('light-mode') ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+            const ticksColor = document.body.classList.contains('light-mode') ? '#666' : '#ccc';
             
             earningsChart = new Chart(ctx, {
-                type: isProjectionView ? 'line' : 'bar',
+                type: earningsChartType,
                 data: {
-                    labels: displayLabels,
+                    labels: labels,
                     datasets: [{
                         label: 'Estimated Earnings ($)',
-                        data: displayData,
-                        backgroundColor: isProjectionView ? 'rgba(46, 204, 113, 0.1)' : 'rgba(46, 204, 113, 0.7)',
-                        borderColor: 'rgba(46, 204, 113, 1)',
-                        borderWidth: isProjectionView ? 2 : 1,
-                        fill: isProjectionView,
-                        tension: 0.4,
-                        pointRadius: isProjectionView ? 3 : 0,
-                        pointHoverRadius: isProjectionView ? 6 : 0
+                        data: earningsData,
+                        borderColor: '#2ecc71',
+                        backgroundColor: earningsChartType === 'bar' ? 'rgba(46, 204, 113, 0.5)' : 'transparent',
+                        borderWidth: 2,
+                        tension: 0.3,
+                        fill: earningsChartType === 'line'
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return 'Earnings: ' + formatCurrency(context.parsed.y);
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: ticksColor,
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
                                 }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                color: gridColor
+                            },
+                            ticks: {
+                                color: ticksColor
                             }
                         }
                     },
-                    scales: {
-                        x: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#bbb'
-                            }
-                        },
-                        y: {
-                            grid: {
-                                color: 'rgba(255, 255, 255, 0.1)'
-                            },
-                            ticks: {
-                                color: '#bbb',
-                                callback: function(value) {
-                                    return formatCurrency(value);
-                                }
-                            }
+                    plugins: {
+                        legend: {
+                            display: false
                         }
                     }
                 }
             });
             
             // Update legend
-            const legendContainer = document.getElementById('earnings-legend');
-            legendContainer.innerHTML = `
+            const legend = document.getElementById('earnings-legend');
+            legend.innerHTML = `
                 <div class="legend-item">
                     <div class="legend-color" style="background-color: #2ecc71"></div>
-                    <span>Estimated Earnings</span>
-                </div>
-                <div class="legend-item">
-                    <i class="fas fa-info-circle" style="color: #bbb;"></i>
-                    <span>Based on RPM of $3.00</span>
+                    <span>Estimated Earnings ($)</span>
                 </div>
             `;
         }
         
-        // Helper function to calculate estimated earnings (returns number)
-        function calculateEarningsNumber(views, subs) {
-            // Very rough estimate: $2-5 per 1000 views
-            const rpm = 3; // Average revenue per 1000 views
+        // Helper function to generate realistic growth data
+        function generateRealisticGrowthData(currentValue, months, growthRate, volatility) {
+            const data = [];
+            
+            // Start from the current value and work backwards
+            let value = currentValue;
+            data.unshift(value);
+            
+            for (let i = 1; i < months; i++) {
+                // Calculate previous value with some randomness
+                const change = value * (growthRate - (Math.random() * volatility));
+                value = Math.max(0, Math.round(value - change));
+                data.unshift(value);
+            }
+            
+            return data;
+        }
+        
+        // Helper function to calculate estimated earnings
+        function calculateEarnings(views, subs, isMonthly) {
+            // Very rough estimate: $1-5 per 1000 views
+            const rpm = 2 + (Math.random() * 3); // RPM between $2 and $5
             const estimatedEarnings = (views / 1000) * rpm;
             
-            // Assume channels earn about 1/12 of yearly earnings per month
-            return estimatedEarnings / 12;
-        }
-        
-        // Helper function to calculate estimated earnings (returns formatted string)
-        function calculateEarnings(views, subs, monthly = true) {
-            const earnings = calculateEarningsNumber(views, subs);
-            return formatCurrency(monthly ? earnings : earnings * 12);
-        }
-        
-        // Helper function to format large numbers
-        function formatNumber(num) {
-            return Intl.NumberFormat('en-US', {
-                notation: num > 1000000 ? 'compact' : 'standard',
-                maximumFractionDigits: 1
-            }).format(num);
-        }
-        
-        // Helper function to format currency
-        function formatCurrency(amount) {
-            if (amount > 1000) {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 0,
-                    maximumFractionDigits: 0
-                }).format(amount);
-            } else {
-                return new Intl.NumberFormat('en-US', {
-                    style: 'currency',
-                    currency: 'USD',
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                }).format(amount);
+            if (isMonthly) {
+                // For monthly earnings, divide by 12 and add some channel size factor
+                const channelSizeFactor = Math.min(3, 1 + (subs / 1000000));
+                return '$' + Math.round((estimatedEarnings / 12) * channelSizeFactor).toLocaleString();
             }
+            
+            return Math.round(estimatedEarnings);
         }
         
-        // Loading state
+        // Helper function to format numbers (1000 -> 1K, 1000000 -> 1M)
+        function formatNumber(num) {
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1) + 'M';
+            } else if (num >= 1000) {
+                return (num / 1000).toFixed(1) + 'K';
+            }
+            return num.toString();
+        }
+        
+        // UI helper functions
         function showLoading() {
             loadingElement.style.display = 'block';
             resultsSection.style.display = 'none';
@@ -1298,7 +1324,6 @@
             loadingElement.style.display = 'none';
         }
         
-        // Error message
         function showError(message) {
             errorElement.textContent = message;
             errorElement.style.display = 'block';
@@ -1308,9 +1333,10 @@
             errorElement.style.display = 'none';
         }
         
-        // Show some popular channels as examples when page loads
+        // Initialize with a demo channel on page load
         window.addEventListener('load', () => {
-            channelInput.value = "UC_x5XG1OV2P6uZZ5FSM9Ttw"; // Google Chrome channel ID as example
+            // Don't load a demo channel automatically
+            // fetchChannelData('UC_x5XG1OV2P6uZZ5FSM9Ttw'); // Google Chrome channel
         });
     </script>
 </body>
