@@ -221,11 +221,13 @@
             border-radius: 50px;
             font-size: 1rem;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
         .header-search-bar:focus {
             outline: none;
-            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.2);
+            box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
+            transform: scale(1.02);
         }
         
         .search-icon {
@@ -235,6 +237,12 @@
             transform: translateY(-50%);
             color: var(--gray-color);
             font-size: 1.2rem;
+            transition: var(--transition);
+        }
+        
+        .header-search-bar:focus + .search-icon {
+            color: var(--primary-color);
+            transform: translateY(-50%) scale(1.1);
         }
 
         /* Theme Toggle */
@@ -450,6 +458,12 @@
             max-height: 300px;
             overflow-y: auto;
             display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .search-result-item {
@@ -677,7 +691,7 @@
         }
 
         .footer-column ul li a:hover {
-            color: white;
+            color: var(--primary-color);
         }
 
         .social-links {
@@ -692,7 +706,7 @@
         }
 
         .social-links a:hover {
-            color: var(--accent-color);
+            color: var(--primary-color);
         }
 
         .footer-bottom {
@@ -755,6 +769,11 @@
             .feedback-form {
                 padding: 1.5rem;
             }
+            
+            /* Footer 2 columns on mobile */
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         @media (max-width: 480px) {
@@ -783,12 +802,17 @@
             .feedback-form {
                 padding: 1rem;
             }
+            
+            /* Footer 2 columns on small mobile */
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <!-- Header Section -->
-    <header class="header">
+    <header class="header" id="header">
         <div class="container">
             <div class="header-top">
                 <div class="logo">
@@ -1059,19 +1083,19 @@
                     <a href="word-counter.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
+                    <h3><i class="fas fa-language"></i> Translator</h3>
+                    <p>Translate text between multiple languages with high accuracy.</p>
+                    <a href="translator.html">Use Tool</a>
+                </div>
+                <div class="tool-card">
                     <h3><i class="fas fa-text-height"></i> Case Converter</h3>
-                    <p>Change text case between uppercase, lowercase, title case etc.</p>
+                    <p>Convert text between uppercase, lowercase, title case and more.</p>
                     <a href="case-converter.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-paragraph"></i> Lorem Ipsum Generator</h3>
-                    <p>Generate placeholder text in Lorem Ipsum for your designs.</p>
-                    <a href="lorem-ipsum.html">Use Tool</a>
-                </div>
-                <div class="tool-card">
-                    <h3><i class="fas fa-lock"></i> Text Encryption</h3>
-                    <p>Encrypt and decrypt text with secure algorithms.</p>
-                    <a href="text-encryption.html">Use Tool</a>
+                    <h3><i class="fas fa-magic"></i> Text Generator</h3>
+                    <p>Generate random text, lorem ipsum, passwords and more.</p>
+                    <a href="text-generator.html">Use Tool</a>
                 </div>
             </div>
         </section>
@@ -1084,22 +1108,22 @@
             </h3>
             <div class="tools-grid">
                 <div class="tool-card">
-                    <h3><i class="fas fa-code"></i> JSON Formatter</h3>
-                    <p>Format and validate JSON data to make it readable and error-free.</p>
-                    <a href="json-formatter.html">Use Tool</a>
+                    <h3><i class="fas fa-code"></i> Code Formatter</h3>
+                    <p>Format and beautify your HTML, CSS, JavaScript, and other code.</p>
+                    <a href="code-formatter.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-key"></i> Base64 Converter</h3>
-                    <p>Encode and decode Base64 strings and files.</p>
-                    <a href="base64-converter.html">Use Tool</a>
+                    <h3><i class="fas fa-exchange-alt"></i> JSON to XML Converter</h3>
+                    <p>Convert JSON data to XML format and vice versa.</p>
+                    <a href="json-xml-converter.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-regex"></i> Regex Tester</h3>
-                    <p>Test and debug regular expressions with real-time matching.</p>
-                    <a href="regex-tester.html">Use Tool</a>
+                    <h3><i class="fas fa-hashtag"></i> Hash Generator</h3>
+                    <p>Generate MD5, SHA-1, SHA-256 and other cryptographic hashes.</p>
+                    <a href="hash-generator.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-fingerprint"></i> UUID Generator</h3>
+                    <h3><i class="fas fa-key"></i> UUID Generator</h3>
                     <p>Generate universally unique identifiers (UUIDs) for your applications.</p>
                     <a href="uuid-generator.html">Use Tool</a>
                 </div>
@@ -1115,63 +1139,61 @@
             <div class="tools-grid">
                 <div class="tool-card">
                     <h3><i class="fas fa-eye-dropper"></i> Color Picker</h3>
-                    <p>Pick colors from images or create custom color schemes.</p>
+                    <p>Pick colors from anywhere and get their HEX, RGB, HSL values.</p>
                     <a href="color-picker.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-barcode"></i> Color Code Generator</h3>
-                    <p>Convert between HEX, RGB, HSL and other color formats.</p>
-                    <a href="color-code-generator.html">Use Tool</a>
+                    <h3><i class="fas fa-swatchbook"></i> Color Palette Generator</h3>
+                    <p>Generate beautiful color palettes for your designs and projects.</p>
+                    <a href="color-palette-generator.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-object-group"></i> Color Combinator</h3>
-                    <p>Find perfect color combinations for your designs.</p>
-                    <a href="color-combinator.html">Use Tool</a>
+                    <h3><i class="fas fa-exchange-alt"></i> Color Converter</h3>
+                    <p>Convert colors between HEX, RGB, HSL, CMYK and other formats.</p>
+                    <a href="color-converter.html">Use Tool</a>
                 </div>
                 <div class="tool-card">
-                    <h3><i class="fas fa-swatchbook"></i> Color Palettes</h3>
-                    <p>Generate beautiful color palettes for your projects.</p>
-                    <a href="color-palettes.html">Use Tool</a>
+                    <h3><i class="fas fa-contrast"></i> Contrast Checker</h3>
+                    <p>Check color contrast ratios for accessibility compliance.</p>
+                    <a href="contrast-checker.html">Use Tool</a>
                 </div>
+            </div>
+        </section>
+
+        <!-- Feedback Section -->
+        <section id="feedback" class="feedback-section">
+            <div class="feedback-container">
+                <h2 class="feedback-title">Send Us Your Feedback</h2>
+                <form class="feedback-form" id="feedbackForm">
+                    <div class="form-group">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" class="form-control" placeholder="Your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" class="form-control" placeholder="Your email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" class="form-control" placeholder="Your feedback or suggestions..." required></textarea>
+                    </div>
+                    <button type="submit" class="submit-button">Send Feedback</button>
+                </form>
             </div>
         </section>
     </main>
 
-    <!-- New Feedback Section -->
-    <section class="feedback-section" id="feedback">
-        <div class="feedback-container">
-            <h2 class="feedback-title">Share Your Feedback</h2>
-            <div class="feedback-form">
-                <form id="feedbackForm">
-                    <div class="form-group">
-                        <label for="name">Your Name (Optional)</label>
-                        <input type="text" id="name" class="form-control" placeholder="Enter your name">
-                    </div>
-                    <div class="form-group">
-                        <label for="email">Your Email</label>
-                        <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="message">Your Feedback</label>
-                        <textarea id="message" class="form-control" placeholder="Tell us what you think about our tools or suggest improvements..." required></textarea>
-                    </div>
-                    <button type="submit" class="submit-button">Send Your Feedback</button>
-                </form>
-            </div>
-        </div>
-    </section>
-
+    <!-- Footer Section -->
     <footer id="contact">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-column">
                     <h3>Wander Tools</h3>
-                    <p>Your complete online toolkit for all your digital needs.</p>
+                    <p>Your complete online toolkit for everyday tasks. Free, fast and easy-to-use tools for everyone.</p>
                     <div class="social-links">
-                        <a href="https://www.facebook.com/shahadot.wp"><i class="fab fa-facebook-f"></i></a>
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
                         <a href="#"><i class="fab fa-twitter"></i></a>
                         <a href="#"><i class="fab fa-instagram"></i></a>
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
                         <a href="#"><i class="fab fa-github"></i></a>
                     </div>
                 </div>
@@ -1179,32 +1201,35 @@
                     <h3>Quick Links</h3>
                     <ul>
                         <li><a href="#header">Home</a></li>
+                        <li><a href="#home">All Tools</a></li>
+                        <li><a href="#feedback">Feedback</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Categories</h3>
+                    <ul>
                         <li><a href="#image-tools">Image Tools</a></li>
                         <li><a href="#file-tools">File Tools</a></li>
                         <li><a href="#analytics-tools">Analytics Tools</a></li>
-                        <li><a href="#seo-tools">SEO Tools</a></li>
-                        <li><a href="#text-tools">Text Tools</a></li>
-                        <li><a href="#feedback">Feedback</a></li>
+                        <li><a href="#seo-tools">SEO & Web Tools</a></li>
                     </ul>
                 </div>
                 <div class="footer-column">
-                    <h3>Support</h3>
+                    <h3>More Categories</h3>
                     <ul>
-                        <li><a href="#">Help Center</a></li>
-                        <li><a href="#">FAQ</a></li>
-                        <li><a href="#feedback">Contact Us</a></li>
-                        <li><a href="#">Privacy Policy</a></li>
-                        <li><a href="#">Terms of Service</a></li>
+                        <li><a href="#math-tools">Math & Utility Tools</a></li>
+                        <li><a href="#text-tools">Text Tools</a></li>
+                        <li><a href="#developer-tools">Developer Tools</a></li>
+                        <li><a href="#color-tools">Color Tools</a></li>
                     </ul>
-                </div>
-                <div class="footer-column">
-                    <h3>Contact Info</h3>
-                    <p>Email: wander.tools.site@gmail.com</p>
-                    <p>Follow us on social media for updates and new tools.</p>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2023 Wander Tools. All rights reserved.</p>
+                <button id="scrollToTop" class="cta-button" style="margin-top: 15px; padding: 8px 20px;">
+                    <i class="fas fa-arrow-up"></i> Back to Top
+                </button>
             </div>
         </div>
     </footer>
@@ -1234,213 +1259,191 @@
             }
         });
 
-        // Search Functionality
-        const headerSearchInput = document.getElementById('headerSearchInput');
-        const searchResults = document.getElementById('searchResults');
-        
-        // Sample tool data for search
-        const tools = [
-            { name: "Image Resizer", category: "Image Tools", url: "image-resizer.html" },
-            { name: "Image Format Converter", category: "Image Tools", url: "image-converter.html" },
-            { name: "Background Remover", category: "Image Tools", url: "background-remover.html" },
-            { name: "Image Compressor", category: "Image Tools", url: "image-compressor.html" },
-            { name: "PDF to Word", category: "File Tools", url: "pdf-to-word.html" },
-            { name: "Word to PDF", category: "File Tools", url: "word-to-pdf.html" },
-            { name: "Image to PDF", category: "File Tools", url: "image-to-pdf.html" },
-            { name: "ZIP Extractor", category: "File Tools", url: "zip-extractor.html" },
-            { name: "CSV/Excel Analyzer", category: "Analytics Tools", url: "csv-excel-analyzer.html" },
-            { name: "Keyword Density & SEO Analyzer", category: "Analytics Tools", url: "keyword-seo-analyzer.html" },
-            { name: "Sentiment Analyzer", category: "Analytics Tools", url: "sentiment-analyzer.html" },
-            { name: "Log File / IP Analyzer", category: "Analytics Tools", url: "log-ip-analyzer.html" },
-            { name: "Readability & Word Frequency Analyzer", category: "Analytics Tools", url: "readability-analyzer.html" },
-            { name: "YouTube Channel Analyzer", category: "Analytics Tools", url: "youtube-analyzer.html" },
-            { name: "Meta Tag Generator", category: "SEO & Web Tools", url: "meta-tag-generator.html" },
-            { name: "Domain WHOIS Lookup", category: "SEO & Web Tools", url: "domain-whois-lookup.html" },
-            { name: "URL Shortener", category: "SEO & Web Tools", url: "url-shortener.html" },
-            { name: "QR Code Generator", category: "SEO & Web Tools", url: "qr-code-generator.html" },
-            { name: "Calculator", category: "Math & Utility Tools", url: "calculator.html" },
-            { name: "Unit Converter", category: "Math & Utility Tools", url: "unit-converter.html" },
-            { name: "Currency Converter", category: "Math & Utility Tools", url: "currency-converter.html" },
-            { name: "Age Calculator", category: "Math & Utility Tools", url: "age-calculator.html" },
-            { name: "Word Counter", category: "Text Tools", url: "word-counter.html" },
-            { name: "Case Converter", category: "Text Tools", url: "case-converter.html" },
-            { name: "Lorem Ipsum Generator", category: "Text Tools", url: "lorem-ipsum.html" },
-            { name: "Text Encryption", category: "Text Tools", url: "text-encryption.html" },
-            { name: "JSON Formatter", category: "Developer Tools", url: "json-formatter.html" },
-            { name: "Base64 Converter", category: "Developer Tools", url: "base64-converter.html" },
-            { name: "Regex Tester", category: "Developer Tools", url: "regex-tester.html" },
-            { name: "UUID Generator", category: "Developer Tools", url: "uuid-generator.html" },
-            { name: "Color Picker", category: "Color Tools", url: "color-picker.html" },
-            { name: "Color Code Generator", category: "Color Tools", url: "color-code-generator.html" },
-            { name: "Color Combinator", category: "Color Tools", url: "color-combinator.html" },
-            { name: "Color Palettes", category: "Color Tools", url: "color-palettes.html" }
-        ];
-
-        headerSearchInput.addEventListener('input', function() {
-            const query = this.value.toLowerCase();
-            searchResults.innerHTML = '';
-            
-            if (query.length < 2) {
-                searchResults.style.display = 'none';
-                return;
-            }
-            
-            const filteredTools = tools.filter(tool => 
-                tool.name.toLowerCase().includes(query) || 
-                tool.category.toLowerCase().includes(query)
-            );
-            
-            if (filteredTools.length > 0) {
-                searchResults.style.display = 'block';
-                filteredTools.forEach(tool => {
-                    const resultItem = document.createElement('div');
-                    resultItem.className = 'search-result-item';
-                    resultItem.innerHTML = `
-                        <strong>${tool.name}</strong>
-                        <span>${tool.category}</span>
-                    `;
-                    resultItem.addEventListener('click', () => {
-                        window.location.href = tool.url;
-                    });
-                    searchResults.appendChild(resultItem);
-                });
-            } else {
-                searchResults.style.display = 'none';
-            }
-        });
-
-        // Close search results when clicking outside
-        document.addEventListener('click', function(e) {
-            if (!headerSearchInput.contains(e.target) && !searchResults.contains(e.target)) {
-                searchResults.style.display = 'none';
-            }
-        });
-
-        // Highlight section when navigating from search
-        function highlightSection(sectionId) {
-            const section = document.getElementById(sectionId);
-            if (section) {
-                section.classList.add('highlight');
-                setTimeout(() => {
-                    section.classList.remove('highlight');
-                }, 2000);
-            }
-        }
-
-        // Download Apps Modal Functionality
+        // Modal Functionality
         const downloadButton = document.getElementById('downloadButton');
         const downloadModal = document.getElementById('downloadModal');
         const closeModal = document.getElementById('closeModal');
 
-        downloadButton.addEventListener('click', function(e) {
+        downloadButton.addEventListener('click', (e) => {
             e.preventDefault();
             downloadModal.style.display = 'block';
         });
 
-        closeModal.addEventListener('click', function() {
+        closeModal.addEventListener('click', () => {
             downloadModal.style.display = 'none';
         });
 
-        window.addEventListener('click', function(e) {
+        window.addEventListener('click', (e) => {
             if (e.target === downloadModal) {
                 downloadModal.style.display = 'none';
             }
         });
 
-        // Fixed Feedback Form Functionality - All devices will automatically open email client
-        document.getElementById('feedbackForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        // Search Functionality
+        const headerSearchInput = document.getElementById('headerSearchInput');
+        const searchResults = document.getElementById('searchResults');
+        
+        // Sample tools data for search
+        const tools = [
+            { name: 'Image Resizer', category: 'Image Tools', url: 'image-resizer.html' },
+            { name: 'Image Format Converter', category: 'Image Tools', url: 'image-converter.html' },
+            { name: 'Background Remover', category: 'Image Tools', url: 'background-remover.html' },
+            { name: 'Image Compressor', category: 'Image Tools', url: 'image-compressor.html' },
+            { name: 'PDF to Word', category: 'File Tools', url: 'pdf-to-word.html' },
+            { name: 'Word to PDF', category: 'File Tools', url: 'word-to-pdf.html' },
+            { name: 'Image to PDF', category: 'File Tools', url: 'image-to-pdf.html' },
+            { name: 'ZIP Extractor', category: 'File Tools', url: 'zip-extractor.html' },
+            { name: 'CSV/Excel Analyzer', category: 'Analytics Tools', url: 'csv-excel-analyzer.html' },
+            { name: 'Keyword Density & SEO Analyzer', category: 'Analytics Tools', url: 'keyword-seo-analyzer.html' },
+            { name: 'Sentiment Analyzer', category: 'Analytics Tools', url: 'sentiment-analyzer.html' },
+            { name: 'Log File / IP Analyzer', category: 'Analytics Tools', url: 'log-ip-analyzer.html' },
+            { name: 'Readability & Word Frequency Analyzer', category: 'Analytics Tools', url: 'readability-analyzer.html' },
+            { name: 'YouTube Channel Analyzer', category: 'Analytics Tools', url: 'youtube-analyzer.html' },
+            { name: 'Meta Tag Generator', category: 'SEO & Web Tools', url: 'meta-tag-generator.html' },
+            { name: 'Domain WHOIS Lookup', category: 'SEO & Web Tools', url: 'domain-whois-lookup.html' },
+            { name: 'URL Shortener', category: 'SEO & Web Tools', url: 'url-shortener.html' },
+            { name: 'QR Code Generator', category: 'SEO & Web Tools', url: 'qr-code-generator.html' },
+            { name: 'Calculator', category: 'Math & Utility Tools', url: 'calculator.html' },
+            { name: 'Unit Converter', category: 'Math & Utility Tools', url: 'unit-converter.html' },
+            { name: 'Currency Converter', category: 'Math & Utility Tools', url: 'currency-converter.html' },
+            { name: 'Age Calculator', category: 'Math & Utility Tools', url: 'age-calculator.html' },
+            { name: 'Word Counter', category: 'Text Tools', url: 'word-counter.html' },
+            { name: 'Translator', category: 'Text Tools', url: 'translator.html' },
+            { name: 'Case Converter', category: 'Text Tools', url: 'case-converter.html' },
+            { name: 'Text Generator', category: 'Text Tools', url: 'text-generator.html' },
+            { name: 'Code Formatter', category: 'Developer Tools', url: 'code-formatter.html' },
+            { name: 'JSON to XML Converter', category: 'Developer Tools', url: 'json-xml-converter.html' },
+            { name: 'Hash Generator', category: 'Developer Tools', url: 'hash-generator.html' },
+            { name: 'UUID Generator', category: 'Developer Tools', url: 'uuid-generator.html' },
+            { name: 'Color Picker', category: 'Color Tools', url: 'color-picker.html' },
+            { name: 'Color Palette Generator', category: 'Color Tools', url: 'color-palette-generator.html' },
+            { name: 'Color Converter', category: 'Color Tools', url: 'color-converter.html' },
+            { name: 'Contrast Checker', category: 'Color Tools', url: 'contrast-checker.html' }
+        ];
+
+        headerSearchInput.addEventListener('input', () => {
+            const searchTerm = headerSearchInput.value.toLowerCase().trim();
             
-            const name = document.getElementById('name').value || 'Anonymous';
+            // Clear previous results
+            searchResults.innerHTML = '';
+            
+            if (searchTerm.length < 2) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            // Filter tools based on search term
+            const filteredTools = tools.filter(tool => 
+                tool.name.toLowerCase().includes(searchTerm) || 
+                tool.category.toLowerCase().includes(searchTerm)
+            );
+            
+            if (filteredTools.length === 0) {
+                searchResults.style.display = 'none';
+                return;
+            }
+            
+            // Display results
+            filteredTools.forEach(tool => {
+                const resultItem = document.createElement('div');
+                resultItem.className = 'search-result-item';
+                
+                // Highlight matching text
+                const highlightedName = tool.name.replace(new RegExp(searchTerm, 'gi'), match => `<strong>${match}</strong>`);
+                
+                resultItem.innerHTML = `
+                    ${highlightedName}
+                    <span>${tool.category}</span>
+                `;
+                
+                resultItem.addEventListener('click', () => {
+                    window.location.href = tool.url;
+                });
+                
+                searchResults.appendChild(resultItem);
+            });
+            
+            searchResults.style.display = 'block';
+        });
+
+        // Hide search results when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!headerSearchInput.contains(e.target) && !searchResults.contains(e.target)) {
+                searchResults.style.display = 'none';
+            }
+        });
+
+        // Feedback Form Handling
+        const feedbackForm = document.getElementById('feedbackForm');
+        
+        feedbackForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
             const email = document.getElementById('email').value;
             const message = document.getElementById('message').value;
             
-            // Using template literals with proper newline characters
-            const subject = `Feedback from ${name} - Wander Tools`;
-            const body = `Name: ${name}\nEmail: ${email}\n\nFeedback:\n${message}`;
+            // In a real application, you would send this data to a server
+            console.log('Feedback submitted:', { name, email, message });
             
-            // Create mailto link
-            const mailtoLink = `mailto:wander.tools.site@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-            
-            // Try to open email client using multiple methods for maximum compatibility
-            let emailOpened = false;
-            
-            // Method 1: window.open (works on most devices)
-            try {
-                const newWindow = window.open(mailtoLink, '_blank');
-                if (newWindow && !newWindow.closed) {
-                    emailOpened = true;
-                    // Close the window after a short delay
-                    setTimeout(() => {
-                        if (!newWindow.closed) {
-                            newWindow.close();
-                        }
-                    }, 500);
-                }
-            } catch (e) {
-                console.error('Window.open method failed:', e);
-            }
-            
-            // Method 2: window.location.href (fallback)
-            if (!emailOpened) {
-                try {
-                    window.location.href = mailtoLink;
-                    emailOpened = true;
-                } catch (e) {
-                    console.error('Location.href method failed:', e);
-                }
-            }
-            
-            // Method 3: Create a hidden link and click it
-            if (!emailOpened) {
-                try {
-                    const link = document.createElement('a');
-                    link.href = mailtoLink;
-                    link.style.display = 'none';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    emailOpened = true;
-                } catch (e) {
-                    console.error('Hidden link method failed:', e);
-                }
-            }
-            
-            // Show a message based on success
-            setTimeout(() => {
-                if (emailOpened) {
-                    alert('Thank you for your feedback! Your email client is opening to send your message.');
-                } else {
-                    alert('Thank you for your feedback! Please send your message to wander.tools.site@gmail.com');
-                }
-            }, 300);
+            // Show success message
+            alert('Thank you for your feedback! We appreciate your input.');
             
             // Reset form
-            document.getElementById('feedbackForm').reset();
+            feedbackForm.reset();
         });
 
-        // Smooth scrolling for navigation links
-        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-            anchor.addEventListener('click', function (e) {
-                e.preventDefault();
+        // Scroll to top functionality
+        const scrollToTopButton = document.getElementById('scrollToTop');
+        
+        scrollToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Highlight navigation when scrolling to sections
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-links a');
+        
+        window.addEventListener('scroll', () => {
+            let current = '';
+            
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
                 
-                const targetId = this.getAttribute('href');
-                if (targetId === '#') return;
-                
-                const targetElement = document.querySelector(targetId);
-                if (targetElement) {
-                    // Calculate the offset based on header height
-                    const headerOffset = 100;
-                    const elementPosition = targetElement.getBoundingClientRect().top;
-                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                    
-                    window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                    });
+                if (pageYOffset >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+            
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
                 }
             });
         });
+
+        // Footer link hover effect with Use Tool button color
+        const footerLinks = document.querySelectorAll('.footer-column ul li a');
+        const useToolButton = document.querySelector('.tool-card a');
+        
+        if (useToolButton) {
+            const useToolColor = getComputedStyle(useToolButton).backgroundColor;
+            
+            footerLinks.forEach(link => {
+                link.addEventListener('mouseenter', () => {
+                    link.style.color = useToolColor;
+                });
+                
+                link.addEventListener('mouseleave', () => {
+                    link.style.color = '';
+                });
+            });
+        }
     </script>
 </body>
 </html>
