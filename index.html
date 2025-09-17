@@ -635,6 +635,43 @@
             transform: translateY(-2px);
         }
         
+        .alert {
+            padding: 12px 15px;
+            border-radius: var(--border-radius);
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+        
+        .alert-success {
+            background-color: rgba(75, 181, 67, 0.2);
+            color: var(--success-color);
+            border: 1px solid var(--success-color);
+        }
+        
+        .alert-error {
+            background-color: rgba(255, 51, 51, 0.2);
+            color: var(--danger-color);
+            border: 1px solid var(--danger-color);
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+        
+        .privacy-note {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--gray-color);
+            text-align: center;
+        }
+        
         [data-theme="dark"] .feedback-section {
             background: linear-gradient(135deg, #2d2d2d 0%, #1e1e1e 100%);
         }
@@ -1163,22 +1200,35 @@
         <!-- Feedback Section -->
         <section id="feedback" class="feedback-section">
             <div class="feedback-container">
-                <h2 class="feedback-title">Send Us Your Feedback</h2>
+                <h2 class="feedback-title">
+                    <i class="fas fa-comment-dots"></i>
+                    Send Us Your Feedback
+                </h2>
+                
+                <div id="alertBox" class="alert"></div>
+                
                 <form class="feedback-form" id="feedbackForm">
                     <div class="form-group">
-                        <label for="name">Name</label>
-                        <input type="text" id="name" class="form-control" placeholder="Your name" required>
+                        <label for="name">Name *</label>
+                        <input type="text" id="name" class="form-control" placeholder="Your name" required minlength="2" maxlength="50">
                     </div>
                     <div class="form-group">
-                        <label for="email">Email</label>
+                        <label for="email">Email *</label>
                         <input type="email" id="email" class="form-control" placeholder="Your email" required>
                     </div>
                     <div class="form-group">
-                        <label for="message">Message</label>
-                        <textarea id="message" class="form-control" placeholder="Your feedback or suggestions..." required></textarea>
+                        <label for="message">Message *</label>
+                        <textarea id="message" class="form-control" placeholder="Your feedback or suggestions..." required minlength="10" maxlength="1000"></textarea>
                     </div>
-                    <button type="submit" class="submit-button">Send Feedback</button>
+                    <button type="submit" class="submit-button" id="submitButton">
+                        Send Feedback
+                    </button>
                 </form>
+
+                <p class="privacy-note">
+                    <i class="fas fa-shield-alt"></i>
+                    Your information is secure and will only be used to respond to your feedback.
+                </p>
             </div>
         </section>
     </main>
@@ -1234,7 +1284,26 @@
         </div>
     </footer>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCIRviVtANQrb72IZzyNlQMuCzsIATP7k",
+            authDomain: "wander-tools.firebaseapp.com",
+            projectId: "wander-tools",
+            storageBucket: "wander-tools.firebasestorage.app",
+            messagingSenderId: "911828766491",
+            appId: "1:911828766491:web:e38541bd54996adea5cdbe",
+            measurementId: "G-GY19ZGWP4K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
@@ -1375,22 +1444,102 @@
 
         // Feedback Form Handling
         const feedbackForm = document.getElementById('feedbackForm');
+        const submitButton = document.getElementById('submitButton');
+        const alertBox = document.getElementById('alertBox');
         
-        feedbackForm.addEventListener('submit', (e) => {
+        // Validate email format
+        function isValidEmail(email) {
+            const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+            return emailRegex.test(email);
+        }
+
+        // Show alert message
+        function showAlert(message, type) {
+            alertBox.textContent = message;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.style.display = 'block';
+            
+            // Hide alert after 5 seconds
+            setTimeout(() => {
+                alertBox.style.display = 'none';
+            }, 5000);
+        }
+
+        feedbackForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const name = document.getElementById('name').value;
-            const email = document.getElementById('email').value;
-            const message = document.getElementById('message').value;
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const message = document.getElementById('message').value.trim();
             
-            // In a real application, you would send this data to a server
-            console.log('Feedback submitted:', { name, email, message });
+            // Client-side validation
+            if (name.length < 2) {
+                showAlert('Name must be at least 2 characters long.', 'error');
+                return;
+            }
             
-            // Show success message
-            alert('Thank you for your feedback! We appreciate your input.');
+            if (!isValidEmail(email)) {
+                showAlert('Please enter a valid email address.', 'error');
+                return;
+            }
             
-            // Reset form
-            feedbackForm.reset();
+            if (message.length < 10) {
+                showAlert('Message must be at least 10 characters long.', 'error');
+                return;
+            }
+            
+            // Disable submit button and show loading state
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<span class="loading"></span> Sending...';
+            
+            try {
+                // Save feedback to Firestore
+                await db.collection("feedbacks").add({
+                    name: name,
+                    email: email,
+                    message: message,
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                    pageUrl: window.location.href
+                });
+                
+                // Show success message
+                showAlert('Thank you for your feedback! We appreciate your input.', 'success');
+                
+                // Reset form
+                feedbackForm.reset();
+            } catch (error) {
+                console.error("Error saving feedback: ", error);
+                showAlert('Sorry, there was an error submitting your feedback. Please try again.', 'error');
+            } finally {
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.innerHTML = 'Send Feedback';
+            }
+        });
+
+        // Input validation on the fly
+        document.getElementById('email').addEventListener('blur', function() {
+            if (this.value && !isValidEmail(this.value)) {
+                this.style.borderColor = 'var(--danger-color)';
+            } else {
+                this.style.borderColor = '#ddd';
+            }
+        });
+
+        document.getElementById('name').addEventListener('blur', function() {
+            if (this.value && this.value.length < 2) {
+                this.style.borderColor = 'var(--danger-color)';
+            } else {
+                this.style.borderColor = '#ddd';
+            }
+        });
+
+        document.getElementById('message').addEventListener('blur', function() {
+            if (this.value && this.value.length < 10) {
+                this.style.borderColor = 'var(--danger-color)';
+            } else {
+                this.style.borderColor = '#ddd';
+            }
         });
 
         // Scroll to top functionality
