@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Image to PDF Converter</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root {
+  --bg-color: #f7f7f7;
+  --card-bg: #fff;
+  --text-color: #333;
+  --button-bg: #4CAF50;
+  --button-hover: #45a049;
+  --download-bg: #008CBA;
+  --download-hover: #007bb5;
+  --drop-border: #2575fc;
+  --progress-bg: #ddd;
+  --progress-fill: #4CAF50;
+}
+
+body.dark {
+  --bg-color: #181818;
+  --card-bg: #242424;
+  --text-color: #eee;
+  --drop-border: #4AA8FF;
+  --progress-bg: #333;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg-color);
+  margin: 0;
+  padding: 50px 0 20px;
+  display: flex;
+  justify-content: center;
+  transition: background 0.3s, color 0.3s;
+}
+
+.container {
+  background: var(--card-bg);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+  padding: 30px;
+  text-align: center;
+  transition: background 0.3s, color 0.3s;
+}
+
+h2 {
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: 1.6rem;
+}
+
+.drop-area {
+  padding: 25px;
+  border: 2px dashed var(--drop-border);
+  border-radius: 8px;
+  margin-bottom: 20px;
+  color: var(--drop-border);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.1);
+}
+.drop-area.dragover {
+  background: rgba(37,117,252,0.15);
+  transform: scale(1.02);
+}
+
+input[type="file"] { display: none; }
+
+button {
+  padding: 12px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  margin: 5px;
+  transition: all 0.3s ease;
+}
+
+#convertBtn { background: var(--button-bg); color: white; }
+#convertBtn:hover { background: var(--button-hover); transform: translateY(-2px); }
+#downloadBtn { background: var(--download-bg); color: white; }
+#downloadBtn:hover { background: var(--download-hover); transform: translateY(-2px); }
+#downloadBtn:disabled { background: grey; cursor: not-allowed; transform: none; }
+
+#progress { width: 100%; background: var(--progress-bg); border-radius: 5px; overflow: hidden; margin-top: 15px; height: 15px; display: none; }
+#progress-bar { width: 0%; height: 100%; background: var(--progress-fill); transition: width 0.3s ease; }
+
+#modeSwitch {
+  position: fixed;
+  top: 15px;
+  right: 20px;
+  background: var(--button-bg);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#modeSwitch:hover { background: var(--button-hover); transform: translateY(-2px); }
+
+@media (max-width: 500px){
+  body { padding: 20px 0 20px; }
+  .container { padding: 20px; }
+  h2 { font-size: 1.4rem; }
+  .drop-area { padding: 20px; }
+  button { padding: 10px 20px; font-size: 15px; }
+}
+</style>
+</head>
+<body>
+
+<button id="modeSwitch">Dark Mode</button>
+
+<div class="container">
+  <h2>Image to PDF Converter</h2>
+  <div class="drop-area" id="dropArea">Drag & drop images here or click to upload</div>
+  <input type="file" id="fileInput" accept="image/*" multiple>
+  <br>
+  <button id="convertBtn">Convert</button>
+  <button id="downloadBtn" disabled>Download PDF</button>
+  <div id="progress"><div id="progress-bar"></div></div>
+</div>
+
+<script>
+const dropArea = document.getElementById('dropArea');
+const fileInput = document.getElementById('fileInput');
+const convertBtn = document.getElementById('convertBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const progress = document.getElementById('progress');
+const progressBar = document.getElementById('progress-bar');
+const modeSwitch = document.getElementById('modeSwitch');
+
+let images = [];
+let pdfDoc = null;
+let darkMode = false;
+
+// Dark/Light Mode Toggle
+modeSwitch.addEventListener('click', ()=>{
+  darkMode = !darkMode;
+  document.body.classList.toggle('dark', darkMode);
+  modeSwitch.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+});
+
+dropArea.addEventListener('click', ()=>fileInput.click());
+dropArea.addEventListener('dragover', e=>{ e.preventDefault(); dropArea.classList.add('dragover'); });
+dropArea.addEventListener('dragleave', e=>{ dropArea.classList.remove('dragover'); });
+dropArea.addEventListener('drop', e=>{ e.preventDefault(); dropArea.classList.remove('dragover'); addFiles(e.dataTransfer.files); });
+fileInput.addEventListener('change', e=>addFiles(e.target.files));
+
+function addFiles(files){
+  images = [...images, ...Array.from(files).filter(f=>f.type.startsWith('image/'))];
+  alert(`${images.length} image(s) ready`);
+}
+
+convertBtn.addEventListener('click', async ()=>{
+  if(images.length===0){ alert("Select images first!"); return; }
+  const { jsPDF } = window.jspdf;
+  pdfDoc = new jsPDF();
+  const pageWidth = pdfDoc.internal.pageSize.getWidth();
+  const pageHeight = pdfDoc.internal.pageSize.getHeight();
+
+  progress.style.display = 'block';
+  progressBar.style.width = '0%';
+
+  for(let i=0;i<images.length;i++){
+    const img = await loadImage(images[i]);
+    const ratio = img.width/img.height;
+    let imgWidth = pageWidth - 20;
+    let imgHeight = imgWidth/ratio;
+    if(imgHeight > pageHeight-20){ imgHeight = pageHeight-20; imgWidth = imgHeight*ratio; }
+
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width; canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img,0,0);
+    const imgData = canvas.toDataURL('image/png');
+
+    if(i>0) pdfDoc.addPage();
+    pdfDoc.addImage(imgData,'PNG',(pageWidth-imgWidth)/2,10,imgWidth,imgHeight);
+
+    progressBar.style.width = `${((i+1)/images.length)*100}%`;
+  }
+
+  alert("Conversion done! You can now download the PDF.");
+  downloadBtn.disabled = false;
+});
+
+downloadBtn.addEventListener('click', ()=>{
+  if(pdfDoc) pdfDoc.save('Images.pdf');
+});
+
+function loadImage(file){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload=()=>resolve(img);
+    img.src = URL.createObjectURL(file);
+  });
+}
+</script>
+
+</body>
+</html>

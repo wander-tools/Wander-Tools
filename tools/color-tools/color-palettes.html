@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palettes - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dark-mode .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dark-mode .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            color: white;
+        }
+        
+        .dark-mode header {
+            color: #f0f0f0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .tool-container {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .color-palettes {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .filter-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .search-input {
+            border-color: #475569;
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .search-input:focus {
+            border-color: #4776E6;
+        }
+        
+        .dark-mode .search-input:focus {
+            border-color: #8E54E9;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #6c757d;
+        }
+        
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            min-width: 150px;
+        }
+        
+        .dark-mode .filter-select {
+            border-color: #475569;
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .filter-select:focus {
+            border-color: #4776E6;
+        }
+        
+        .dark-mode .filter-select:focus {
+            border-color: #8E54E9;
+        }
+        
+        .palettes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+        
+        .palette-card {
+            background: #f8f9fa;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s, background-color 0.3s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark-mode .palette-card {
+            background: #334155;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .palette-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .dark-mode .palette-card:hover {
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .palette-colors {
+            display: flex;
+            height: 120px;
+        }
+        
+        .palette-color {
+            flex: 1;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding: 10px;
+            cursor: pointer;
+            transition: flex 0.3s;
+            position: relative;
+        }
+        
+        .palette-color:hover {
+            flex: 1.5;
+        }
+        
+        .color-code {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        
+        .palette-color:hover .color-code {
+            opacity: 1;
+        }
+        
+        .palette-info {
+            padding: 15px;
+        }
+        
+        .palette-name {
+            font-weight: 600;
+            color: #4776E6;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .palette-name {
+            color: #8E54E9;
+        }
+        
+        .palette-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 12px;
+        }
+        
+        .palette-tag {
+            background: #e9ecef;
+            color: #495057;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .palette-tag {
+            background: #475569;
+            color: #e2e8f0;
+        }
+        
+        .palette-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .palette-action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            background: #4776E6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .palette-action-btn:hover {
+            background: #3b5fc9;
+        }
+        
+        .palette-action-btn.save-btn {
+            background: #4caf50;
+        }
+        
+        .palette-action-btn.save-btn:hover {
+            background: #43a047;
+        }
+        
+        .load-more {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 20px;
+        }
+        
+        .load-more:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 30px;
+        }
+        
+        .pagination-btn {
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .pagination-btn {
+            background: #334155;
+            border-color: #475569;
+            color: #f0f0f0;
+        }
+        
+        .pagination-btn.active {
+            background: #4776E6;
+            color: white;
+            border-color: #4776E6;
+        }
+        
+        .dark-mode .pagination-btn.active {
+            background: #8E54E9;
+            border-color: #8E54E9;
+        }
+        
+        .pagination-btn:hover:not(.active) {
+            background: #e9ecef;
+        }
+        
+        .dark-mode .pagination-btn:hover:not(.active) {
+            background: #475569;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .instructions {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions h3 {
+            color: #8E54E9;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4776E6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions li:before {
+            color: #8E54E9;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding: 20px;
+            opacity: 0.8;
+        }
+        
+        .dark-mode footer {
+            color: #cbd5e1;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            background: #4caf50;
+            color: white;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        
+        .toast.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        @media (max-width: 768px) {
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+            
+            .palettes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .palette-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="index.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Tools
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <header>
+            <h1>Color Palettes</h1>
+            <p>Discover beautiful color palettes for your design projects</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="tool-header">
+                <h2><i class="fas fa-swatchbook"></i> Color Palettes</h2>
+                <div class="tool-actions">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            
+            <div class="color-palettes">
+                <div class="filter-controls">
+                    <div class="search-box">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search palettes...">
+                    </div>
+                    
+                    <select class="filter-select" id="colorFilter">
+                        <option value="all">All Colors</option>
+                        <option value="red">Reds</option>
+                        <option value="blue">Blues</option>
+                        <option value="green">Greens</option>
+                        <option value="purple">Purples</option>
+                        <option value="warm">Warm Tones</option>
+                        <option value="cool">Cool Tones</option>
+                        <option value="pastel">Pastels</option>
+                        <option value="vibrant">Vibrant</option>
+                    </select>
+                    
+                    <select class="filter-select" id="sortFilter">
+                        <option value="popular">Most Popular</option>
+                        <option value="newest">Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="name">Name</option>
+                    </select>
+                </div>
+                
+                <div class="palettes-grid" id="palettesGrid">
+                    <!-- Palettes will be loaded here -->
+                </div>
+                
+                <button class="load-more" id="loadMoreBtn">
+                    <i class="fas fa-plus"></i> Load More Palettes
+                </button>
+                
+                <div class="pagination" id="pagination">
+                    <button class="pagination-btn active">1</button>
+                    <button class="pagination-btn">2</button>
+                    <button class="pagination-btn">3</button>
+                    <button class="pagination-btn">4</button>
+                    <button class="pagination-btn">5</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use the Color Palettes Tool</h3>
+            <ul>
+                <li>Browse through curated color palettes for inspiration</li>
+                <li>Use the search box to find palettes by name or color</li>
+                <li>Filter palettes by color family or tone</li>
+                <li>Sort palettes by popularity, date, or name</li>
+                <li>Click on a color to copy its HEX code to clipboard</li>
+                <li>Use the "Copy Palette" button to copy all colors in a palette</li>
+                <li>Save your favorite palettes for later reference</li>
+                <li>Use the pagination to browse through more palettes</li>
+                <li>Toggle between dark and light mode using the moon/sun button</li>
+            </ul>
+            
+            <h3>Tips for Using Color Palettes</h3>
+            <ul>
+                <li>Use the 60-30-10 rule: 60% dominant color, 30% secondary color, 10% accent color</li>
+                <li>Consider color psychology when choosing palettes for your projects</li>
+                <li>Ensure sufficient contrast for accessibility</li>
+                <li>Test your color palette in different lighting conditions</li>
+                <li>Use online tools to check color contrast ratios</li>
+                <li>Consider cultural associations of colors for international audiences</li>
+            </ul>
+            
+            <h3>Popular Palette Types</h3>
+            <ul>
+                <li><strong>Monochromatic</strong>: Variations of a single hue</li>
+                <li><strong>Analogous</strong>: Colors next to each other on the color wheel</li>
+                <li><strong>Complementary</strong>: Colors opposite each other on the color wheel</li>
+                <li><strong>Triadic</strong>: Three colors evenly spaced on the color wheel</li>
+                <li><strong>Tetradic</strong>: Four colors arranged into two complementary pairs</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Wander Tools | All Rights Reserved</p>
+    </footer>
+
+    <div class="toast" id="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Color copied to clipboard!</span>
+    </div>
+
+    <script>
+        // DOM Elements
+        const searchInput = document.getElementById('searchInput');
+        const colorFilter = document.getElementById('colorFilter');
+        const sortFilter = document.getElementById('sortFilter');
+        const palettesGrid = document.getElementById('palettesGrid');
+        const loadMoreBtn = document.getElementById('loadMoreBtn');
+        const pagination = document.getElementById('pagination');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const toast = document.getElementById('toast');
+        const toastMessage = document.getElementById('toastMessage');
+        
+        // Sample color palettes data
+        const colorPalettes = [
+            {
+                id: 1,
+                name: "Sunset Vibes",
+                colors: ["#FF6B6B", "#FF9E6D", "#FFD166", "#9EE6CF", "#51C4D3"],
+                tags: ["warm", "vibrant", "sunset"],
+                likes: 245,
+                date: "2023-06-15"
+            },
+            {
+                id: 2,
+                name: "Ocean Breeze",
+                colors: ["#0A2463", "#3E92CC", "#D6E5E3", "#FFFDED", "#C1292E"],
+                tags: ["cool", "blue", "ocean"],
+                likes: 189,
+                date: "2023-07-02"
+            },
+            {
+                id: 3,
+                name: "Forest Retreat",
+                colors: ["#2D5A27", "#5B8C5A", "#8FBC8F", "#C8E6C9", "#F1F8E9"],
+                tags: ["green", "nature", "earthy"],
+                likes: 176,
+                date: "2023-05-18"
+            },
+            {
+                id: 4,
+                name: "Berry Smoothie",
+                colors: ["#6A0572", "#AB83A1", "#C8B8DB", "#F5E5FC", "#FFD6FF"],
+                tags: ["purple", "pastel", "berry"],
+                likes: 212,
+                date: "2023-07-22"
+            },
+            {
+                id: 5,
+                name: "Desert Sand",
+                colors: ["#8C5E3C", "#BF8A49", "#F2C879", "#F2E0BD", "#F2F2F2"],
+                tags: ["warm", "earth", "desert"],
+                likes: 154,
+                date: "2023-06-30"
+            },
+            {
+                id: 6,
+                name: "Midnight Sky",
+                colors: ["#0D1B2A", "#1B263B", "#415A77", "#778DA9", "#E0E1DD"],
+                tags: ["cool", "dark", "blue"],
+                likes: 278,
+                date: "2023-07-10"
+            },
+            {
+                id: 7,
+                name: "Spring Blossom",
+                colors: ["#F72585", "#B5179E", "#7209B7", "#560BAD", "#480CA8"],
+                tags: ["vibrant", "purple", "pink"],
+                likes: 231,
+                date: "2023-04-12"
+            },
+            {
+                id: 8,
+                name: "Citrus Fresh",
+                colors: ["#F9C80E", "#F86624", "#EA3546", "#662E9B", "#43BCCD"],
+                tags: ["vibrant", "warm", "citrus"],
+                likes: 195,
+                date: "2023-07-05"
+            },
+            {
+                id: 9,
+                name: "Mint Chocolate",
+                colors: ["#3D5A80", "#98C1D9", "#E0FBFC", "#EE6C4D", "#293241"],
+                tags: ["cool", "pastel", "mint"],
+                likes: 167,
+                date: "2023-05-25"
+            },
+            {
+                id: 10,
+                name: "Autumn Leaves",
+                colors: ["#8D5A3A", "#C57B57", "#F1AB86", "#F7DBA7", "#9CAF88"],
+                tags: ["warm", "autumn", "earth"],
+                likes: 203,
+                date: "2023-06-08"
+            },
+            {
+                id: 11,
+                name: "Cotton Candy",
+                colors: ["#FFADAD", "#FFD6A5", "#FDFFB6", "#CAFFBF", "#9BF6FF"],
+                tags: ["pastel", "soft", "rainbow"],
+                likes: 187,
+                date: "2023-07-15"
+            },
+            {
+                id: 12,
+                name: "Deep Ocean",
+                colors: ["#03045E", "#0077B6", "#00B4D8", "#90E0EF", "#CAF0F8"],
+                tags: ["blue", "cool", "ocean"],
+                likes: 221,
+                date: "2023-06-25"
+            }
+        ];
+        
+        // Initialize the Color Palettes Tool
+        function initColorPalettes() {
+            // Set up event listeners
+            searchInput.addEventListener('input', filterPalettes);
+            colorFilter.addEventListener('change', filterPalettes);
+            sortFilter.addEventListener('change', filterPalettes);
+            loadMoreBtn.addEventListener('click', loadMorePalettes);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Pagination buttons
+            const paginationBtns = pagination.querySelectorAll('.pagination-btn');
+            paginationBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    paginationBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    // In a real app, this would load the corresponding page
+                    showToast(`Page ${btn.textContent} loaded`);
+                });
+            });
+            
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            // Initial load
+            renderPalettes(colorPalettes);
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        }
+        
+        // Filter palettes based on search and filters
+        function filterPalettes() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const colorValue = colorFilter.value;
+            const sortValue = sortFilter.value;
+            
+            let filteredPalettes = colorPalettes.filter(palette => {
+                // Search filter
+                const matchesSearch = searchTerm === '' || 
+                    palette.name.toLowerCase().includes(searchTerm) ||
+                    palette.tags.some(tag => tag.includes(searchTerm));
+                
+                // Color filter
+                const matchesColor = colorValue === 'all' || 
+                    palette.tags.includes(colorValue);
+                
+                return matchesSearch && matchesColor;
+            });
+            
+            // Sort palettes
+            switch(sortValue) {
+                case 'popular':
+                    filteredPalettes.sort((a, b) => b.likes - a.likes);
+                    break;
+                case 'newest':
+                    filteredPalettes.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                case 'oldest':
+                    filteredPalettes.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    break;
+                case 'name':
+                    filteredPalettes.sort((a, b) => a.name.localeCompare(b.name));
+                    break;
+            }
+            
+            renderPalettes(filteredPalettes);
+        }
+        
+        // Render palettes to the grid
+        function renderPalettes(palettes) {
+            palettesGrid.innerHTML = '';
+            
+            if (palettes.length === 0) {
+                palettesGrid.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+                        <i class="fas fa-palette" style="font-size: 3rem; color: #6c757d; margin-bottom: 15px;"></i>
+                        <h3 style="color: #6c757d;">No palettes found</h3>
+                        <p>Try adjusting your search or filters</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            palettes.forEach(palette => {
+                const paletteElement = document.createElement('div');
+                paletteElement.className = 'palette-card';
+                
+                let colorsHtml = '';
+                palette.colors.forEach(color => {
+                    colorsHtml += `
+                        <div class="palette-color" style="background-color: ${color};">
+                            <span class="color-code">${color}</span>
+                        </div>
+                    `;
+                });
+                
+                paletteElement.innerHTML = `
+                    <div class="palette-colors">
+                        ${colorsHtml}
+                    </div>
+                    <div class="palette-info">
+                        <h3 class="palette-name">
+                            <i class="fas fa-palette"></i> ${palette.name}
+                        </h3>
+                        <div class="palette-tags">
+                            ${palette.tags.map(tag => `<span class="palette-tag">${tag}</span>`).join('')}
+                        </div>
+                        <div class="palette-actions">
+                            <button class="palette-action-btn copy-palette-btn">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                            <button class="palette-action-btn save-btn">
+                                <i class="fas fa-heart"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add event listeners for color copying
+                const colorElements = paletteElement.querySelectorAll('.palette-color');
+                colorElements.forEach((colorEl, index) => {
+                    colorEl.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        copyToClipboard(palette.colors[index], 'Color');
+                    });
+                });
+                
+                // Add event listener for copying entire palette
+                const copyBtn = paletteElement.querySelector('.copy-palette-btn');
+                copyBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const paletteText = palette.colors.join(', ');
+                    copyToClipboard(paletteText, 'Palette');
+                });
+                
+                // Add event listener for saving palette
+                const saveBtn = paletteElement.querySelector('.save-btn');
+                saveBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved';
+                    saveBtn.style.background = '#43a047';
+                    showToast('Palette saved to favorites!');
+                    
+                    // Reset after 2 seconds
+                    setTimeout(() => {
+                        saveBtn.innerHTML = '<i class="fas fa-heart"></i> Save';
+                        saveBtn.style.background = '#4caf50';
+                    }, 2000);
+                });
+                
+                palettesGrid.appendChild(paletteElement);
+            });
+        }
+        
+        // Load more palettes (simulated)
+        function loadMorePalettes() {
+            showToast('Loading more palettes...');
+            
+            // Simulate loading
+            setTimeout(() => {
+                // In a real app, this would fetch more data
+                const newPalettes = [
+                    {
+                        id: 13,
+                        name: "Tropical Paradise",
+                        colors: ["#FF5E5B", "#FF9D5C", "#FFCC5C", "#4CB944", "#007A87"],
+                        tags: ["vibrant", "tropical", "warm"],
+                        likes: 176,
+                        date: "2023-07-28"
+                    },
+                    {
+                        id: 14,
+                        name: "Icy Frost",
+                        colors: ["#D9EDDF", "#B6E1E7", "#9CCCDB", "#6BA1B7", "#4A7C93"],
+                        tags: ["cool", "pastel", "winter"],
+                        likes: 142,
+                        date: "2023-07-25"
+                    }
+                ];
+                
+                // Add to existing palettes and re-render
+                colorPalettes.push(...newPalettes);
+                filterPalettes();
+                
+                showToast('More palettes loaded!');
+            }, 1000);
+        }
+        
+        // Copy to clipboard with fallback
+        async function copyToClipboard(text, format) {
+            try {
+                // Try using the modern Clipboard API first
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    showToast(`${format} copied to clipboard!`);
+                    return;
+                }
+                
+                // Fallback for older browsers or insecure contexts
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                
+                // Make the textarea out of viewport
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                textArea.style.top = '-999999px';
+                document.body.appendChild(textArea);
+                
+                // Select and copy
+                textArea.focus();
+                textArea.select();
+                
+                let successful = false;
+                try {
+                    successful = document.execCommand('copy');
+                } catch (err) {
+                    console.error('Fallback copy failed:', err);
+                }
+                
+                document.body.removeChild(textArea);
+                
+                if (successful) {
+                    showToast(`${format} copied to clipboard!`);
+                } else {
+                    showError('Failed to copy. Please manually select and copy the text.');
+                }
+            } catch (err) {
+                console.error('Copy failed:', err);
+                showError('Failed to copy: ' + err.message);
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            // In a real app, you'd show this in the UI
+            console.error(message);
+        }
+        
+        // Show toast message
+        function showToast(message) {
+            toastMessage.textContent = message;
+            toast.classList.add('visible');
+            
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+        
+        // Initialize the Color Palettes Tool when the page loads
+        window.onload = initColorPalettes;
+    </script>
+</body>
+</html>

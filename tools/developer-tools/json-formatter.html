@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #f0f0f0;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        
+        .back-button {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .dark-mode .back-button {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .dark-mode .back-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: white;
+            font-size: 1.2rem;
+            transition: all 0.3s;
+        }
+        
+        .dark-mode .dark-mode-toggle {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+        
+        .dark-mode-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            color: white;
+        }
+        
+        .dark-mode header {
+            color: #f0f0f0;
+        }
+        
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        header p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin: 0 auto;
+            opacity: 0.9;
+        }
+        
+        .tool-container {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .tool-container {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .tool-header {
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .tool-header h2 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .json-formatter {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .editor-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 900px) {
+            .editor-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .editor-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .editor-panel h3 {
+            color: #4776E6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .editor-panel h3 {
+            color: #8E54E9;
+        }
+        
+        .code-editor {
+            width: 100%;
+            min-height: 300px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            outline: none;
+            resize: vertical;
+            transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+            tab-size: 2;
+            white-space: pre;
+        }
+        
+        .dark-mode .code-editor {
+            border-color: #475569;
+            background-color: #334155;
+            color: #f0f0f0;
+        }
+        
+        .button-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 10px 0;
+        }
+        
+        .format-btn {
+            padding: 12px;
+            background: linear-gradient(90deg, #4776E6 0%, #8E54E9 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .format-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .minify-btn {
+            padding: 12px;
+            background: linear-gradient(90deg, #20c997 0%, #0ca678 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .minify-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .validate-btn {
+            padding: 12px;
+            background: linear-gradient(90deg, #f59f00 0%, #e67700 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .validate-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .reset-btn {
+            padding: 12px;
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .reset-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            background: #ff5252;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .action-btn {
+            padding: 10px 15px;
+            background: #4776E6;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .action-btn:hover {
+            background: #3b5fc9;
+        }
+        
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 15px;
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        
+        .dark-mode .status-bar {
+            background: #334155;
+            border-color: #475569;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .status-icon {
+            color: #4776E6;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .status-icon {
+            color: #8E54E9;
+        }
+        
+        .status-value {
+            font-weight: 600;
+            color: #495057;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .status-value {
+            color: #cbd5e1;
+        }
+        
+        .error-message {
+            padding: 12px;
+            background: #fff5f5;
+            border: 2px solid #ff6b6b;
+            border-radius: 8px;
+            color: #c92a2a;
+            margin-top: 10px;
+            display: none;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+        
+        .dark-mode .error-message {
+            background: #2b1d1d;
+            border-color: #ff6b6b;
+            color: #ffa8a8;
+        }
+        
+        .error-message.visible {
+            display: block;
+        }
+        
+        .instructions {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 30px;
+            transition: background-color 0.3s;
+            max-width: 1200px;
+        }
+        
+        .dark-mode .instructions {
+            background-color: #1e293b;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        
+        .instructions h3 {
+            color: #4776E6;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions h3 {
+            color: #8E54E9;
+        }
+        
+        .instructions ul {
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+        }
+        
+        .instructions li:before {
+            content: "•";
+            color: #4776E6;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+            transition: color 0.3s;
+        }
+        
+        .dark-mode .instructions li:before {
+            color: #8E54E9;
+        }
+        
+        .instructions code {
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+        
+        .dark-mode .instructions code {
+            background: #334155;
+        }
+        
+        footer {
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            padding: 20px;
+            opacity: 0.8;
+        }
+        
+        .dark-mode footer {
+            color: #cbd5e1;
+        }
+        
+        @media (max-width: 768px) {
+            .button-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+        }
+        
+        /* JSON Syntax Highlighting */
+        .json-key { color: #e67700; }
+        .json-string { color: #2b8a3e; }
+        .json-number { color: #1971c2; }
+        .json-boolean { color: #ae3ec9; }
+        .json-null { color: #5c7cfa; }
+        
+        .dark-mode .json-key { color: #ffa94d; }
+        .dark-mode .json-string { color: #8ce99a; }
+        .dark-mode .json-number { color: #74c0fc; }
+        .dark-mode .json-boolean { color: #e599f7; }
+        .dark-mode .json-null { color: #91a7ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-container">
+            <a href="index.html" class="back-button">
+                <i class="fas fa-arrow-left"></i> Back to Tools
+            </a>
+            <button class="dark-mode-toggle" id="darkModeToggle">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        
+        <header>
+            <h1>Wander Tools</h1>
+            <p>A collection of handy web tools for everyday use</p>
+        </header>
+        
+        <div class="tool-container">
+            <div class="tool-header">
+                <h2><i class="fas fa-code"></i> JSON Formatter</h2>
+                <div class="tool-actions">
+                    <i class="fas fa-expand"></i>
+                </div>
+            </div>
+            
+            <div class="json-formatter">
+                <div class="editor-container">
+                    <div class="editor-panel">
+                        <h3><i class="fas fa-pencil-alt"></i> Input JSON</h3>
+                        <textarea class="code-editor" id="jsonInput" placeholder='Paste your JSON here...&#10;Example: {"name": "John", "age": 30, "city": "New York"}'></textarea>
+                    </div>
+                    
+                    <div class="editor-panel">
+                        <h3><i class="fas fa-eye"></i> Formatted JSON</h3>
+                        <pre class="code-editor" id="jsonOutput" readonly>Your formatted JSON will appear here...</pre>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="format-btn" id="formatBtn">
+                        <i class="fas fa-indent"></i> Format JSON
+                    </button>
+                    <button class="minify-btn" id="minifyBtn">
+                        <i class="fas fa-compress-alt"></i> Minify JSON
+                    </button>
+                    <button class="validate-btn" id="validateBtn">
+                        <i class="fas fa-check-circle"></i> Validate JSON
+                    </button>
+                    <button class="reset-btn" id="resetBtn">
+                        <i class="fas fa-redo"></i> Reset
+                    </button>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn" id="copyBtn">
+                        <i class="fas fa-copy"></i> Copy Formatted JSON
+                    </button>
+                    <button class="action-btn" id="clearBtn">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                    <button class="action-btn" id="exampleBtn">
+                        <i class="fas fa-lightbulb"></i> Load Example
+                    </button>
+                </div>
+                
+                <div class="status-bar">
+                    <div class="status-item">
+                        <i class="fas fa-file-code status-icon"></i>
+                        <span>Size:</span>
+                        <span class="status-value" id="sizeValue">0 bytes</span>
+                    </div>
+                    <div class="status-item">
+                        <i class="fas fa-layer-group status-icon"></i>
+                        <span>Lines:</span>
+                        <span class="status-value" id="linesValue">0</span>
+                    </div>
+                    <div class="status-item">
+                        <i class="fas fa-check-circle status-icon"></i>
+                        <span>Status:</span>
+                        <span class="status-value" id="statusValue">Ready</span>
+                    </div>
+                </div>
+                
+                <div class="error-message" id="errorMessage">
+                    <strong><i class="fas fa-exclamation-circle"></i> Error:</strong>
+                    <span id="errorText"></span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3>How to Use the JSON Formatter</h3>
+            <ul>
+                <li>Paste your JSON code into the input editor</li>
+                <li>Click "Format JSON" to beautify and format your JSON with proper indentation</li>
+                <li>Click "Minify JSON" to compress your JSON by removing all whitespace</li>
+                <li>Click "Validate JSON" to check if your JSON is valid</li>
+                <li>Use "Copy Formatted JSON" to copy the result to clipboard</li>
+                <li>Use "Clear All" to reset both input and output editors</li>
+                <li>Use "Load Example" to load a sample JSON for testing</li>
+                <li>Toggle between dark and light mode using the moon/sun button</li>
+            </ul>
+            
+            <h3>JSON Formatting Options</h3>
+            <ul>
+                <li><strong>Formatting</strong>: Adds proper indentation (2 spaces) and line breaks</li>
+                <li><strong>Minifying</strong>: Removes all unnecessary whitespace to reduce file size</li>
+                <li><strong>Validation</strong>: Checks for proper JSON syntax and structure</li>
+                <li><strong>Syntax Highlighting</strong>: Colors different JSON elements for better readability</li>
+            </ul>
+            
+            <h3>Keyboard Shortcuts</h3>
+            <ul>
+                <li><code>Ctrl + F</code> / <code>Cmd + F</code> - Format JSON</li>
+                <li><code>Ctrl + M</code> / <code>Cmd + M</code> - Minify JSON</li>
+                <li><code>Ctrl + V</code> / <code>Cmd + V</code> - Validate JSON</li>
+                <li><code>Ctrl + R</code> / <code>Cmd + R</code> - Reset</li>
+            </ul>
+        </div>
+    </div>
+    
+    <footer>
+        <p>© 2023 Wander Tools | All Rights Reserved</p>
+    </footer>
+
+    <script>
+        // DOM Elements
+        const jsonInput = document.getElementById('jsonInput');
+        const jsonOutput = document.getElementById('jsonOutput');
+        const formatBtn = document.getElementById('formatBtn');
+        const minifyBtn = document.getElementById('minifyBtn');
+        const validateBtn = document.getElementById('validateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exampleBtn = document.getElementById('exampleBtn');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const sizeValue = document.getElementById('sizeValue');
+        const linesValue = document.getElementById('linesValue');
+        const statusValue = document.getElementById('statusValue');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        
+        // Example JSON data
+        const exampleJSON = {
+            "name": "John Doe",
+            "age": 30,
+            "isStudent": false,
+            "address": {
+                "street": "123 Main St",
+                "city": "New York",
+                "zipcode": "10001"
+            },
+            "phoneNumbers": [
+                {
+                    "type": "home",
+                    "number": "212-555-1234"
+                },
+                {
+                    "type": "work",
+                    "number": "646-555-5678"
+                }
+            ],
+            "children": [],
+            "spouse": null
+        };
+        
+        // Initialize the JSON formatter
+        function initJSONFormatter() {
+            // Set up event listeners
+            formatBtn.addEventListener('click', formatJSON);
+            minifyBtn.addEventListener('click', minifyJSON);
+            validateBtn.addEventListener('click', validateJSON);
+            resetBtn.addEventListener('click', resetFormatter);
+            copyBtn.addEventListener('click', copyToClipboard);
+            clearBtn.addEventListener('click', clearAll);
+            exampleBtn.addEventListener('click', loadExample);
+            darkModeToggle.addEventListener('click', toggleDarkMode);
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', handleKeyboardShortcuts);
+            
+            // Input change listener
+            jsonInput.addEventListener('input', updateStats);
+            
+            // Check for saved dark mode preference
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            
+            // Initial stats update
+            updateStats();
+        }
+        
+        // Toggle dark mode
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                localStorage.setItem('darkMode', 'enabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('darkMode', 'disabled');
+                darkModeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+            
+            // Re-format JSON to apply syntax highlighting for current mode
+            if (jsonOutput.textContent !== 'Your formatted JSON will appear here...') {
+                formatJSON();
+            }
+        }
+        
+        // Handle keyboard shortcuts
+        function handleKeyboardShortcuts(e) {
+            if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+                switch (e.key) {
+                    case 'f':
+                        e.preventDefault();
+                        formatJSON();
+                        break;
+                    case 'm':
+                        e.preventDefault();
+                        minifyJSON();
+                        break;
+                    case 'v':
+                        e.preventDefault();
+                        validateJSON();
+                        break;
+                    case 'r':
+                        e.preventDefault();
+                        resetFormatter();
+                        break;
+                }
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const text = jsonInput.value;
+            const size = new Blob([text]).size;
+            const lines = text.split('\n').length;
+            
+            sizeValue.textContent = `${size} bytes`;
+            linesValue.textContent = lines;
+        }
+        
+        // Format JSON with proper indentation
+        function formatJSON() {
+            try {
+                const inputText = jsonInput.value.trim();
+                if (!inputText) {
+                    showError('Please enter some JSON to format');
+                    return;
+                }
+                
+                const parsedJSON = JSON.parse(inputText);
+                const formattedJSON = JSON.stringify(parsedJSON, null, 2);
+                
+                jsonOutput.textContent = formattedJSON;
+                applySyntaxHighlighting();
+                updateStatus('Formatted successfully', 'success');
+                hideError();
+                updateStats();
+            } catch (error) {
+                showError(`Invalid JSON: ${error.message}`);
+                updateStatus('Invalid JSON', 'error');
+            }
+        }
+        
+        // Minify JSON by removing whitespace
+        function minifyJSON() {
+            try {
+                const inputText = jsonInput.value.trim();
+                if (!inputText) {
+                    showError('Please enter some JSON to minify');
+                    return;
+                }
+                
+                const parsedJSON = JSON.parse(inputText);
+                const minifiedJSON = JSON.stringify(parsedJSON);
+                
+                jsonOutput.textContent = minifiedJSON;
+                applySyntaxHighlighting();
+                updateStatus('Minified successfully', 'success');
+                hideError();
+                updateStats();
+            } catch (error) {
+                showError(`Invalid JSON: ${error.message}`);
+                updateStatus('Invalid JSON', 'error');
+            }
+        }
+        
+        // Validate JSON syntax
+        function validateJSON() {
+            try {
+                const inputText = jsonInput.value.trim();
+                if (!inputText) {
+                    showError('Please enter some JSON to validate');
+                    return;
+                }
+                
+                JSON.parse(inputText);
+                jsonOutput.textContent = '✅ JSON is valid!';
+                updateStatus('Valid JSON', 'success');
+                hideError();
+            } catch (error) {
+                showError(`Invalid JSON: ${error.message}`);
+                updateStatus('Invalid JSON', 'error');
+                jsonOutput.textContent = '❌ JSON is invalid!';
+            }
+        }
+        
+        // Apply syntax highlighting to formatted JSON
+        function applySyntaxHighlighting() {
+            let text = jsonOutput.textContent;
+            
+            // Highlight JSON syntax
+            text = text
+                .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?)/g, function(match) {
+                    let cls = 'json-string';
+                    if (/:$/.test(match)) {
+                        cls = 'json-key';
+                    }
+                    return '<span class="' + cls + '">' + match + '</span>';
+                })
+                .replace(/\b(true|false)\b/g, '<span class="json-boolean">$1</span>')
+                .replace(/\b(null)\b/g, '<span class="json-null">$1</span>')
+                .replace(/\b-?\d+(\.\d+)?([eE][+-]?\d+)?\b/g, '<span class="json-number">$&</span>');
+            
+            jsonOutput.innerHTML = text;
+        }
+        
+        // Copy to clipboard
+        function copyToClipboard() {
+            if (!jsonOutput.textContent || jsonOutput.textContent === 'Your formatted JSON will appear here...') {
+                return;
+            }
+            
+            navigator.clipboard.writeText(jsonOutput.textContent)
+                .then(() => {
+                    updateStatus('Copied to clipboard', 'success');
+                    
+                    // Show feedback
+                    const originalText = copyBtn.innerHTML;
+                    copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = originalText;
+                    }, 2000);
+                })
+                .catch(err => {
+                    showError('Failed to copy: ' + err);
+                    updateStatus('Copy failed', 'error');
+                });
+        }
+        
+        // Clear all editors
+        function clearAll() {
+            jsonInput.value = '';
+            jsonOutput.textContent = 'Your formatted JSON will appear here...';
+            updateStatus('Cleared', 'info');
+            hideError();
+            updateStats();
+        }
+        
+        // Load example JSON
+        function loadExample() {
+            jsonInput.value = JSON.stringify(exampleJSON, null, 2);
+            formatJSON();
+            updateStatus('Example loaded', 'info');
+        }
+        
+        // Reset the formatter
+        function resetFormatter() {
+            clearAll();
+            updateStatus('Ready', 'info');
+        }
+        
+        // Update status message
+        function updateStatus(message, type) {
+            statusValue.textContent = message;
+            
+            // Remove previous status classes
+            statusValue.classList.remove('status-success', 'status-error', 'status-info');
+            
+            // Add new status class
+            switch (type) {
+                case 'success':
+                    statusValue.classList.add('status-success');
+                    break;
+                case 'error':
+                    statusValue.classList.add('status-error');
+                    break;
+                case 'info':
+                    statusValue.classList.add('status-info');
+                    break;
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.classList.add('visible');
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.classList.remove('visible');
+        }
+        
+        // Initialize the JSON formatter when the page loads
+        window.onload = initJSONFormatter;
+    </script>
+</body>
+</html>

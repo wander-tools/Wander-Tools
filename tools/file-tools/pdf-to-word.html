@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>PDF → Word Converter (robust)</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --accent-color: #4895ef;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+      --gray-color: #6c757d;
+      --success-color: #4bb543;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --transition: all 0.3s ease;
+    }
+
+    [data-theme="dark"] {
+      --primary-color: #4895ef;
+      --secondary-color: #4361ee;
+      --light-color: #121416;
+      --dark-color: #e9ecef;
+      --gray-color: #adb5bd;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background-color: var(--light-color);
+      color: var(--dark-color);
+      line-height: 1.6;
+      transition: var(--transition);
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .tool-header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .tool-header h1 {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 10px;
+    }
+
+    .tool-header p {
+      color: var(--gray-color);
+      font-size: 1.1rem;
+    }
+
+    .back-button {
+      display: inline-flex;
+      align-items: center;
+      margin-bottom: 20px;
+      padding: 8px 16px;
+      background-color: var(--primary-color);
+      color: white;
+      text-decoration: none;
+      border-radius: var(--border-radius);
+      transition: var(--transition);
+    }
+
+    .back-button:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .tool-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 768px) {
+      .tool-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .upload-section {
+      background-color: var(--light-color);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .upload-area {
+      width: 100%;
+      height: 200px;
+      border: 2px dashed var(--primary-color);
+      border-radius: var(--border-radius);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 20px;
+      position: relative;
+    }
+
+    .upload-area:hover {
+      border-color: var(--secondary-color);
+      background-color: rgba(67, 97, 238, 0.05);
+    }
+
+    .upload-area i {
+      font-size: 3rem;
+      color: var(--primary-color);
+      margin-bottom: 15px;
+    }
+
+    .upload-area p {
+      color: var(--gray-color);
+      text-align: center;
+    }
+
+    .upload-area.has-file {
+      border-color: var(--success-color);
+      background-color: rgba(75, 181, 67, 0.05);
+    }
+
+    #file-input {
+      display: none;
+    }
+
+    .controls-section {
+      background-color: var(--light-color);
+      border-radius: var(--border-radius);
+      padding: 25px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 15px;
+      margin-top: 25px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 500;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--secondary-color);
+    }
+
+    .btn-secondary {
+      background-color: var(--gray-color);
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #5a6268;
+    }
+
+    .btn-success {
+      background-color: var(--success-color);
+      color: white;
+    }
+
+    .btn-success:hover {
+      background-color: #3d9436;
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      background-color: var(--success-color);
+      color: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .notification.show {
+      transform: translateX(0);
+    }
+
+    .theme-toggle {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background-color: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--box-shadow);
+      z-index: 100;
+      border: none;
+    }
+    
+    .file-info {
+      background-color: rgba(0, 0, 0, 0.03);
+      padding: 10px;
+      border-radius: var(--border-radius);
+      margin-top: 10px;
+      text-align: center;
+      width: 100%;
+    }
+    
+    .progress-info {
+      margin-top: 20px;
+      width: 100%;
+      text-align: center;
+      color: var(--gray-color);
+      min-height: 60px;
+    }
+    
+    .console {
+      background-color: rgba(0, 0, 0, 0.03);
+      padding: 15px;
+      border-radius: var(--border-radius);
+      margin-top: 20px;
+      width: 100%;
+      max-height: 200px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 0.9rem;
+      display: none;
+    }
+    
+    .format-options {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .format-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      border: 2px solid var(--gray-color);
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .format-option:hover {
+      border-color: var(--primary-color);
+    }
+
+    .format-option.selected {
+      border-color: var(--primary-color);
+      background-color: rgba(67, 97, 238, 0.1);
+    }
+
+    .format-option i {
+      font-size: 2rem;
+      margin-bottom: 10px;
+    }
+    
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background-color: #e9ecef;
+      border-radius: 4px;
+      margin-top: 10px;
+      overflow: hidden;
+    }
+    
+    .progress-bar-inner {
+      height: 100%;
+      background-color: var(--primary-color);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-button">
+      <i class="fas fa-arrow-left"></i>
+      Back to Tools
+    </a>
+
+    <div class="tool-header">
+      <h1><i class="fas fa-file-pdf"></i> PDF → Word Converter</h1>
+      <p>Convert PDF documents to Word or Text format with text extraction</p>
+    </div>
+
+    <div class="tool-container">
+      <div class="upload-section">
+        <div class="upload-area" id="dropzone">
+          <i class="fas fa-file-pdf"></i>
+          <p>Click to upload a PDF or drag and drop</p>
+        </div>
+        <input id="fileInput" type="file" accept="application/pdf"/>
+        
+        <div class="file-info" id="file-info">
+          <p>No file selected</p>
+        </div>
+        
+        <div class="progress-info" id="progress">
+          Ready — drop a PDF or select a file.
+          <div class="progress-bar">
+            <div class="progress-bar-inner" id="progress-bar"></div>
+          </div>
+        </div>
+        
+        <div class="action-buttons">
+          <button id="reset-btn" class="btn-secondary" disabled>
+            <i class="fas fa-redo"></i> Reset
+          </button>
+          <button id="process-btn" class="btn-primary" disabled>
+            <i class="fas fa-cog"></i> Process PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="controls-section">
+        <div class="control-group">
+          <label>Convert To:</label>
+          <div class="format-options">
+            <div class="format-option selected" data-format="docx">
+              <i class="fas fa-file-word" style="color: #2b579a;"></i>
+              <span>Word (.docx)</span>
+            </div>
+            <div class="format-option" data-format="txt">
+              <i class="fas fa-file-alt" style="color: #3f37c9;"></i>
+              <span>Text (.txt)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="action-buttons" id="actions" style="display:none">
+          <button id="downloadDocx" class="btn-success">
+            <i class="fas fa-download"></i> Download Word
+          </button>
+          <button id="downloadTxt" class="btn-success">
+            <i class="fas fa-download"></i> Download Text
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="console" id="log"></div>
+  </div>
+
+  <div class="notification" id="notification">
+    <i class="fas fa-check-circle"></i> <span id="notification-text"></span>
+  </div>
+
+  <button class="theme-toggle" id="theme-toggle">
+    <i class="fas fa-moon" id="theme-icon"></i>
+  </button>
+
+  <!-- pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <!-- jszip -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <script>
+  // Robust PDF -> DOCX (text only) implementation using pdf.js + JSZip
+  (function(){
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const progressEl = document.getElementById('progress');
+    const progressBar = document.getElementById('progress-bar');
+    const actions = document.getElementById('actions');
+    const downloadDocxBtn = document.getElementById('downloadDocx');
+    const downloadTxtBtn  = document.getElementById('downloadTxt');
+    const logEl = document.getElementById('log');
+    const fileInfo = document.getElementById('file-info');
+    const processBtn = document.getElementById('process-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notification-text');
+    const themeToggle = document.getElementById('theme-toggle');
+    const themeIcon = document.getElementById('theme-icon');
+    const formatOptions = document.querySelectorAll('.format-option');
+
+    // Theme Toggle Functionality
+    function initTheme() {
+      try {
+        const savedTheme = localStorage.getItem('wander-tools-theme');
+        if (savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', 'dark');
+          themeIcon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+          document.documentElement.removeAttribute('data-theme');
+          themeIcon.classList.replace('fa-sun', 'fa-moon');
+        }
+      } catch (e) {
+        console.log("LocalStorage not available, using default theme");
+        document.documentElement.removeAttribute('data-theme');
+      }
+    }
+
+    // Initialize theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      initTheme();
+      setupEventListeners();
+    });
+
+    function setupEventListeners() {
+      // Theme toggle
+      themeToggle.addEventListener('click', toggleTheme);
+
+      // Format selection
+      formatOptions.forEach(option => {
+        option.addEventListener('click', () => selectFormat(option));
+      });
+
+      // Reset button
+      resetBtn.addEventListener('click', resetTool);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      
+      if (currentTheme === 'dark') {
+        document.documentElement.removeAttribute('data-theme');
+        themeIcon.classList.replace('fa-sun', 'fa-moon');
+        try {
+          localStorage.setItem('wander-tools-theme', 'light');
+        } catch (e) {
+          console.log("LocalStorage not available");
+        }
+      } else {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeIcon.classList.replace('fa-moon', 'fa-sun');
+        try {
+          localStorage.setItem('wander-tools-theme', 'dark');
+        } catch (e) {
+          console.log("LocalStorage not available");
+        }
+      }
+    }
+
+    function selectFormat(option) {
+      // Remove selected class from all options
+      formatOptions.forEach(opt => opt.classList.remove('selected'));
+      
+      // Add selected class to clicked option
+      option.classList.add('selected');
+    }
+
+    function resetTool() {
+      // Reset UI
+      dropzone.innerHTML = `
+        <i class="fas fa-file-pdf"></i>
+        <p>Click to upload a PDF or drag and drop</p>
+      `;
+      dropzone.classList.remove('has-file');
+      
+      // Reset file info
+      fileInfo.innerHTML = '<p>No file selected</p>';
+      
+      // Hide actions
+      actions.style.display = 'none';
+      
+      // Disable buttons
+      processBtn.disabled = true;
+      resetBtn.disabled = true;
+      
+      // Reset progress
+      progressEl.innerHTML = 'Ready — drop a PDF or select a file.';
+      progressBar.style.width = '0%';
+      
+      // Reset state
+      extractedPages = [];
+      currentFile = null;
+      
+      // Reset file input
+      fileInput.value = '';
+      
+      // Hide log
+      logEl.style.display = 'none';
+    }
+
+    function showNotification(message, isSuccess = true) {
+      notificationText.textContent = message;
+      notification.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#ff3333';
+      notification.classList.add('show');
+      
+      setTimeout(() => {
+        notification.classList.remove('show');
+      }, 3000);
+    }
+
+    // Quick env checks
+    if (!window.pdfjsLib) {
+      progressEl.innerHTML = 'ERROR: pdf.js did not load.';
+      showLog('pdf.js missing. Check network or CDN.');
+      showNotification('PDF library failed to load', false);
+      return;
+    }
+    if (!window.JSZip) {
+      progressEl.innerHTML = 'ERROR: JSZip did not load.';
+      showLog('JSZip missing. Check network or CDN.');
+      showNotification('ZIP library failed to load', false);
+      return;
+    }
+
+    // set worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let extractedPages = []; // array of strings per page
+    let currentFile = null;
+
+    // UI events
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('dragover', (e) => { 
+      e.preventDefault(); 
+      dropzone.style.borderColor = '#4361ee';
+      dropzone.style.backgroundColor = 'rgba(67, 97, 238, 0.1)';
+    });
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.style.borderColor = '';
+      dropzone.style.backgroundColor = '';
+    });
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.style.borderColor = '';
+      dropzone.style.backgroundColor = '';
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) handleFileSelect(f);
+    });
+    fileInput.addEventListener('change', (e) => { 
+      const f = e.target.files && e.target.files[0]; 
+      if (f) handleFileSelect(f); 
+    });
+
+    processBtn.addEventListener('click', () => {
+      if (currentFile) {
+        processFile(currentFile);
+      }
+    });
+
+    function handleFileSelect(file) {
+      if (!file || file.type !== 'application/pdf') {
+        showNotification('Please select a PDF file.', false);
+        return;
+      }
+      
+      currentFile = file;
+      
+      // Update UI
+      dropzone.innerHTML = `
+        <i class="fas fa-file-pdf" style="color:var(--success-color)"></i>
+        <p>${file.name}</p>
+      `;
+      dropzone.classList.add('has-file');
+      
+      // Update file info
+      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+      fileInfo.innerHTML = `<p>${file.name} (${sizeMB} MB)</p>`;
+      
+      // Enable buttons
+      processBtn.disabled = false;
+      resetBtn.disabled = false;
+      
+      // Update status
+      progressEl.innerHTML = 'PDF file selected. Click "Process PDF" to convert.';
+      progressBar.style.width = '0%';
+      
+      // Hide any previous actions
+      actions.style.display = 'none';
+      
+      // Reset extracted pages
+      extractedPages = [];
+      
+      showNotification('PDF file selected. Click "Process PDF" to convert.');
+    }
+
+    async function processFile(file) {
+      try {
+        progressEl.innerHTML = 'Reading PDF…';
+        progressBar.style.width = '10%';
+        logHide();
+        showNotification('Processing PDF file...');
+
+        extractedPages = [];
+        actions.style.display = 'none';
+
+        const arrayBuf = await file.arrayBuffer();
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuf });
+        const pdf = await loadingTask.promise;
+        progressEl.innerHTML = `PDF loaded — pages: ${pdf.numPages}`;
+        progressBar.style.width = '20%';
+
+        for (let p = 1; p <= pdf.numPages; p++) {
+          progressEl.innerHTML = `Extracting text — page ${p} of ${pdf.numPages}…`;
+          progressBar.style.width = `${20 + (p/pdf.numPages * 60)}%`;
+          const page = await pdf.getPage(p);
+          const text = await extractTextFromPage(page);
+          extractedPages.push(text);
+        }
+        progressEl.innerHTML = `Extraction complete — ${extractedPages.length} pages.`;
+        progressBar.style.width = '100%';
+        actions.style.display = '';
+        showNotification('PDF processed successfully!');
+      } catch (err) {
+        console.error(err);
+        progressEl.innerHTML = 'Error reading PDF. See console for details.';
+        progressBar.style.width = '0%';
+        showLog(err && (err.message || String(err)));
+        showNotification('Error processing PDF', false);
+      }
+    }
+
+    // More robust line reconstruction (group by y coordinate)
+    async function extractTextFromPage(page) {
+      const content = await page.getTextContent();
+      const linesMap = new Map();
+      for (const item of content.items) {
+        // pdf.js transform: [a, b, c, d, e, f] where e=x, f=y
+        const t = item.transform;
+        const x = t[4];
+        const y = t[5];
+        const yKey = Math.round(y); // group roughly by baseline
+        const arr = linesMap.get(yKey) || [];
+        arr.push({ x, str: item.str });
+        linesMap.set(yKey, arr);
+      }
+      const sortedY = Array.from(linesMap.keys()).sort((a,b) => b - a); // top->bottom
+      const lines = [];
+      for (const y of sortedY) {
+        const parts = (linesMap.get(y) || []).sort((a,b) => a.x - b.x).map(o => o.str.trim());
+        const line = parts.join(' ').replace(/\s{2,}/g,' ').trim();
+        if (line) lines.push(line);
+      }
+      return lines.join('\n');
+    }
+
+    // Download TXT
+    downloadTxtBtn.addEventListener('click', () => {
+      if (!extractedPages.length) { 
+        showNotification('No extracted content.', false); 
+        return; 
+      }
+      const all = extractedPages.map((t,i) => `--- Page ${i+1} ---\n${t}`).join('\n\n');
+      const blob = new Blob([all], { type: 'text/plain;charset=utf-8' });
+      triggerDownload(blob, (currentFile?.name || 'converted.pdf').replace(/\.pdf$/i,'') + '.txt');
+      showNotification('Text file downloaded');
+    });
+
+    // Download DOCX (simple xml packaging + JSZip)
+    downloadDocxBtn.addEventListener('click', async () => {
+      try {
+        if (!extractedPages.length) { 
+          showNotification('No extracted content.', false); 
+          return; 
+        }
+        progressEl.innerHTML = 'Building .docx…';
+        showNotification('Creating Word document...');
+
+        const docXml = buildDocumentXml(extractedPages);
+        const contentTypes = buildContentTypesXml();
+        const relsRoot = buildRelsRootXml();
+        const docRels = buildDocumentRelsXml();
+        const styles = buildStylesXml();
+
+        const zip = new JSZip();
+        zip.file('[Content_Types].xml', contentTypes);
+        zip.folder('_rels').file('.rels', relsRoot);
+        const word = zip.folder('word');
+        word.file('document.xml', docXml);
+        word.file('styles.xml', styles);
+        word.folder('_rels').file('document.xml.rels', docRels);
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const outName = (currentFile?.name || 'converted.pdf').replace(/\.pdf$/i,'') + '.docx';
+        triggerDownload(blob, outName);
+        progressEl.innerHTML = 'Download ready.';
+        showNotification('Word document downloaded');
+      } catch (err) {
+        console.error('DOCX build failed', err);
+        progressEl.innerHTML = 'Failed to build .docx.';
+        showLog(err && (err.message || String(err)));
+        showNotification('Error creating Word document', false);
+      }
+    });
+
+    // Helpers: build xml parts
+    function escXml(s) {
+      if (s === null || s === undefined) return '';
+      return String(s)
+        .replace(/&/g,'&amp;')
+        .replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;')
+        .replace(/"/g,'&quot;')
+        .replace(/'/g,'&apos;');
+    }
+
+    function buildDocumentXml(pages) {
+      // header
+      let body = '';
+      pages.forEach((pageText, idx) => {
+        const pageNum = idx + 1;
+        body += `<w:p><w:r><w:t xml:space="preserve">${escXml('--- Page ' + pageNum + ' ---')}</w:t></w:r></w:p>`;
+        const lines = pageText.split(/\r?\n/);
+        lines.forEach(line => {
+          // preserve leading/trailing spaces
+          body += `<w:p><w:r><w:t xml:space="preserve">${escXml(line)}</w:t></w:r></w:p>`;
+        });
+        // page break after each page except last
+        if (idx !== pages.length - 1) {
+          body += `<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+        }
+      });
+
+      const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    ${body}
+    <w:sectPr>
+      <w:pgSz w:w="12240" w:h="15840"/>
+      <w:pgMar w:top="1440" w:right="1440" w:bottom="1440" w:left="1440" w:header="720" w:footer="720" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
+      return doc;
+    }
+
+    function buildContentTypesXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+</Types>`;
+    }
+
+    function buildRelsRootXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`;
+    }
+
+    function buildDocumentRelsXml() {
+      // we have no external relationships (no images), so empty
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"></Relationships>`;
+    }
+
+    function buildStylesXml() {
+      return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:style w:type="paragraph" w:default="1" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+    <w:rPr/>
+  </w:style>
+</w:styles>`;
+    }
+
+    function triggerDownload(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 100);
+    }
+
+    // logging helpers
+    function showLog(text) { logEl.style.display = 'block'; logEl.textContent += String(text) + '\n'; }
+    function logHide() { logEl.style.display = 'none'; logEl.textContent = ''; }
+
+  })();
+  </script>
+</body>
+</html>
