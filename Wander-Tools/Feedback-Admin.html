@@ -1,0 +1,979 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Wander Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --gray-color: #6c757d;
+            --success-color: #4bb543;
+            --danger-color: #ff3333;
+            --warning-color: #ffcc00;
+            --sidebar-width: 250px;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f7f9;
+            color: var(--dark-color);
+            line-height: 1.6;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            height: 100vh;
+            position: fixed;
+            padding: 20px 0;
+            box-shadow: var(--box-shadow);
+            overflow-y: auto;
+        }
+
+        .logo {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .logo h2 {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            list-style: none;
+            padding: 0 15px;
+        }
+
+        .nav-links li {
+            margin-bottom: 10px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .stats-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .bg-primary {
+            background-color: rgba(67, 97, 238, 0.2);
+            color: var(--primary-color);
+        }
+
+        .bg-success {
+            background-color: rgba(75, 181, 67, 0.2);
+            color: var(--success-color);
+        }
+
+        .bg-warning {
+            background-color: rgba(255, 204, 0, 0.2);
+            color: var(--warning-color);
+        }
+
+        .bg-danger {
+            background-color: rgba(255, 51, 51, 0.2);
+            color: var(--danger-color);
+        }
+
+        .stat-info h3 {
+            font-size: 1.8rem;
+            margin-bottom: 5px;
+        }
+
+        .stat-info p {
+            color: var(--gray-color);
+            font-size: 0.9rem;
+        }
+
+        .card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px 10px 40px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+        }
+
+        .filter-select {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            background-color: white;
+            min-width: 150px;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        th:hover {
+            background-color: #e9ecef;
+        }
+
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .badge {
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background-color: rgba(75, 181, 67, 0.2);
+            color: var(--success-color);
+        }
+
+        .badge-warning {
+            background-color: rgba(255, 204, 0, 0.2);
+            color: var(--warning-color);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .pagination button {
+            padding: 8px 15px;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+        }
+
+        .pagination button.active {
+            background-color: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            animation: modalopen 0.3s;
+        }
+
+        @keyframes modalopen {
+            from {opacity: 0; transform: translateY(-50px);}
+            to {opacity: 1; transform: translateY(0);}
+        }
+
+        .close-button {
+            color: var(--gray-color);
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .close-button:hover {
+            color: var(--dark-color);
+        }
+
+        .modal-body {
+            margin-top: 20px;
+        }
+
+        .detail-row {
+            margin-bottom: 15px;
+            display: flex;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            min-width: 100px;
+        }
+
+        .detail-content {
+            flex: 1;
+        }
+
+        .message-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: var(--border-radius);
+            margin-top: 10px;
+        }
+
+        .error-message {
+            color: var(--danger-color);
+            text-align: center;
+            padding: 20px;
+            background-color: rgba(255, 51, 51, 0.1);
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+
+        /* Responsive Styles */
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 70px;
+                overflow: visible;
+            }
+            
+            .logo h2 span, .nav-links a span {
+                display: none;
+            }
+            
+            .logo h2 {
+                justify-content: center;
+            }
+            
+            .main-content {
+                margin-left: 70px;
+            }
+            
+            .nav-links a {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .nav-links a i {
+                margin-right: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .search-box {
+                min-width: 100%;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .sidebar {
+                width: 0;
+                display: none;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <div class="logo">
+            <h2><i class="fas fa-tools"></i> <span>Wander Tools</span></h2>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="#"><i class="fas fa-comments"></i> <span>Feedback</span></a></li>
+            <li><a href="#"><i class="fas fa-users"></i> <span>Users</span></a></li>
+            <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="header">
+            <h1>Admin Dashboard</h1>
+            <div class="user-info">
+                <span>Hello, Admin</span>
+            </div>
+        </div>
+
+        <!-- Stats Cards -->
+        <div class="stats-cards">
+            <div class="stat-card">
+                <div class="stat-icon bg-primary">
+                    <i class="fas fa-comments"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="totalFeedback">0</h3>
+                    <p>Total Feedback</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-success">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="todayFeedback">0</h3>
+                    <p>Today's Feedback</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-warning">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="pendingFeedback">0</h3>
+                    <p>Pending Review</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon bg-danger">
+                    <i class="fas fa-trash"></i>
+                </div>
+                <div class="stat-info">
+                    <h3 id="deletedFeedback">0</h3>
+                    <p>Deleted Feedback</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Feedback Table Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>Feedback Management</h2>
+                <button class="btn btn-primary" id="exportBtn">
+                    <i class="fas fa-download"></i> Export Data
+                </button>
+            </div>
+            <div class="card-body">
+                <div class="filters">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Search feedback...">
+                    </div>
+                    <select class="filter-select" id="sortSelect">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                    <select class="filter-select" id="filterSelect">
+                        <option value="all">All Feedback</option>
+                        <option value="today">Today</option>
+                        <option value="week">This Week</option>
+                        <option value="month">This Month</option>
+                    </select>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p id="errorText"></p>
+                    <p>Please check your Firebase configuration and security rules.</p>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th data-sort="name">Name <i class="fas fa-sort"></i></th>
+                            <th data-sort="email">Email <i class="fas fa-sort"></i></th>
+                            <th data-sort="message">Message <i class="fas fa-sort"></i></th>
+                            <th data-sort="timestamp">Date <i class="fas fa-sort"></i></th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="feedbackTableBody">
+                        <tr>
+                            <td colspan="5" style="text-align: center;">Loading feedback data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pagination" id="pagination">
+                    <button id="prevBtn">&laquo; Previous</button>
+                    <button id="nextBtn">Next &raquo;</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Feedback Detail Modal -->
+    <div id="detailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModal">&times;</span>
+            <h2>Feedback Details</h2>
+            <div class="modal-body" id="modalBody">
+                <!-- Details will be inserted here by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCIRviVtANQrb72IZzyNlQMuCzsIATP7k",
+            authDomain: "wander-tools.firebaseapp.com",
+            projectId: "wander-tools",
+            storageBucket: "wander-tools.firebasestorage.app",
+            messagingSenderId: "911828766491",
+            appId: "1:911828766491:web:e38541bd54996adea5cdbe",
+            measurementId: "G-GY19ZGWP4K"
+        };
+
+        // Initialize Firebase
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            console.log("Firebase initialized successfully");
+        } catch (error) {
+            console.error("Firebase initialization error:", error);
+            showError("Firebase initialization failed: " + error.message);
+        }
+
+        // DOM elements
+        const feedbackTableBody = document.getElementById('feedbackTableBody');
+        const searchInput = document.getElementById('searchInput');
+        const sortSelect = document.getElementById('sortSelect');
+        const filterSelect = document.getElementById('filterSelect');
+        const totalFeedback = document.getElementById('totalFeedback');
+        const todayFeedback = document.getElementById('todayFeedback');
+        const pendingFeedback = document.getElementById('pendingFeedback');
+        const deletedFeedback = document.getElementById('deletedFeedback');
+        const detailModal = document.getElementById('detailModal');
+        const modalBody = document.getElementById('modalBody');
+        const closeModal = document.getElementById('closeModal');
+        const exportBtn = document.getElementById('exportBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+
+        // Global variables
+        let allFeedback = [];
+        let currentPage = 1;
+        const itemsPerPage = 10;
+        let sortField = 'timestamp';
+        let sortDirection = 'desc';
+        let currentFilter = 'all';
+
+        // Show error message
+        function showError(message) {
+            errorText.textContent = message;
+            errorMessage.style.display = 'block';
+            console.error("Error:", message);
+        }
+
+        // Format timestamp to readable date
+        function formatDate(timestamp) {
+            if (!timestamp) return 'N/A';
+            
+            const date = timestamp.toDate();
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        // Fetch feedback from Firestore
+        function fetchFeedback() {
+            if (!db) {
+                showError("Firebase is not initialized properly.");
+                return;
+            }
+
+            feedbackTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">Loading feedback data...</td></tr>';
+            errorMessage.style.display = 'none';
+            
+            db.collection("feedbacks").get()
+                .then((querySnapshot) => {
+                    allFeedback = [];
+                    querySnapshot.forEach((doc) => {
+                        const data = doc.data();
+                        allFeedback.push({
+                            id: doc.id,
+                            ...data,
+                            formattedDate: formatDate(data.timestamp)
+                        });
+                    });
+                    
+                    totalFeedback.textContent = allFeedback.length;
+                    updateTodayFeedbackCount();
+                    renderTable();
+                })
+                .catch((error) => {
+                    console.error("Error getting feedback: ", error);
+                    showError("Error loading feedback data: " + error.message);
+                    feedbackTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error loading feedback data</td></tr>';
+                });
+        }
+
+        // Update today's feedback count
+        function updateTodayFeedbackCount() {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const todaysFeedback = allFeedback.filter(feedback => {
+                if (!feedback.timestamp) return false;
+                const feedbackDate = feedback.timestamp.toDate();
+                feedbackDate.setHours(0, 0, 0, 0);
+                return feedbackDate.getTime() === today.getTime();
+            });
+            
+            todayFeedback.textContent = todaysFeedback.length;
+        }
+
+        // Render the feedback table
+        function renderTable() {
+            // Apply filters and sorting
+            let filteredFeedback = filterFeedback(allFeedback);
+            filteredFeedback = sortFeedback(filteredFeedback);
+            
+            // Calculate pagination
+            const totalPages = Math.ceil(filteredFeedback.length / itemsPerPage);
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = Math.min(startIndex + itemsPerPage, filteredFeedback.length);
+            const currentItems = filteredFeedback.slice(startIndex, endIndex);
+            
+            // Update pagination buttons
+            updatePaginationButtons(totalPages);
+            
+            // Render table rows
+            if (currentItems.length === 0) {
+                feedbackTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No feedback found</td></tr>';
+                return;
+            }
+            
+            feedbackTableBody.innerHTML = '';
+            currentItems.forEach(feedback => {
+                const tr = document.createElement('tr');
+                
+                // Shorten long messages for display
+                const shortMessage = feedback.message.length > 50 
+                    ? feedback.message.substring(0, 50) + '...' 
+                    : feedback.message;
+                
+                tr.innerHTML = `
+                    <td>${feedback.name}</td>
+                    <td>${feedback.email}</td>
+                    <td>${shortMessage}</td>
+                    <td>${feedback.formattedDate}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary view-btn" data-id="${feedback.id}">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                        <button class="btn btn-danger delete-btn" data-id="${feedback.id}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </td>
+                `;
+                
+                feedbackTableBody.appendChild(tr);
+            });
+            
+            // Add event listeners to buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', () => viewFeedback(btn.getAttribute('data-id')));
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => deleteFeedback(btn.getAttribute('data-id')));
+            });
+        }
+
+        // Filter feedback based on current filter
+        function filterFeedback(feedback) {
+            const now = new Date();
+            const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            
+            switch(currentFilter) {
+                case 'today':
+                    return feedback.filter(f => {
+                        if (!f.timestamp) return false;
+                        const feedbackDate = f.timestamp.toDate();
+                        return feedbackDate >= today;
+                    });
+                case 'week':
+                    return feedback.filter(f => {
+                        if (!f.timestamp) return false;
+                        const feedbackDate = f.timestamp.toDate();
+                        return feedbackDate >= weekAgo;
+                    });
+                case 'month':
+                    return feedback.filter(f => {
+                        if (!f.timestamp) return false;
+                        const feedbackDate = f.timestamp.toDate();
+                        return feedbackDate >= monthAgo;
+                    });
+                default:
+                    return feedback;
+            }
+        }
+
+        // Sort feedback based on current sort settings
+        function sortFeedback(feedback) {
+            return feedback.sort((a, b) => {
+                let valueA, valueB;
+                
+                switch(sortField) {
+                    case 'name':
+                        valueA = a.name.toLowerCase();
+                        valueB = b.name.toLowerCase();
+                        break;
+                    case 'email':
+                        valueA = a.email.toLowerCase();
+                        valueB = b.email.toLowerCase();
+                        break;
+                    case 'message':
+                        valueA = a.message.toLowerCase();
+                        valueB = b.message.toLowerCase();
+                        break;
+                    case 'timestamp':
+                    default:
+                        valueA = a.timestamp ? a.timestamp.toDate().getTime() : 0;
+                        valueB = b.timestamp ? b.timestamp.toDate().getTime() : 0;
+                        break;
+                }
+                
+                if (sortDirection === 'asc') {
+                    return valueA > valueB ? 1 : -1;
+                } else {
+                    return valueA < valueB ? 1 : -1;
+                }
+            });
+        }
+
+        // Update pagination buttons
+        function updatePaginationButtons(totalPages) {
+            // Simple implementation - in a real app you might want numbered pagination
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages || totalPages === 0;
+        }
+
+        // View feedback details
+        function viewFeedback(id) {
+            const feedback = allFeedback.find(f => f.id === id);
+            if (!feedback) return;
+            
+            modalBody.innerHTML = `
+                <div class="detail-row">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-content">${feedback.name}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-content">${feedback.email}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Date:</div>
+                    <div class="detail-content">${feedback.formattedDate}</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Message:</div>
+                    <div class="detail-content">
+                        <div class="message-box">${feedback.message}</div>
+                    </div>
+                </div>
+            `;
+            
+            detailModal.style.display = 'block';
+        }
+
+        // Delete feedback
+        function deleteFeedback(id) {
+            if (!db) {
+                showError("Firebase is not initialized properly.");
+                return;
+            }
+
+            if (!confirm('Are you sure you want to delete this feedback? This action cannot be undone.')) {
+                return;
+            }
+            
+            db.collection("feedbacks").doc(id).delete()
+                .then(() => {
+                    alert('Feedback deleted successfully!');
+                    fetchFeedback(); // Refresh the data
+                })
+                .catch((error) => {
+                    console.error("Error deleting feedback: ", error);
+                    alert('Error deleting feedback. Please try again.');
+                });
+        }
+
+        // Export data to CSV
+        function exportToCSV() {
+            const filteredFeedback = filterFeedback(allFeedback);
+            const sortedFeedback = sortFeedback(filteredFeedback);
+            
+            if (sortedFeedback.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            // Create CSV content
+            let csvContent = "Name,Email,Message,Date\n";
+            sortedFeedback.forEach(feedback => {
+                const escapedMessage = feedback.message.replace(/"/g, '""');
+                csvContent += `"${feedback.name}","${feedback.email}","${escapedMessage}","${feedback.formattedDate}"\n`;
+            });
+            
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `feedback_export_${new Date().toISOString().slice(0, 10)}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Event Listeners
+        searchInput.addEventListener('input', renderTable);
+        sortSelect.addEventListener('change', () => {
+            const value = sortSelect.value;
+            if (value === 'newest') {
+                sortField = 'timestamp';
+                sortDirection = 'desc';
+            } else if (value === 'oldest') {
+                sortField = 'timestamp';
+                sortDirection = 'asc';
+            }
+            renderTable();
+        });
+        
+        filterSelect.addEventListener('change', () => {
+            currentFilter = filterSelect.value;
+            currentPage = 1;
+            renderTable();
+        });
+        
+        closeModal.addEventListener('click', () => {
+            detailModal.style.display = 'none';
+        });
+        
+        window.addEventListener('click', (event) => {
+            if (event.target === detailModal) {
+                detailModal.style.display = 'none';
+            }
+        });
+        
+        exportBtn.addEventListener('click', exportToCSV);
+        
+        prevBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderTable();
+            }
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            currentPage++;
+            renderTable();
+        });
+        
+        // Table header sorting
+        document.querySelectorAll('th[data-sort]').forEach(th => {
+            th.addEventListener('click', () => {
+                const field = th.getAttribute('data-sort');
+                
+                if (sortField === field) {
+                    sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+                } else {
+                    sortField = field;
+                    sortDirection = 'asc';
+                }
+                
+                renderTable();
+            });
+        });
+
+        // Initialize
+        fetchFeedback();
+    </script>
+</body>
+</html>
