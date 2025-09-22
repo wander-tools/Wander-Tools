@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wander Tools - Login</title>
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body { background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .header {
+            background: #4a6bff;
+            color: white;
+            padding: 25px 20px;
+            text-align: center;
+            position: relative;
+        }
+        .close-embed {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.35);
+        }
+        .close-embed:hover { background: rgba(255,255,255,0.3); }
+        
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .logo i {
+            font-size: 32px;
+            color: #4a6bff;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .form-container {
+            padding: 25px;
+        }
+        
+        .input-group {
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .input-group input {
+            width: 100%;
+            padding: 14px 45px 14px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .input-group input:focus {
+            border-color: #4a6bff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 107, 255, 0.2);
+        }
+        
+        .input-icon {
+            position: absolute;
+            right: 15px;
+            top: 40px;
+            color: #777;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn-primary {
+            background: #4a6bff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3a5be0;
+            transform: translateY(-2px);
+        }
+        
+        .btn-google {
+            background: #fff;
+            color: #757575;
+            border: 1px solid #ddd;
+        }
+        
+        .btn-google:hover {
+            background: #f5f5f5;
+            transform: translateY(-2px);
+        }
+        
+        .separator {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #777;
+        }
+        
+        .separator::before,
+        .separator::after {
+            content: "";
+            flex: 1;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .separator span {
+            padding: 0 15px;
+            font-size: 14px;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .footer a {
+            color: #4a6bff;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        
+        .message {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            display: none;
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #d32f2f;
+            border: 1px solid #ffcdd2;
+        }
+        
+        .success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border: 1px solid #c8e6c9;
+        }
+        
+        .password-container {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #777;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .active {
+            display: block;
+        }
+        
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateX(-3px);
+        }
+        
+        .password-rules {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            display: none;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .terms {
+            font-size: 12px;
+            color: #666;
+            margin-top: 20px;
+            text-align: center;
+        }
+        /* Embed mode adjustments */
+        .embed-body { background: transparent; min-height: auto; padding: 0; }
+        .embed-container { box-shadow: none; border-radius: 12px; overflow: hidden; }
+        .embed-header { }
+    </style>
+</head>
+<body>
+    <div class="container" id="rootContainer">
+        <!-- Login Page -->
+        <div id="loginPage" class="page active">
+            <div class="header">
+                <button class="close-embed" id="closeEmbed" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="logo">
+                    <i class="fas fa-tools"></i>
+                </div>
+                <h1>Welcome to Wander Tools</h1>
+                <p>Sign in to access your tools and preferences</p>
+            </div>
+            
+            <div class="form-container">
+                <div id="loginErrorMessage" class="message error"></div>
+                <div id="loginSuccessMessage" class="message success"></div>
+                
+                <div class="input-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email">
+                    <div class="input-icon">
+                        <i class="far fa-envelope"></i>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <div class="password-container">
+                        <input type="password" id="loginPassword" placeholder="Enter your password">
+                        <span class="toggle-password" id="toggleLoginPassword">
+                            <i class="far fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                <button id="loginBtn" class="btn btn-primary">
+                    <span>Sign In</span>
+                    <div class="loader" id="loginLoader"></div>
+                </button>
+                
+                <div class="separator">
+                    <span>OR</span>
+                </div>
+                
+                <button id="googleLoginBtn" class="btn btn-google">
+                    <i class="fab fa-google"></i> Sign in with Google
+                </button>
+                
+                <div class="footer">
+                    <p>Don't have an account? <a href="#" id="showSignUpLink">Sign up</a></p>
+                    <p><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sign Up Page -->
+        <div id="signUpPage" class="page">
+            <div class="header">
+                <div class="back-btn" id="backToLogin">
+                    <i class="fas fa-arrow-left"></i>
+                </div>
+                <div class="logo">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <h1>Create Account</h1>
+                <p>Join Wander Tools today</p>
+            </div>
+            
+            <div class="form-container">
+                <div id="signUpErrorMessage" class="message error"></div>
+                <div id="signUpSuccessMessage" class="message success"></div>
+                
+                <div class="input-group">
+                    <label for="signUpName">Full Name</label>
+                    <input type="text" id="signUpName" placeholder="Enter your full name">
+                    <div class="input-icon">
+                        <i class="far fa-user"></i>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="signUpEmail">Email</label>
+                    <input type="email" id="signUpEmail" placeholder="Enter your email">
+                    <div class="input-icon">
+                        <i class="far fa-envelope"></i>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="signUpPassword">Password</label>
+                    <div class="password-container">
+                        <input type="password" id="signUpPassword" placeholder="Create a password">
+                        <span class="toggle-password" id="toggleSignUpPassword">
+                            <i class="far fa-eye"></i>
+                        </span>
+                    </div>
+                    <div class="password-rules">
+                        Must be at least 6 characters with a number and special character
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="confirmPassword">Confirm Password</label>
+                    <div class="password-container">
+                        <input type="password" id="confirmPassword" placeholder="Confirm your password">
+                        <span class="toggle-password" id="toggleConfirmPassword">
+                            <i class="far fa-eye"></i>
+                        </span>
+                    </div>
+                </div>
+                
+                <button id="signUpBtn" class="btn btn-primary">
+                    <span>Create Account</span>
+                    <div class="loader" id="signUpLoader"></div>
+                </button>
+                
+                <div class="terms">
+                    By creating an account, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCIRviVtANQrb72IZzyNlQMuCzsIATP7k",
+            authDomain: "wander-tools.firebaseapp.com",
+            projectId: "wander-tools",
+            storageBucket: "wander-tools.firebasestorage.app",
+            messagingSenderId: "911828766491",
+            appId: "1:911828766491:web:e38541bd54996adea5cdbe",
+            measurementId: "G-GY19ZGWP4K"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // DOM elements
+        const loginPage = document.getElementById('loginPage');
+        const signUpPage = document.getElementById('signUpPage');
+        
+        // Login page elements
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const showSignUpLink = document.getElementById('showSignUpLink');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+        const loginErrorMessage = document.getElementById('loginErrorMessage');
+        const loginSuccessMessage = document.getElementById('loginSuccessMessage');
+        const loginLoader = document.getElementById('loginLoader');
+        
+        // Sign up page elements
+        const backToLogin = document.getElementById('backToLogin');
+        const signUpNameInput = document.getElementById('signUpName');
+        const signUpEmailInput = document.getElementById('signUpEmail');
+        const signUpPasswordInput = document.getElementById('signUpPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const toggleSignUpPassword = document.getElementById('toggleSignUpPassword');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const signUpErrorMessage = document.getElementById('signUpErrorMessage');
+        const signUpSuccessMessage = document.getElementById('signUpSuccessMessage');
+        const signUpLoader = document.getElementById('signUpLoader');
+
+        // Read query param to switch initial page
+        const params = new URLSearchParams(window.location.search);
+        const initialPage = params.get('page');
+        const isEmbed = params.get('embed') === '1';
+        if (initialPage === 'signup') {
+            loginPage.classList.remove('active');
+            signUpPage.classList.add('active');
+        } else {
+            loginPage.classList.add('active');
+            signUpPage.classList.remove('active');
+        }
+
+        // Apply embed mode styles so only the card shows
+        if (isEmbed) {
+            document.body.classList.add('embed-body');
+            const container = document.getElementById('rootContainer');
+            container.classList.add('embed-container');
+            // tighten outer spacing in header
+            const header = container.querySelector('.header');
+            if (header) header.classList.add('embed-header');
+            // Notify parent about size so the outer box can shrink to card
+            function sendSize() {
+                const h = document.querySelector('.container').offsetHeight;
+                try { window.parent.postMessage({ type: 'authResize', height: h }, '*'); } catch(e) {}
+            }
+            window.addEventListener('load', sendSize);
+            setTimeout(sendSize, 50);
+            setInterval(sendSize, 300);
+        }
+
+        // Toggle password visibility
+        function setupPasswordToggle(toggleElement, inputElement) {
+            toggleElement.addEventListener('click', () => {
+                if (inputElement.type === 'password') {
+                    inputElement.type = 'text';
+                    toggleElement.innerHTML = '<i class="far fa-eye-slash"></i>';
+                } else {
+                    inputElement.type = 'password';
+                    toggleElement.innerHTML = '<i class="far fa-eye"></i>';
+                }
+            });
+        }
+
+        setupPasswordToggle(toggleLoginPassword, loginPasswordInput);
+        setupPasswordToggle(toggleSignUpPassword, signUpPasswordInput);
+        setupPasswordToggle(toggleConfirmPassword, confirmPasswordInput);
+
+        // Switch to sign up page
+        showSignUpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginPage.classList.remove('active');
+            signUpPage.classList.add('active');
+        });
+
+        // Switch back to login page
+        backToLogin.addEventListener('click', () => {
+            signUpPage.classList.remove('active');
+            loginPage.classList.add('active');
+        });
+
+        // Login with email and password
+        loginBtn.addEventListener('click', () => {
+            const email = loginEmailInput.value;
+            const password = loginPasswordInput.value;
+            
+            if (!email || !password) {
+                showLoginError('Please enter both email and password');
+                return;
+            }
+            
+            // Show loading state
+            loginBtn.disabled = true;
+            loginLoader.style.display = 'block';
+            loginBtn.querySelector('span').textContent = 'Signing in...';
+            
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    showLoginSuccess('Successfully signed in!');
+                    // Notify parent and optionally close modal
+                    try { window.parent.postMessage({ type: 'authSuccess', mode: 'login' }, '*'); } catch(e) {}
+                })
+                .catch((error) => {
+                    loginBtn.disabled = false;
+                    loginLoader.style.display = 'none';
+                    loginBtn.querySelector('span').textContent = 'Sign In';
+                    showLoginError(getErrorMessage(error.code));
+                });
+        });
+
+        // Login with Google
+        googleLoginBtn.addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            
+            googleLoginBtn.disabled = true;
+            googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+            
+            auth.signInWithPopup(provider)
+                .then((result) => {
+                    showLoginSuccess('Successfully signed in with Google!');
+                    try { window.parent.postMessage({ type: 'authSuccess', mode: 'google' }, '*'); } catch(e) {}
+                })
+                .catch((error) => {
+                    googleLoginBtn.disabled = false;
+                    googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+                    showLoginError(getErrorMessage(error.code));
+                });
+        });
+
+        // Sign up with email and password
+        signUpBtn.addEventListener('click', () => {
+            const name = signUpNameInput.value;
+            const email = signUpEmailInput.value;
+            const password = signUpPasswordInput.value;
+            const confirmPassword = confirmPasswordInput.value;
+            
+            // Validate inputs
+            if (!name || !email || !password || !confirmPassword) {
+                showSignUpError('Please fill in all fields');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showSignUpError('Passwords do not match');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showSignUpError('Password must be at least 6 characters long');
+                return;
+            }
+            
+            // Show loading state
+            signUpBtn.disabled = true;
+            signUpLoader.style.display = 'block';
+            signUpBtn.querySelector('span').textContent = 'Creating account...';
+            
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Add user data to Firestore
+                    return db.collection('users').doc(userCredential.user.uid).set({
+                        name: name,
+                        email: email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                })
+                .then(() => {
+                    showSignUpSuccess('Account created successfully! You are now signed in.');
+                    try { window.parent.postMessage({ type: 'authSuccess', mode: 'signup' }, '*'); } catch(e) {}
+                })
+                .catch((error) => {
+                    signUpBtn.disabled = false;
+                    signUpLoader.style.display = 'none';
+                    signUpBtn.querySelector('span').textContent = 'Create Account';
+                    showSignUpError(getErrorMessage(error.code));
+                });
+        });
+
+        // Forgot password
+        forgotPasswordLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const email = loginEmailInput.value || prompt('Please enter your email address:');
+            
+            if (!email) {
+                showLoginError('Please enter your email first');
+                return;
+            }
+            
+            auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    showLoginSuccess('Password reset email sent! Check your inbox.');
+                })
+                .catch((error) => {
+                    showLoginError(getErrorMessage(error.code));
+                });
+        });
+
+        // Helper functions
+        function showLoginError(message) {
+            loginErrorMessage.textContent = message;
+            loginErrorMessage.style.display = 'block';
+            loginSuccessMessage.style.display = 'none';
+        }
+
+        function showLoginSuccess(message) {
+            loginSuccessMessage.textContent = message;
+            loginSuccessMessage.style.display = 'block';
+            loginErrorMessage.style.display = 'none';
+        }
+
+        function showSignUpError(message) {
+            signUpErrorMessage.textContent = message;
+            signUpErrorMessage.style.display = 'block';
+            signUpSuccessMessage.style.display = 'none';
+        }
+
+        function showSignUpSuccess(message) {
+            signUpSuccessMessage.textContent = message;
+            signUpSuccessMessage.style.display = 'block';
+            signUpErrorMessage.style.display = 'none';
+        }
+
+        function getErrorMessage(errorCode) {
+            switch(errorCode) {
+                case 'auth/invalid-email':
+                    return 'Invalid email address format.';
+                case 'auth/user-disabled':
+                    return 'This user account has been disabled.';
+                case 'auth/user-not-found':
+                    return 'No user found with this email.';
+                case 'auth/wrong-password':
+                    return 'Incorrect password.';
+                case 'auth/email-already-in-use':
+                    return 'This email is already registered.';
+                case 'auth/weak-password':
+                    return 'Password should be at least 6 characters.';
+                case 'auth/popup-closed-by-user':
+                    return 'Google sign-in was canceled.';
+                case 'auth/operation-not-allowed':
+                    return 'Email/password accounts are not enabled.';
+                default:
+                    return 'An error occurred during authentication. Please try again.';
+            }
+        }
+
+        // Check if user is already logged in
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                try { window.parent.postMessage({ type: 'authSuccess', mode: 'session' }, '*'); } catch(e) {}
+            }
+        });
+
+        // Allow closing from inside iframe via Esc and close button
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                try { window.parent.postMessage({ type: 'authClose' }, '*'); } catch(err) {}
+            }
+        });
+
+        const closeEmbedBtn = document.getElementById('closeEmbed');
+        if (closeEmbedBtn) {
+            closeEmbedBtn.addEventListener('click', () => {
+                try { window.parent.postMessage({ type: 'authClose' }, '*'); } catch(err) {}
+            });
+        }
+    </script>
+</body>
+</html>

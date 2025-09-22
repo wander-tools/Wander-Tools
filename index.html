@@ -346,6 +346,20 @@
             display: block;
         }
 
+        /* Auth/Profile Dropdown */
+        .auth-area { display: flex; align-items: center; gap: 10px; }
+        .auth-buttons { display: flex; gap: 10px; }
+        .auth-button { background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: var(--transition); font-weight: 600; }
+        .auth-button:hover { background-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+        .profile { position: relative; }
+        .profile-toggle { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 22px; cursor: pointer; }
+        .profile-toggle .fa-user-circle { font-size: 1.35rem; }
+        .profile-menu { position: absolute; top: 110%; right: 0; background: white; border-radius: var(--border-radius); box-shadow: var(--box-shadow); display: none; min-width: 180px; overflow: hidden; z-index: 100; }
+        [data-theme="dark"] .profile-menu { background: #2d2d2d; }
+        .profile-menu a, .profile-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; border: none; background: transparent; cursor: pointer; color: var(--dark-color); text-decoration: none; }
+        [data-theme="dark"] .profile-menu a, [data-theme="dark"] .profile-menu button { color: #e9ecef; }
+        .profile-menu a:hover, .profile-menu button:hover { background-color: rgba(67,97,238,0.1); color: var(--primary-color); }
+
         /* Download Apps Modal */
         .modal {
             display: none;
@@ -889,6 +903,7 @@
                     <button class="theme-toggle" id="themeToggle">
                         <i class="fas fa-moon" id="themeIcon"></i>
                     </button>
+                    <div class="auth-area" id="authArea"></div>
                 </div>
             </div>
             
@@ -899,6 +914,10 @@
                 <div class="header-buttons">
                     <a href="#home" class="cta-button">Explore Tools</a>
                     <a href="#" class="download-button" id="downloadButton">Download Apps</a>
+                    <div class="auth-buttons" id="headerAuthButtons" style="display:none;">
+                        <button class="auth-button" id="openLogin">Login</button>
+                        <button class="auth-button" id="openSignUp">Sign Up</button>
+                    </div>
                 </div>
                 
                 <div class="header-search-container">
@@ -936,6 +955,16 @@
                     <i class="fab fa-windows"></i>
                     <span>Download Windows Application</span>
                 </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" style="display:none; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background: transparent; box-shadow: none; border: none; padding: 0; width: auto; max-width: 520px;">
+            <span class="close-button" id="closeAuthModal" style="display:none">&times;</span>
+            <div style="border-radius: 0; overflow: visible;">
+                <iframe id="authFrame" src="" title="Authentication" style="width:100%; height:560px; border:0; display:block;"></iframe>
             </div>
         </div>
     </div>
@@ -1219,11 +1248,11 @@
                 <div id="alertBox" class="alert"></div>
                 
                 <form class="feedback-form" id="feedbackForm">
-                    <div class="form-group">
+                    <div class="form-group" id="nameGroup">
                         <label for="name">Name *</label>
                         <input type="text" id="name" class="form-control" placeholder="Your name" required minlength="2" maxlength="50">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="emailGroup">
                         <label for="email">Email *</label>
                         <input type="email" id="email" class="form-control" placeholder="Your email" required>
                     </div>
@@ -1297,6 +1326,7 @@
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -1314,6 +1344,7 @@
         // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+        const auth = firebase.auth();
 
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
@@ -1343,6 +1374,14 @@
         const downloadButton = document.getElementById('downloadButton');
         const downloadModal = document.getElementById('downloadModal');
         const closeModal = document.getElementById('closeModal');
+        // Auth modal elements
+        const authModal = document.getElementById('authModal');
+        const closeAuthModal = document.getElementById('closeAuthModal');
+        const authFrame = document.getElementById('authFrame');
+        const openLoginBtn = document.getElementById('openLogin');
+        const openSignUpBtn = document.getElementById('openSignUp');
+        const authArea = document.getElementById('authArea');
+        const headerAuthButtons = document.getElementById('headerAuthButtons');
 
         downloadButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -1356,6 +1395,32 @@
         window.addEventListener('click', (e) => {
             if (e.target === downloadModal) {
                 downloadModal.style.display = 'none';
+            }
+            if (e.target === authModal) {
+                authModal.style.display = 'none';
+            }
+        });
+
+        function openAuthModal(mode) {
+            authFrame.src = `login-page.html?page=${encodeURIComponent(mode || 'login')}&embed=1`;
+            authModal.style.display = 'block';
+        }
+
+        if (openLoginBtn) openLoginBtn.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
+        if (openSignUpBtn) openSignUpBtn.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signup'); });
+        closeAuthModal.addEventListener('click', () => { authModal.style.display = 'none'; });
+
+        // Listen for auth messages from iframe
+        window.addEventListener('message', (event) => {
+            const data = event.data || {};
+            if (data.type === 'authSuccess') {
+                authModal.style.display = 'none';
+            }
+            if (data.type === 'authClose') {
+                authModal.style.display = 'none';
+            }
+            if (data.type === 'authResize' && typeof data.height === 'number') {
+                authFrame.style.height = Math.max(420, Math.min(data.height, window.innerHeight - 40)) + 'px';
             }
         });
 
@@ -1439,7 +1504,7 @@
                 `;
                 
                 resultItem.addEventListener('click', () => {
-                    window.location.href = tool.url;
+                    navigateTo(tool.url);
                 });
                 
                 searchResults.appendChild(resultItem);
@@ -1478,6 +1543,33 @@
             }, 5000);
         }
 
+        function prefillFeedbackForUser(user) {
+            const nameGroup = document.getElementById('nameGroup');
+            const emailGroup = document.getElementById('emailGroup');
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            if (user) {
+                const displayName = user.displayName || (user.email ? user.email.split('@')[0] : '');
+                nameInput.value = displayName;
+                emailInput.value = user.email || '';
+                nameGroup.style.display = 'none';
+                emailGroup.style.display = 'none';
+                nameInput.removeAttribute('required');
+                emailInput.removeAttribute('required');
+            } else {
+                nameGroup.style.display = '';
+                emailGroup.style.display = '';
+                nameInput.setAttribute('required', 'true');
+                emailInput.setAttribute('required', 'true');
+                nameInput.value = '';
+                emailInput.value = '';
+            }
+        }
+
+        auth.onAuthStateChanged((u) => {
+            prefillFeedbackForUser(u);
+        });
+
         feedbackForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -1485,15 +1577,16 @@
             const email = document.getElementById('email').value.trim();
             const message = document.getElementById('message').value.trim();
             
-            // Client-side validation
-            if (name.length < 2) {
-                showAlert('Name must be at least 2 characters long.', 'error');
-                return;
-            }
-            
-            if (!isValidEmail(email)) {
-                showAlert('Please enter a valid email address.', 'error');
-                return;
+            // Client-side validation (skip name/email checks for authenticated users)
+            if (!auth.currentUser) {
+                if (name.length < 2) {
+                    showAlert('Name must be at least 2 characters long.', 'error');
+                    return;
+                }
+                if (!isValidEmail(email)) {
+                    showAlert('Please enter a valid email address.', 'error');
+                    return;
+                }
             }
             
             if (message.length < 10) {
@@ -1507,12 +1600,14 @@
             
             try {
                 // Save feedback to Firestore
+                const activeUser = auth.currentUser;
                 await db.collection("feedbacks").add({
                     name: name,
                     email: email,
                     message: message,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-                    pageUrl: window.location.href
+                    pageUrl: window.location.href,
+                    uid: activeUser ? activeUser.uid : null
                 });
                 
                 // Show success message
@@ -1606,6 +1701,78 @@
                 });
             });
         }
+
+        // ===== Auth UI and gating =====
+        function renderAuthUI(user) {
+            if (user) {
+                headerAuthButtons.style.display = 'none';
+                const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+                authArea.innerHTML = '';
+                const profileDiv = document.createElement('div');
+                profileDiv.className = 'profile';
+                profileDiv.innerHTML = `
+                    <button class="profile-toggle" id="profileToggle">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="profileName">${displayName}</span>
+                    </button>
+                    <div class="profile-menu" id="profileMenu">
+                        <a href="profile.html" id="viewProfile">View Profile</a>
+                        <button id="logoutBtn">Logout</button>
+                    </div>
+                `;
+                authArea.appendChild(profileDiv);
+
+                const profileToggle = document.getElementById('profileToggle');
+                const profileMenu = document.getElementById('profileMenu');
+                const logoutBtn = document.getElementById('logoutBtn');
+
+                profileToggle.addEventListener('click', () => {
+                    profileMenu.style.display = profileMenu.style.display === 'block' ? 'none' : 'block';
+                });
+
+                document.addEventListener('click', (evt) => {
+                    if (!profileDiv.contains(evt.target)) {
+                        profileMenu.style.display = 'none';
+                    }
+                });
+
+                logoutBtn.addEventListener('click', async () => {
+                    await auth.signOut();
+                    profileMenu.style.display = 'none';
+                });
+            } else {
+                authArea.innerHTML = '';
+                headerAuthButtons.style.display = 'flex';
+            }
+        }
+
+        auth.onAuthStateChanged((user) => {
+            renderAuthUI(user);
+        });
+
+        function navigateTo(url) {
+            const user = auth.currentUser;
+            if (!user) {
+                openAuthModal('login');
+                return;
+            }
+            window.location.href = url;
+        }
+
+        // Intercept "Use Tool" clicks when not authenticated
+        document.addEventListener('click', function(e) {
+            const target = e.target;
+            if (target.closest && target.closest('.tool-card a')) {
+                const anchor = target.closest('.tool-card a');
+                const url = anchor.getAttribute('href');
+                if (!auth.currentUser) {
+                    e.preventDefault();
+                    openAuthModal('login');
+                } else {
+                    // allow default navigation
+                }
+            }
+        }, true);
     </script>
 </body>
 </html>
