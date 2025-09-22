@@ -37,6 +37,42 @@
             min-height: 100vh;
         }
 
+        /* Auth Gate Overlay */
+        .auth-gate {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: #fff;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+        }
+        .auth-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 18px 20px;
+            text-align: center;
+        }
+        .auth-body { padding: 20px; }
+        .auth-group { margin-bottom: 14px; }
+        .auth-group label { display:block; margin-bottom:6px; font-weight:600; }
+        .auth-input { width:100%; padding:12px 14px; border:1px solid #ddd; border-radius:8px; font-size:16px; }
+        .auth-actions { display:flex; flex-direction:column; gap:10px; margin-top:12px; }
+        .auth-btn { padding:12px; border:none; border-radius:8px; cursor:pointer; font-weight:700; display:flex; align-items:center; justify-content:center; gap:8px; }
+        .auth-btn-primary { background: var(--primary-color); color:#fff; }
+        .auth-btn-google { background:#fff; border:1px solid #ddd; color:#444; }
+        .auth-msg { display:none; margin-top:8px; padding:10px; border-radius:8px; font-weight:600; text-align:center; }
+        .auth-msg.error { background: rgba(255,51,51,0.12); color: var(--danger-color); border:1px solid rgba(255,51,51,0.25); }
+        .auth-msg.success { background: rgba(75,181,67,0.12); color: var(--success-color); border:1px solid rgba(75,181,67,0.25); }
+
         /* Sidebar Styles */
         .sidebar {
             width: var(--sidebar-width);
@@ -102,6 +138,9 @@
             padding-bottom: 15px;
             border-bottom: 1px solid #e0e0e0;
         }
+
+        .user-actions { display:flex; align-items:center; gap:10px; }
+        .btn-outline { background:#fff; color: var(--primary-color); border:1px solid var(--primary-color); }
 
         .stats-cards {
             display: grid;
@@ -237,6 +276,11 @@
         .btn-danger {
             background-color: var(--danger-color);
             color: white;
+        }
+
+        .btn-warning {
+            background-color: var(--warning-color);
+            color: #222;
         }
 
         .btn:hover {
@@ -454,12 +498,12 @@
         <div class="logo">
             <h2><i class="fas fa-tools"></i> <span>Wander Tools</span></h2>
         </div>
-        <ul class="nav-links">
-            <li><a href="#" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
-            <li><a href="#"><i class="fas fa-comments"></i> <span>Feedback</span></a></li>
-            <li><a href="#"><i class="fas fa-users"></i> <span>Users</span></a></li>
-            <li><a href="#"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
-            <li><a href="#"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
+        <ul class="nav-links" id="sideNav">
+            <li><a href="#dashboard" data-target="#dashboard" class="active"><i class="fas fa-home"></i> <span>Dashboard</span></a></li>
+            <li><a href="#feedback" data-target="#feedback"><i class="fas fa-comments"></i> <span>Feedback</span></a></li>
+            <li><a href="#users" data-target="#users"><i class="fas fa-users"></i> <span>Users</span></a></li>
+            <li><a href="#settings" data-target="#settings"><i class="fas fa-cog"></i> <span>Settings</span></a></li>
+            <li><a href="#logout" id="sideLogout"><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a></li>
         </ul>
     </div>
 
@@ -467,13 +511,14 @@
     <div class="main-content">
         <div class="header">
             <h1>Admin Dashboard</h1>
-            <div class="user-info">
-                <span>Hello, Admin</span>
+            <div class="user-actions">
+                <span id="currentAdminEmail" style="color: var(--gray-color);"></span>
+                <button class="btn btn-outline" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
         </div>
 
         <!-- Stats Cards -->
-        <div class="stats-cards">
+        <section id="dashboard" class="stats-cards">
             <div class="stat-card">
                 <div class="stat-icon bg-primary">
                     <i class="fas fa-comments"></i>
@@ -510,10 +555,10 @@
                     <p>Deleted Feedback</p>
                 </div>
             </div>
-        </div>
+        </section>
 
         <!-- Feedback Table Card -->
-        <div class="card">
+        <section id="feedback" class="card">
             <div class="card-header">
                 <h2>Feedback Management</h2>
                 <button class="btn btn-primary" id="exportBtn">
@@ -566,7 +611,51 @@
                     <button id="nextBtn">Next &raquo;</button>
                 </div>
             </div>
-        </div>
+        </section>
+
+        <!-- Users Management Card -->
+        <section class="card" id="users">
+            <div class="card-header">
+                <h2>User Management</h2>
+                <div>
+                    <button class="btn btn-primary" id="exportUsersBtn"><i class="fas fa-download"></i> Export Users</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="filters">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="userSearchInput" placeholder="Search users...">
+                    </div>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Created</th>
+                            <th>UID</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr><td colspan="5" style="text-align:center;">Loading users...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Settings Card -->
+        <section class="card" id="settings">
+            <div class="card-header">
+                <h2>Settings</h2>
+            </div>
+            <div class="card-body">
+                <p style="margin-bottom:10px; color: var(--gray-color);">Allowed admin emails (allowlist):</p>
+                <ul id="allowlist" style="list-style: none; padding-left: 0;"></ul>
+                <p style="margin-top:12px; color: var(--gray-color); font-size:.9rem;">To update allowlist, edit this file's <code>adminEmails</code> array or extend to use Firestore-based allowlist.</p>
+            </div>
+        </section>
     </div>
 
     <!-- Feedback Detail Modal -->
@@ -580,8 +669,39 @@
         </div>
     </div>
 
+    <!-- Edit User Modal -->
+    <div id="userEditModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeUserEditModal">&times;</span>
+            <h2>Edit User</h2>
+            <div class="modal-body">
+                <div class="detail-row">
+                    <div class="detail-label">UID:</div>
+                    <div class="detail-content" id="editUserId">-</div>
+                </div>
+                <div class="detail-row">
+                    <div class="detail-label">Email:</div>
+                    <div class="detail-content" id="editUserEmail">-</div>
+                </div>
+                <div class="detail-row" style="align-items:center; gap:10px;">
+                    <div class="detail-label">Name:</div>
+                    <div class="detail-content"><input id="editUserName" style="width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:8px;" placeholder="Full name"></div>
+                </div>
+                <div class="detail-row" style="align-items:center; gap:10px;">
+                    <div class="detail-label">Suspended:</div>
+                    <div class="detail-content"><input type="checkbox" id="editUserSuspended"></div>
+                </div>
+                <div style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
+                    <button class="btn" id="cancelEditUserBtn">Cancel</button>
+                    <button class="btn btn-primary" id="saveEditUserBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
@@ -598,13 +718,64 @@
 
         // Initialize Firebase
         let db;
+        let auth;
+        const adminEmails = [
+            'shahadotshake1@gmail.com',
+            'techbaaz01@gmail.com'
+        ];
         try {
             firebase.initializeApp(firebaseConfig);
             db = firebase.firestore();
+            auth = firebase.auth();
             console.log("Firebase initialized successfully");
         } catch (error) {
             console.error("Firebase initialization error:", error);
             showError("Firebase initialization failed: " + error.message);
+        }
+
+        // Auth Gate elements
+        const authGate = document.createElement('div');
+        authGate.className = 'auth-gate';
+        authGate.innerHTML = `
+            <div class="auth-card">
+                <div class="auth-header">
+                    <h2><i class="fas fa-shield-alt"></i> Admin Sign In</h2>
+                    <p style="opacity:.9; font-size: .9rem;">Sign in to manage Wander Tools</p>
+                </div>
+                <div class="auth-body">
+                    <div id="authError" class="auth-msg error"></div>
+                    <div id="authSuccess" class="auth-msg success"></div>
+                    <div class="auth-group">
+                        <label for="adminEmail">Email</label>
+                        <input id="adminEmail" type="email" class="auth-input" placeholder="admin@example.com">
+                    </div>
+                    <div class="auth-group">
+                        <label for="adminPassword">Password</label>
+                        <input id="adminPassword" type="password" class="auth-input" placeholder="Your password">
+                    </div>
+                    <div class="auth-actions">
+                        <button id="adminLoginBtn" class="auth-btn auth-btn-primary"><i class="fas fa-sign-in-alt"></i> Sign In</button>
+                        <button id="googleLoginBtn" class="auth-btn auth-btn-google"><i class="fab fa-google"></i> Sign in with Google</button>
+                    </div>
+                </div>
+            </div>`;
+        document.body.appendChild(authGate);
+
+        function showAuthGate(message) {
+            if (message) {
+                const err = authGate.querySelector('#authError');
+                err.textContent = message;
+                err.style.display = 'block';
+            }
+            authGate.style.display = 'flex';
+        }
+
+        function hideAuthGate() {
+            const err = authGate.querySelector('#authError');
+            const ok = authGate.querySelector('#authSuccess');
+            if (err) err.style.display = 'none';
+            if (ok) ok.style.display = 'none';
+            authGate.style.display = 'none';
         }
 
         // DOM elements
@@ -624,9 +795,19 @@
         const nextBtn = document.getElementById('nextBtn');
         const errorMessage = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
+        const logoutBtn = document.getElementById('logoutBtn');
+        const currentAdminEmailEl = document.getElementById('currentAdminEmail');
+        const sideNav = document.getElementById('sideNav');
+        const sideLogout = document.getElementById('sideLogout');
+
+        // Users DOM
+        const usersTableBody = document.getElementById('usersTableBody');
+        const userSearchInput = document.getElementById('userSearchInput');
+        const exportUsersBtn = document.getElementById('exportUsersBtn');
 
         // Global variables
         let allFeedback = [];
+        let allUsers = [];
         let currentPage = 1;
         const itemsPerPage = 10;
         let sortField = 'timestamp';
@@ -651,6 +832,94 @@
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
+            });
+        }
+
+        // Auth gating
+        if (auth) {
+            auth.onAuthStateChanged((user) => {
+                if (!user) {
+                    showAuthGate();
+                } else {
+                    // Basic allowlist check for admins
+                    if (adminEmails.length && !adminEmails.includes(user.email || '')) {
+                        showAuthGate('This account is not authorized for admin access.');
+                        auth.signOut();
+                        return;
+                    }
+                    currentAdminEmailEl.textContent = user.email || '';
+                    hideAuthGate();
+                    // Load data after auth
+                    fetchFeedback();
+                    fetchUsers();
+                }
+            });
+        } else {
+            // If auth not initialized, show gate
+            showAuthGate('Authentication not available.');
+        }
+
+        // Auth handlers
+        document.addEventListener('click', (e) => {
+            if (e.target && e.target.id === 'adminLoginBtn') {
+                const email = authGate.querySelector('#adminEmail').value.trim();
+                const pass = authGate.querySelector('#adminPassword').value.trim();
+                const err = authGate.querySelector('#authError');
+                err.style.display = 'none';
+                if (!email || !pass) { err.textContent = 'Enter email and password'; err.style.display='block'; return; }
+                auth.signInWithEmailAndPassword(email, pass).catch((ex) => {
+                    err.textContent = 'Login failed. ' + (ex && ex.message ? ex.message : '');
+                    err.style.display = 'block';
+                });
+            }
+            if (e.target && e.target.id === 'googleLoginBtn') {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                const err = authGate.querySelector('#authError');
+                err.style.display = 'none';
+                auth.signInWithPopup(provider).catch((ex) => {
+                    err.textContent = 'Google sign-in failed. ' + (ex && ex.message ? ex.message : '');
+                    err.style.display = 'block';
+                });
+            }
+        });
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                try { await auth.signOut(); } catch(e) {}
+                showAuthGate();
+            });
+        }
+
+        // Smooth scroll for side nav
+        if (sideNav) {
+            sideNav.addEventListener('click', (e) => {
+                const a = e.target.closest('a[data-target]');
+                if (!a) return;
+                e.preventDefault();
+                const target = document.querySelector(a.getAttribute('data-target'));
+                if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                sideNav.querySelectorAll('a').forEach(x => x.classList.remove('active'));
+                a.classList.add('active');
+            });
+        }
+
+        if (sideLogout) {
+            sideLogout.addEventListener('click', (e) => { e.preventDefault(); if (logoutBtn) logoutBtn.click(); });
+        }
+
+        // Render allowlist in Settings
+        function renderAllowlist() {
+            const ul = document.getElementById('allowlist');
+            if (!ul) return;
+            ul.innerHTML = '';
+            adminEmails.forEach(mail => {
+                const li = document.createElement('li');
+                li.textContent = mail;
+                li.style.padding = '6px 10px';
+                li.style.border = '1px solid #eee';
+                li.style.borderRadius = '6px';
+                li.style.marginBottom = '6px';
+                ul.appendChild(li);
             });
         }
 
@@ -685,6 +954,116 @@
                     showError("Error loading feedback data: " + error.message);
                     feedbackTableBody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: red;">Error loading feedback data</td></tr>';
                 });
+        }
+
+        // Fetch users from Firestore
+        async function fetchUsers() {
+            if (!db) return;
+            usersTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">Loading users...</td></tr>';
+            allUsers = [];
+            try {
+                // Try ordered by createdAt if the field exists
+                const snap = await db.collection('users').orderBy('createdAt','desc').get();
+                snap.forEach((doc) => { allUsers.push({ id: doc.id, ...doc.data() }); });
+            } catch (err) {
+                // Fallback: simple get without order in case some docs don't have createdAt
+                try {
+                    const snap2 = await db.collection('users').get();
+                    snap2.forEach((doc) => { allUsers.push({ id: doc.id, ...doc.data() }); });
+                } catch (err2) {
+                    console.error('Failed to load users:', err2);
+                }
+            }
+            // Fallback 2: if still empty, build user list from feedbacks unique emails
+            if (!allUsers.length) {
+                try {
+                    const fbSnap = await db.collection('feedbacks').get();
+                    const seen = new Map();
+                    fbSnap.forEach((d) => {
+                        const v = d.data();
+                        const email = (v.email || '').toLowerCase();
+                        if (!email || seen.has(email)) return;
+                        seen.set(email, true);
+                        allUsers.push({ id: email, name: v.name || '', email, createdAt: v.timestamp });
+                    });
+                } catch(e) { console.warn('Fallback from feedbacks failed:', e); }
+            }
+            renderUsers();
+        }
+
+        function renderUsers() {
+            const q = (userSearchInput.value || '').toLowerCase();
+            const filtered = allUsers.filter(u => {
+                const name = (u.name || '').toLowerCase();
+                const email = (u.email || '').toLowerCase();
+                const id = (u.id || '').toLowerCase();
+                return name.includes(q) || email.includes(q) || id.includes(q);
+            });
+            if (filtered.length === 0) {
+                usersTableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;">No users found</td></tr>';
+                return;
+            }
+            usersTableBody.innerHTML = '';
+            filtered.forEach(u => {
+                const tr = document.createElement('tr');
+                const created = (u.createdAt && u.createdAt.toDate) ? formatDate(u.createdAt) : '—';
+                const suspended = !!u.suspended;
+                tr.innerHTML = `
+                    <td>${u.name || '-'} ${suspended ? '<span class="badge badge-warning" style="margin-left:6px;">Suspended</span>' : ''}</td>
+                    <td>${u.email || '-'}</td>
+                    <td>${created}</td>
+                    <td style="font-family: monospace;">${u.id}</td>
+                    <td class="action-buttons">
+                        <button class="btn btn-primary" data-action="editUser" data-id="${u.id}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn btn-warning" data-action="toggleSuspend" data-id="${u.id}" data-suspended="${suspended}"><i class="fas fa-user-slash"></i> ${suspended ? 'Unsuspend' : 'Suspend'}</button>
+                        <button class="btn btn-danger" data-action="removeUserDoc" data-id="${u.id}"><i class="fas fa-trash"></i> Remove Doc</button>
+                    </td>
+                `;
+                usersTableBody.appendChild(tr);
+            });
+        }
+
+        if (userSearchInput) {
+            userSearchInput.addEventListener('input', renderUsers);
+        }
+
+        if (usersTableBody) {
+            usersTableBody.addEventListener('click', (e) => {
+                const btn = e.target.closest('button[data-action]');
+                if (!btn) return;
+                const action = btn.getAttribute('data-action');
+                const id = btn.getAttribute('data-id');
+                if (action === 'removeUserDoc') {
+                    if (!confirm('Remove this user document from Firestore? This will not delete their Auth account.')) return;
+                    db.collection('users').doc(id).delete().then(() => fetchUsers());
+                } else if (action === 'toggleSuspend') {
+                    const suspended = btn.getAttribute('data-suspended') === 'true';
+                    db.collection('users').doc(id).set({ suspended: !suspended }, { merge: true })
+                        .then(fetchUsers);
+                } else if (action === 'editUser') {
+                    const u = allUsers.find(x => x.id === id);
+                    if (!u) return;
+                    openEditUser(u);
+                }
+            });
+        }
+
+        if (exportUsersBtn) {
+            exportUsersBtn.addEventListener('click', () => {
+                if (!allUsers.length) { alert('No user data to export'); return; }
+                let csv = 'Name,Email,UID,Created,Suspended\n';
+                allUsers.forEach(u => {
+                    const created = (u.createdAt && u.createdAt.toDate) ? formatDate(u.createdAt) : '';
+                    const name = (u.name || '').replace(/"/g,'""');
+                    csv += `"${name}","${u.email || ''}","${u.id}","${created}","${u.suspended ? 'yes' : 'no'}"\n`;
+                });
+                const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = `users_export_${new Date().toISOString().slice(0,10)}.csv`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
         }
 
         // Update today's feedback count
@@ -973,8 +1352,8 @@
             });
         });
 
-        // Initialize
-        fetchFeedback();
+        // Initialize: loading of data now happens after successful auth
+        renderAllowlist();
     </script>
 </body>
 </html>

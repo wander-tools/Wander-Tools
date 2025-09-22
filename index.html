@@ -351,6 +351,11 @@
         .auth-buttons { display: flex; gap: 10px; }
         .auth-button { background-color: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 20px; cursor: pointer; transition: var(--transition); font-weight: 600; }
         .auth-button:hover { background-color: rgba(255,255,255,0.3); transform: translateY(-2px); }
+        /* Distinct styles for Login vs Sign Up */
+        #openLogin { background-color: #ffffff; color: var(--primary-color); border-color: transparent; }
+        #openLogin:hover { background-color: #eef2ff; }
+        #openSignUp { background-color: var(--secondary-color); color: #ffffff; border-color: rgba(255,255,255,0.15); }
+        #openSignUp:hover { background-color: var(--primary-color); }
         .profile { position: relative; }
         .profile-toggle { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 22px; cursor: pointer; }
         .profile-toggle .fa-user-circle { font-size: 1.35rem; }
@@ -386,8 +391,8 @@
         }
 
         @keyframes modalopen {
-            from {opacity: 0; transform: translateY(-50px);}
-            to {opacity: 1; transform: translateY(0);}
+            from {opacity: 0; transform: translateY(-50px);} 
+            to {opacity: 1; transform: translateY(0);} 
         }
 
         .close-button {
@@ -443,6 +448,38 @@
         .download-option span {
             font-weight: 500;
         }
+
+        /* Embedded Auth Card (scoped) */
+        .auth-card { width: 100%; max-width: 520px; background: white; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.2); overflow: hidden; margin: 5% auto; }
+        [data-theme="dark"] .auth-card { background: rgb(30,30,30); border: 1px solid #444; }
+        .auth-header { background: #4a6bff; color: #fff; padding: 18px 20px; position: relative; text-align: center; }
+        .auth-header .logo { width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .auth-header .logo i { color: #4a6bff; font-size: 28px; }
+        .auth-body { padding: 20px; }
+        .auth-input { width: 100%; padding: 12px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; transition: all 0.3s; background: white; color: #333; }
+        [data-theme="dark"] .auth-input { background: #333; border-color: #555; color: #eee; }
+        .auth-input:focus { border-color: #4a6bff; outline: none; box-shadow: 0 0 0 3px rgba(74,107,255,0.2); }
+        .auth-group { margin-bottom: 16px; }
+        .auth-label { display: block; margin-bottom: 6px; font-weight: 500; }
+        .auth-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .auth-btn-primary { background: #4a6bff; color: #fff; }
+        .auth-btn-primary:hover { background: #3a5be0; transform: translateY(-2px); }
+        .auth-btn-google { background: #fff; color: #757575; border: 1px solid #ddd; }
+        .auth-btn-google:hover { background: #f5f5f5; transform: translateY(-2px); }
+        .auth-sep { display: flex; align-items: center; margin: 18px 0; color: #777; }
+        .auth-sep::before, .auth-sep::after { content: ""; flex: 1; border-bottom: 1px solid #ddd; }
+        .auth-sep span { padding: 0 10px; font-size: 14px; }
+        .auth-footer { text-align: center; margin-top: 10px; color: #666; font-size: 14px; }
+        .auth-footer a { color: #4a6bff; text-decoration: none; font-weight: 600; }
+        .auth-msg { padding: 10px; border-radius: 8px; margin-bottom: 12px; text-align: center; display: none; }
+        .auth-msg.error { background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; }
+        .auth-msg.success { background: #e8f5e9; color: #388e3c; border: 1px solid #c8e6c9; }
+        .auth-password-container { position: relative; }
+        .auth-toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #777; }
+        .auth-back-btn { position: absolute; top: 14px; left: 14px; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.35); }
+        .auth-close { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; border: 1px solid rgba(255,255,255,0.35); }
+        .auth-page { display: none; }
+        .auth-page.active { display: block; }
 
         /* Main Content Styles */
         .main-title {
@@ -961,10 +998,76 @@
 
     <!-- Auth Modal -->
     <div id="authModal" class="modal" style="display:none; align-items:center; justify-content:center;">
-        <div class="modal-content" style="background: transparent; box-shadow: none; border: none; padding: 0; width: auto; max-width: 520px;">
-            <span class="close-button" id="closeAuthModal" style="display:none">&times;</span>
-            <div style="border-radius: 0; overflow: visible;">
-                <iframe id="authFrame" src="" title="Authentication" style="width:100%; height:560px; border:0; display:block;"></iframe>
+        <div class="auth-card">
+            <div id="loginPage" class="auth-page active">
+                <div class="auth-header">
+                    <button class="auth-close" id="authCloseBtn" title="Close"><i class="fas fa-times"></i></button>
+                    <div class="logo"><i class="fas fa-tools"></i></div>
+                    <h2>Welcome to Wander Tools</h2>
+                    <p>Sign in to access your tools and preferences</p>
+                </div>
+                <div class="auth-body">
+                    <div id="loginErrorMessage" class="auth-msg error"></div>
+                    <div id="loginSuccessMessage" class="auth-msg success"></div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" class="auth-input" placeholder="Enter your email">
+                    </div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="loginPassword">Password</label>
+                        <div class="auth-password-container">
+                            <input type="password" id="loginPassword" class="auth-input" placeholder="Enter your password">
+                            <span class="auth-toggle-password" id="toggleLoginPassword"><i class="far fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <button id="loginBtn" class="auth-btn auth-btn-primary"><span>Sign In</span></button>
+                    <div class="auth-sep"><span>OR</span></div>
+                    <button id="googleLoginBtn" class="auth-btn auth-btn-google"><i class="fab fa-google"></i> Sign in with Google</button>
+                    <div class="auth-footer">
+                        <p>Don't have an account? <a href="#" id="showSignUpLink">Sign up</a></p>
+                        <p><a href="#" id="forgotPasswordLink">Forgot password?</a></p>
+                    </div>
+                </div>
+            </div>
+            <div id="signUpPage" class="auth-page">
+                <div class="auth-header">
+                    <button class="auth-back-btn" id="backToLogin" title="Back"><i class="fas fa-arrow-left"></i></button>
+                    <button class="auth-close" id="authCloseBtn2" title="Close"><i class="fas fa-times"></i></button>
+                    <div class="logo"><i class="fas fa-user-plus"></i></div>
+                    <h2>Create Account</h2>
+                    <p>Join Wander Tools today</p>
+                </div>
+                <div class="auth-body">
+                    <div id="signUpErrorMessage" class="auth-msg error"></div>
+                    <div id="signUpSuccessMessage" class="auth-msg success"></div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="signUpName">Full Name</label>
+                        <input type="text" id="signUpName" class="auth-input" placeholder="Enter your full name">
+                    </div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="signUpEmail">Email</label>
+                        <input type="email" id="signUpEmail" class="auth-input" placeholder="Enter your email">
+                    </div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="signUpPassword">Password</label>
+                        <div class="auth-password-container">
+                            <input type="password" id="signUpPassword" class="auth-input" placeholder="Create a password">
+                            <span class="auth-toggle-password" id="toggleSignUpPassword"><i class="far fa-eye"></i></span>
+                        </div>
+                        <div class="password-rules" style="font-size:12px;color:#666;margin-top:6px;">Must be at least 6 characters</div>
+                    </div>
+                    <div class="auth-group">
+                        <label class="auth-label" for="confirmPassword">Confirm Password</label>
+                        <div class="auth-password-container">
+                            <input type="password" id="confirmPassword" class="auth-input" placeholder="Confirm your password">
+                            <span class="auth-toggle-password" id="toggleConfirmPassword"><i class="far fa-eye"></i></span>
+                        </div>
+                    </div>
+                    <button id="signUpBtn" class="auth-btn auth-btn-primary"><span>Create Account</span></button>
+                    <div class="auth-footer" style="margin-top:14px;">
+                        By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy</a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1376,8 +1479,6 @@
         const closeModal = document.getElementById('closeModal');
         // Auth modal elements
         const authModal = document.getElementById('authModal');
-        const closeAuthModal = document.getElementById('closeAuthModal');
-        const authFrame = document.getElementById('authFrame');
         const openLoginBtn = document.getElementById('openLogin');
         const openSignUpBtn = document.getElementById('openSignUp');
         const authArea = document.getElementById('authArea');
@@ -1401,28 +1502,29 @@
             }
         });
 
+        function setAuthPage(page) {
+            const loginPageEl = document.getElementById('loginPage');
+            const signUpPageEl = document.getElementById('signUpPage');
+            if (page === 'signup') {
+                loginPageEl.classList.remove('active');
+                signUpPageEl.classList.add('active');
+            } else {
+                signUpPageEl.classList.remove('active');
+                loginPageEl.classList.add('active');
+            }
+        }
+
         function openAuthModal(mode) {
-            authFrame.src = `login-page.html?page=${encodeURIComponent(mode || 'login')}&embed=1`;
+            setAuthPage(mode || 'login');
             authModal.style.display = 'block';
         }
 
         if (openLoginBtn) openLoginBtn.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('login'); });
         if (openSignUpBtn) openSignUpBtn.addEventListener('click', (e) => { e.preventDefault(); openAuthModal('signup'); });
-        closeAuthModal.addEventListener('click', () => { authModal.style.display = 'none'; });
-
-        // Listen for auth messages from iframe
-        window.addEventListener('message', (event) => {
-            const data = event.data || {};
-            if (data.type === 'authSuccess') {
-                authModal.style.display = 'none';
-            }
-            if (data.type === 'authClose') {
-                authModal.style.display = 'none';
-            }
-            if (data.type === 'authResize' && typeof data.height === 'number') {
-                authFrame.style.height = Math.max(420, Math.min(data.height, window.innerHeight - 40)) + 'px';
-            }
-        });
+        const authCloseBtn = document.getElementById('authCloseBtn');
+        const authCloseBtn2 = document.getElementById('authCloseBtn2');
+        if (authCloseBtn) authCloseBtn.addEventListener('click', () => { authModal.style.display = 'none'; });
+        if (authCloseBtn2) authCloseBtn2.addEventListener('click', () => { authModal.style.display = 'none'; });
 
         // Search Functionality
         const headerSearchInput = document.getElementById('headerSearchInput');
@@ -1773,6 +1875,175 @@
                 }
             }
         }, true);
+
+        // ===== Inline Auth Handlers =====
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const googleLoginBtn = document.getElementById('googleLoginBtn');
+        const showSignUpLink = document.getElementById('showSignUpLink');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+        const toggleLoginPassword = document.getElementById('toggleLoginPassword');
+        const loginErrorMessage = document.getElementById('loginErrorMessage');
+        const loginSuccessMessage = document.getElementById('loginSuccessMessage');
+
+        const backToLogin = document.getElementById('backToLogin');
+        const signUpNameInput = document.getElementById('signUpName');
+        const signUpEmailInput = document.getElementById('signUpEmail');
+        const signUpPasswordInput = document.getElementById('signUpPassword');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const signUpBtn = document.getElementById('signUpBtn');
+        const toggleSignUpPassword = document.getElementById('toggleSignUpPassword');
+        const toggleConfirmPassword = document.getElementById('toggleConfirmPassword');
+        const signUpErrorMessage = document.getElementById('signUpErrorMessage');
+        const signUpSuccessMessage = document.getElementById('signUpSuccessMessage');
+
+        function setupPasswordToggle(toggleElement, inputElement) {
+            if (!toggleElement || !inputElement) return;
+            toggleElement.addEventListener('click', () => {
+                if (inputElement.type === 'password') {
+                    inputElement.type = 'text';
+                    toggleElement.innerHTML = '<i class="far fa-eye-slash"></i>';
+                } else {
+                    inputElement.type = 'password';
+                    toggleElement.innerHTML = '<i class="far fa-eye"></i>';
+                }
+            });
+        }
+        setupPasswordToggle(toggleLoginPassword, loginPasswordInput);
+        setupPasswordToggle(toggleSignUpPassword, signUpPasswordInput);
+        setupPasswordToggle(toggleConfirmPassword, confirmPasswordInput);
+
+        if (showSignUpLink) {
+            showSignUpLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                setAuthPage('signup');
+            });
+        }
+        if (backToLogin) {
+            backToLogin.addEventListener('click', () => setAuthPage('login'));
+        }
+
+        function showLoginError(message) {
+            loginErrorMessage.textContent = message;
+            loginErrorMessage.style.display = 'block';
+            loginSuccessMessage.style.display = 'none';
+        }
+        function showLoginSuccess(message) {
+            loginSuccessMessage.textContent = message;
+            loginSuccessMessage.style.display = 'block';
+            loginErrorMessage.style.display = 'none';
+        }
+        function showSignUpError(message) {
+            signUpErrorMessage.textContent = message;
+            signUpErrorMessage.style.display = 'block';
+            signUpSuccessMessage.style.display = 'none';
+        }
+        function showSignUpSuccess(message) {
+            signUpSuccessMessage.textContent = message;
+            signUpSuccessMessage.style.display = 'block';
+            signUpErrorMessage.style.display = 'none';
+        }
+
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                const email = loginEmailInput.value;
+                const password = loginPasswordInput.value;
+                if (!email || !password) { showLoginError('Please enter both email and password'); return; }
+                loginBtn.disabled = true;
+                loginBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin"></i> Signing in...</span>';
+                auth.signInWithEmailAndPassword(email, password)
+                    .then(() => {
+                        showLoginSuccess('Successfully signed in!');
+                        authModal.style.display = 'none';
+                    })
+                    .catch((error) => {
+                        loginBtn.disabled = false;
+                        loginBtn.innerHTML = '<span>Sign In</span>';
+                        showLoginError((() => {
+                            switch(error.code){
+                                case 'auth/invalid-email': return 'Invalid email address format.';
+                                case 'auth/user-disabled': return 'This user account has been disabled.';
+                                case 'auth/user-not-found': return 'No user found with this email.';
+                                case 'auth/wrong-password': return 'Incorrect password.';
+                                default: return 'An error occurred during authentication. Please try again.';
+                            }
+                        })());
+                    });
+            });
+        }
+
+        if (googleLoginBtn) {
+            googleLoginBtn.addEventListener('click', () => {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                googleLoginBtn.disabled = true;
+                googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+                auth.signInWithPopup(provider)
+                    .then(() => {
+                        showLoginSuccess('Successfully signed in with Google!');
+                        authModal.style.display = 'none';
+                    })
+                    .catch((error) => {
+                        googleLoginBtn.disabled = false;
+                        googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+                        showLoginError((() => {
+                            switch(error.code){
+                                case 'auth/popup-closed-by-user': return 'Google sign-in was canceled.';
+                                default: return 'An error occurred during Google sign-in. Please try again.';
+                            }
+                        })());
+                    });
+            });
+        }
+
+        if (signUpBtn) {
+            signUpBtn.addEventListener('click', () => {
+                const name = signUpNameInput.value;
+                const email = signUpEmailInput.value;
+                const password = signUpPasswordInput.value;
+                const confirmPassword = confirmPasswordInput.value;
+                if (!name || !email || !password || !confirmPassword) { showSignUpError('Please fill in all fields'); return; }
+                if (password !== confirmPassword) { showSignUpError('Passwords do not match'); return; }
+                if (password.length < 6) { showSignUpError('Password must be at least 6 characters long'); return; }
+                signUpBtn.disabled = true;
+                signUpBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin"></i> Creating account...</span>';
+                auth.createUserWithEmailAndPassword(email, password)
+                    .then((userCredential) => {
+                        return db.collection('users').doc(userCredential.user.uid).set({
+                            name: name,
+                            email: email,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    })
+                    .then(() => {
+                        showSignUpSuccess('Account created successfully! You are now signed in.');
+                        authModal.style.display = 'none';
+                    })
+                    .catch((error) => {
+                        signUpBtn.disabled = false;
+                        signUpBtn.innerHTML = '<span>Create Account</span>';
+                        showSignUpError((() => {
+                            switch(error.code){
+                                case 'auth/invalid-email': return 'Invalid email address format.';
+                                case 'auth/email-already-in-use': return 'This email is already registered.';
+                                case 'auth/weak-password': return 'Password should be at least 6 characters.';
+                                default: return 'An error occurred during sign up. Please try again.';
+                            }
+                        })());
+                    });
+            });
+        }
+
+        if (forgotPasswordLink) {
+            forgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                const email = loginEmailInput.value || prompt('Please enter your email address:');
+                if (!email) { showLoginError('Please enter your email first'); return; }
+                auth.sendPasswordResetEmail(email)
+                    .then(() => { showLoginSuccess('Password reset email sent! Check your inbox.'); })
+                    .catch((error) => { showLoginError('Failed to send reset email. Please try again.'); });
+            });
+        }
     </script>
 </body>
 </html>
