@@ -1064,9 +1064,27 @@
                         </div>
                     </div>
                     <button id="signUpBtn" class="auth-btn auth-btn-primary"><span>Create Account</span></button>
+                    <div class="auth-sep" style="margin: 18px 0;"><span>OR</span></div>
+                    <button id="googleSignUpBtn" class="auth-btn auth-btn-google"><i class="fab fa-google"></i> Continue with Google</button>
                     <div class="auth-footer" style="margin-top:14px;">
                         By creating an account, you agree to our <a href="#">Terms</a> and <a href="#">Privacy</a>
                     </div>
+                </div>
+            </div>
+            <div id="verifyEmailPage" class="auth-page">
+                <div class="auth-header">
+                    <button class="auth-back-btn" id="verifyBackToLogin" title="Back"><i class="fas fa-arrow-left"></i></button>
+                    <button class="auth-close" id="authCloseBtn3" title="Close"><i class="fas fa-times"></i></button>
+                    <div class="logo"><i class="fas fa-envelope"></i></div>
+                    <h2>Verify your email</h2>
+                    <p>We've sent a verification link to <span id="verifyEmailTarget"></span>. Please verify to continue.</p>
+                </div>
+                <div class="auth-body">
+                    <div id="verifyInfoMessage" class="auth-msg success" style="display:block;">Please check your inbox (and spam folder).</div>
+                    <div id="verifyErrorMessage" class="auth-msg error"></div>
+                    <button id="resendVerifyBtn" class="auth-btn auth-btn-google"><i class="fas fa-paper-plane"></i> Resend verification email</button>
+                    <div class="auth-sep"><span>THEN</span></div>
+                    <button id="iVerifiedBtn" class="auth-btn auth-btn-primary"><span>I've verified, continue</span></button>
                 </div>
             </div>
         </div>
@@ -1505,12 +1523,19 @@
         function setAuthPage(page) {
             const loginPageEl = document.getElementById('loginPage');
             const signUpPageEl = document.getElementById('signUpPage');
+            const verifyEmailPageEl = document.getElementById('verifyEmailPage');
             if (page === 'signup') {
                 loginPageEl.classList.remove('active');
                 signUpPageEl.classList.add('active');
+                verifyEmailPageEl.classList.remove('active');
+            } else if (page === 'verify') {
+                loginPageEl.classList.remove('active');
+                signUpPageEl.classList.remove('active');
+                verifyEmailPageEl.classList.add('active');
             } else {
                 signUpPageEl.classList.remove('active');
                 loginPageEl.classList.add('active');
+                verifyEmailPageEl.classList.remove('active');
             }
         }
 
@@ -1848,7 +1873,17 @@
             }
         }
 
-        auth.onAuthStateChanged((user) => {
+        auth.onAuthStateChanged(async (user) => {
+            // Try to hydrate displayName from Firestore if missing
+            if (user && !user.displayName) {
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    const data = doc.exists ? doc.data() : null;
+                    if (data && data.name) {
+                        await user.updateProfile({ displayName: data.name }).catch(() => {});
+                    }
+                } catch (_) { /* ignore */ }
+            }
             renderAuthUI(user);
         });
 
@@ -1923,6 +1958,11 @@
         if (backToLogin) {
             backToLogin.addEventListener('click', () => setAuthPage('login'));
         }
+        // Verify email navigation controls
+        const verifyBackToLogin = document.getElementById('verifyBackToLogin');
+        const authCloseBtn3 = document.getElementById('authCloseBtn3');
+        if (verifyBackToLogin) verifyBackToLogin.addEventListener('click', () => setAuthPage('login'));
+        if (authCloseBtn3) authCloseBtn3.addEventListener('click', () => { authModal.style.display = 'none'; });
 
         function showLoginError(message) {
             loginErrorMessage.textContent = message;
@@ -1954,8 +1994,16 @@
                 loginBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin"></i> Signing in...</span>';
                 auth.signInWithEmailAndPassword(email, password)
                     .then(() => {
-                        showLoginSuccess('Successfully signed in!');
-                        authModal.style.display = 'none';
+                        const user = auth.currentUser;
+                        if (user && !user.emailVerified) {
+                            document.getElementById('verifyEmailTarget').textContent = user.email || '';
+                            setAuthPage('verify');
+                            user.sendEmailVerification().catch(() => {});
+                            showLoginError('Please verify your email from the verification link we sent.');
+                        } else {
+                            showLoginSuccess('Successfully signed in!');
+                            authModal.style.display = 'none';
+                        }
                     })
                     .catch((error) => {
                         loginBtn.disabled = false;
@@ -1976,7 +2024,9 @@
         // Handle Google sign-in (popup with graceful fallback to redirect)
         // Also processes results if we returned from a redirect flow
         (function setupGoogleAuth() {
-            if (!googleLoginBtn) return;
+            // Both Login and Sign Up Google buttons
+            const googleSignUpBtn = document.getElementById('googleSignUpBtn');
+            const googleButtons = [googleLoginBtn, googleSignUpBtn].filter(Boolean);
 
             // If we came back from a redirect, complete the sign-in
             auth.getRedirectResult()
@@ -2001,10 +2051,12 @@
                     showLoginError(msg);
                 });
 
-            googleLoginBtn.addEventListener('click', async () => {
+            // Attach handler to all Google buttons
+            googleButtons.forEach((btn) => btn.addEventListener('click', async () => {
                 const provider = new firebase.auth.GoogleAuthProvider();
-                googleLoginBtn.disabled = true;
-                googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
                 try {
                     await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
                 } catch (_) { /* ignore */ }
@@ -2045,10 +2097,10 @@
                         showLoginError(msg);
                     }
                 } finally {
-                    googleLoginBtn.disabled = false;
-                    googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
                 }
-            });
+            }));
         })();
 
         if (signUpBtn) {
@@ -2064,15 +2116,19 @@
                 signUpBtn.innerHTML = '<span><i class="fas fa-spinner fa-spin"></i> Creating account...</span>';
                 auth.createUserWithEmailAndPassword(email, password)
                     .then((userCredential) => {
-                        return db.collection('users').doc(userCredential.user.uid).set({
+                        // Save display name to Firebase Auth profile
+                        return userCredential.user.updateProfile({ displayName: name })
+                            .catch(() => {})
+                            .then(() => db.collection('users').doc(userCredential.user.uid).set({
                             name: name,
                             email: email,
                             createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        })).then(async () => {
+                            try { await userCredential.user.sendEmailVerification(); } catch(_) {}
+                            document.getElementById('verifyEmailTarget').textContent = email;
+                            setAuthPage('verify');
+                            showSignUpSuccess('A verification email has been sent. Please verify to complete sign up.');
                         });
-                    })
-                    .then(() => {
-                        showSignUpSuccess('Account created successfully! You are now signed in.');
-                        authModal.style.display = 'none';
                     })
                     .catch((error) => {
                         signUpBtn.disabled = false;
@@ -2088,6 +2144,42 @@
                     });
             });
         }
+
+        // Verify page actions
+        const resendVerifyBtn = document.getElementById('resendVerifyBtn');
+        const iVerifiedBtn = document.getElementById('iVerifiedBtn');
+        const verifyErrorMessage = document.getElementById('verifyErrorMessage');
+        if (resendVerifyBtn) resendVerifyBtn.addEventListener('click', async () => {
+            verifyErrorMessage.style.display = 'none';
+            const user = auth.currentUser;
+            if (!user) { setAuthPage('login'); return; }
+            try {
+                await user.sendEmailVerification();
+                const info = document.getElementById('verifyInfoMessage');
+                if (info) { info.style.display = 'block'; info.textContent = 'Verification email re-sent. Please check your inbox.'; }
+            } catch (e) {
+                verifyErrorMessage.textContent = 'Failed to send verification email. Please try again later.';
+                verifyErrorMessage.style.display = 'block';
+            }
+        });
+        if (iVerifiedBtn) iVerifiedBtn.addEventListener('click', async () => {
+            verifyErrorMessage.style.display = 'none';
+            const user = auth.currentUser;
+            if (!user) { setAuthPage('login'); return; }
+            try {
+                await user.reload();
+                if (user.emailVerified) {
+                    showLoginSuccess('Email verified! You are now signed in.');
+                    authModal.style.display = 'none';
+                } else {
+                    verifyErrorMessage.textContent = 'Not verified yet. Please click the link in your email and try again.';
+                    verifyErrorMessage.style.display = 'block';
+                }
+            } catch (_) {
+                verifyErrorMessage.textContent = 'Could not confirm verification. Please try again.';
+                verifyErrorMessage.style.display = 'block';
+            }
+        });
 
         if (forgotPasswordLink) {
             forgotPasswordLink.addEventListener('click', (e) => {
