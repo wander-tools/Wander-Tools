@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wander Tools - Admin</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="favicon.png" sizes="32x32" type="image/png">
+    <style>
+        :root { --primary:#4361ee; --secondary:#3f37c9; --bg:#f5f7f9; --card:#fff; --text:#212529; --muted:#6c757d; --danger:#ff3333; --warning:#ffcc00; --success:#4bb543; --radius:12px; --box-shadow:0 4px 6px rgba(0,0,0,0.1); --transition:all .3s ease; }
+        *{ box-sizing:border-box; }
+        body{ margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:var(--bg); color:var(--text);}    
+        .layout{ display:grid; grid-template-columns:260px 1fr; min-height:100vh; }
+        .sidebar{ background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%); color:#fff; padding:18px; box-shadow: var(--box-shadow); }
+        .brand{ display:flex; align-items:center; gap:10px; font-weight:700; margin-bottom:18px; }
+        .nav{ display:flex; flex-direction:column; gap:8px; }
+        .nav button{ display:flex; align-items:center; gap:10px; padding:12px 14px; border:none; border-radius:10px; background:transparent; color:#eef2ff; cursor:pointer; text-align:left; transition: var(--transition); }
+        .nav button i{ width:18px; }
+        .nav button.active,.nav button:hover{ background:rgba(255,255,255,0.12); color:#fff; transform: translateX(2px); }
+        .content{ padding:24px; }
+        .topbar{ display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; }
+        .card{ background:var(--card); border-radius:var(--radius); box-shadow:var(--box-shadow); padding:20px; animation: fadeInUp .25s ease; transition: box-shadow .25s ease, transform .2s ease; }
+        .card:hover{ box-shadow:0 10px 20px rgba(0,0,0,.12); transform: translateY(-2px); }
+        .grid{ display:grid; gap:16px; }
+        .grid.cols-3{ grid-template-columns: repeat(3, minmax(0,1fr)); }
+        .stat{ display:flex; align-items:center; gap:15px; padding:14px; border-radius:12px; transition: transform .2s ease, box-shadow .2s ease; }
+        .stat:hover{ transform: translateY(-2px); box-shadow:0 12px 28px rgba(0,0,0,.12); }
+        .stat i{ font-size:22px; color:var(--primary); background: rgba(67,97,238,.15); padding:10px; border-radius:50%; }
+        table{ width:100%; border-collapse:collapse; }
+        th,td{ padding:12px 15px; border-bottom:1px solid #e0e0e0; font-size:14px; }
+        th{ text-align:left; color:#555; background:#f8f9fa; font-weight:600; cursor:pointer; user-select:none; }
+        tr:hover{ background:#f8f9fa; }
+        .toolbar{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+        .btn{ padding:10px 14px; border:none; border-radius:10px; cursor:pointer; font-weight:700; letter-spacing:.2px; transition:transform .15s ease, box-shadow .25s ease, background .2s ease, opacity .2s ease; box-shadow:0 4px 10px rgba(0,0,0,.08); display:inline-flex; align-items:center; gap:8px; }
+        .btn:hover{ transform: translateY(-2px); box-shadow:0 10px 18px rgba(0,0,0,.14); }
+        .btn:active{ transform: translateY(0); box-shadow:0 4px 10px rgba(0,0,0,.1); }
+        .btn[disabled]{ opacity:.6; cursor:not-allowed; pointer-events:none; }
+        .btn-primary{ background: var(--primary); color:#fff; }
+        .btn-secondary{ background:#eef1f6; color:#2b2f36; }
+        .btn-danger{ background: var(--danger); color:#fff; }
+        .btn-warning{ background: var(--warning); color:#222; }
+        /* Loading state */
+        .btn.is-loading{ position:relative; color:transparent !important; }
+        .btn.is-loading::after{ content:""; position:absolute; inset:auto; left:50%; top:50%; width:1.1em; height:1.1em; margin:-0.55em 0 0 -0.55em; border-radius:50%; border:2px solid rgba(255,255,255,.35); border-top-color:#fff; animation: spin .9s linear infinite; }
+        .btn-secondary.is-loading::after{ border-color: rgba(60,72,88,.25); border-top-color:#3c4858; }
+        .btn-warning.is-loading::after{ border-color: rgba(74,59,0,.25); border-top-color:#4a3b00; }
+        .btn-xs{ padding:6px 8px; font-size:12px; }
+        .mr-6{ margin-right:6px; }
+        .badge{ padding:4px 8px; border-radius:999px; font-size:12px; }
+        .badge-success{ background:rgba(46,125,50,.12); color:var(--success); }
+        .badge-muted{ background:#eef1ff; color:#3f51b5; }
+        .hidden{ display:none; }
+        .modal{ position:fixed; inset:0; background:rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+        .modal-content{ background:#fff; border-radius:12px; padding:20px; width:90%; max-width:600px; box-shadow:0 15px 35px rgba(0,0,0,.25); animation: modalopen .3s; }
+        .modal-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+        .form-row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+        .form-control{ width:100%; padding:12px 14px; border:1px solid #ddd; border-radius:8px; font-size:16px; }
+        @keyframes fadeInUp{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform: translateY(0);} }
+        @keyframes modalopen{ from{ opacity:0; transform: translateY(-50px);} to{ opacity:1; transform: translateY(0);} }
+        @keyframes spin{ to{ transform: rotate(360deg);} }
+        @media (max-width: 900px){ .layout{ grid-template-columns:1fr; } .sidebar{ position:sticky; top:0; z-index:10; border-bottom:1px solid #334; } .grid.cols-3{ grid-template-columns:1fr; } }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+</head>
+<body>
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="brand"><i class="fas fa-screwdriver-wrench"></i> <span>Admin Panel</span></div>
+            <div class="nav" id="nav">
+                <button data-page="dashboard" class="active"><i class="fas fa-chart-pie"></i> Dashboard</button>
+                <button data-page="feedbacks"><i class="fas fa-comments"></i> Feedbacks</button>
+                <button data-page="users"><i class="fas fa-users"></i> Users</button>
+                <button data-page="admins"><i class="fas fa-user-shield"></i> Admins</button>
+                <button data-page="settings"><i class="fas fa-gear"></i> Settings</button>
+                <button data-page="profile"><i class="fas fa-id-badge"></i> Profile</button>
+                <button id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Logout</button>
+            </div>
+        </aside>
+        <main class="content">
+            <div class="topbar">
+                <h2 id="pageTitle">Dashboard</h2>
+                <div id="adminInfo" class="muted"></div>
+            </div>
+            <div id="guardMsg" class="card hidden" style="border-left:4px solid #e53935; color:#b71c1c; font-weight:600; margin-bottom:16px;">Access restricted.</div>
+            <div id="loginCard" class="card hidden" style="max-width:520px; margin-bottom:24px;">
+                <h3 style="margin-top:0;">Admin Login</h3>
+                <div class="form-row">
+                    <input id="adminLoginEmail" class="form-control" placeholder="Email">
+                    <input id="adminLoginPassword" class="form-control" type="password" placeholder="Password">
+                </div>
+                <div style="margin-top:10px; display:flex; gap:8px;">
+                    <button class="btn btn-primary" id="adminLoginBtn">Sign In</button>
+                    <button class="btn btn-secondary" id="adminForgotBtn">Forgot Password</button>
+                </div>
+                <div id="adminLoginMsg" style="margin-top:10px; font-weight:600;"></div>
+            </div>
+
+            <section id="page-dashboard" class="grid">
+                <div class="grid cols-3">
+                    <div class="card stat"><i class="fas fa-users"></i><div><div id="statUsers" style="font-size:22px;font-weight:700;">0</div><div>Total Users</div></div></div>
+                    <div class="card stat"><i class="fas fa-comments"></i><div><div id="statFeedbacks" style="font-size:22px;font-weight:700;">0</div><div>Total Feedbacks</div></div></div>
+                    <div class="card stat"><i class="fas fa-user-shield"></i><div><div id="statAdmins" style="font-size:22px;font-weight:700;">0</div><div>Admins</div></div></div>
+                </div>
+                <div class="card">
+                    <h3 style="margin:0 0 8px 0;">Recent Feedbacks</h3>
+                    <div class="toolbar">
+                        <button class="btn btn-secondary" id="exportRecentFeedbacks">Export CSV</button>
+                    </div>
+                    <table id="recentFeedbacksTbl">
+                        <thead><tr><th>Name</th><th>Email</th><th>Message</th><th>Status</th><th>Date</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-feedbacks" class="hidden">
+                <div class="card">
+                    <div class="toolbar">
+                        <button class="btn btn-secondary" id="exportFeedbacks">Export CSV</button>
+                        <span style="color:var(--muted)">Manage all feedback entries</span>
+                    </div>
+                    <table id="feedbacksTbl">
+                        <thead><tr><th>Name</th><th>Email</th><th>Message</th><th>Status</th><th>Date</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-users" class="hidden">
+                <div class="card">
+                    <div class="toolbar">
+                        <button class="btn btn-primary" id="addUserBtn">Add User</button>
+                        <button class="btn btn-secondary" id="exportUsers">Export CSV</button>
+                    </div>
+                    <table id="usersTbl">
+                        <thead><tr><th>Name</th><th>Email</th><th>UID</th><th>Disabled</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                    <div style="margin-top:8px; color:var(--muted); font-size:12px;">Note: Admin SDK is required to truly disable/delete Auth users. Here we store a disabled flag in Firestore and provide password reset.</div>
+                </div>
+            </section>
+
+            <section id="page-admins" class="hidden">
+                <div class="card">
+                    <div class="toolbar">
+                        <button class="btn btn-primary" id="addAdminBtn">Add Admin</button>
+                        <button class="btn btn-secondary" id="exportAdmins">Export CSV</button>
+                    </div>
+                    <table id="adminsTbl">
+                        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section id="page-settings" class="hidden">
+                <div class="card">
+                    <h3 style="margin-top:0;">Settings</h3>
+                    <p class="muted">Basic app settings can be stored under `settings` document in Firestore (example only).</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input id="siteTitle" placeholder="Site title" style="padding:10px;border:1px solid #ddd;border-radius:8px;">
+                        <button class="btn btn-primary" id="saveSettings">Save</button>
+                    </div>
+                    <div id="settingsMsg" style="margin-top:10px; font-weight:600;"></div>
+                </div>
+            </section>
+
+            <section id="page-profile" class="hidden">
+                <div class="card">
+                    <h3 style="margin-top:0;">My Profile</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; max-width:700px;">
+                        <div>
+                            <label>Name</label>
+                            <input id="profName" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+                        </div>
+                        <div>
+                            <label>Email</label>
+                            <input id="profEmail" disabled style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;">
+                        </div>
+                    </div>
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button class="btn btn-primary" id="saveProfile">Save</button>
+                        <button class="btn btn-secondary" id="sendReset">Send Password Reset</button>
+                    </div>
+                    <div id="profileMsg" style="margin-top:10px; font-weight:600;"></div>
+                </div>
+            </section>
+        </main>
+        <!-- Modals -->
+        <div id="modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle" style="margin:0;">Modal</h3>
+                    <button id="modalClose" class="btn btn-secondary">Close</button>
+                </div>
+                <div id="modalBody"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBCIRviVtANQrb72IZzyNlQMuCzsIATP7k",
+            authDomain: "wander-tools.firebaseapp.com",
+            projectId: "wander-tools",
+            storageBucket: "wander-tools.firebasestorage.app",
+            messagingSenderId: "911828766491",
+            appId: "1:911828766491:web:e38541bd54996adea5cdbe",
+            measurementId: "G-GY19ZGWP4K"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(_) {}
+
+        const pages = {
+            dashboard: document.getElementById('page-dashboard'),
+            feedbacks: document.getElementById('page-feedbacks'),
+            users: document.getElementById('page-users'),
+            admins: document.getElementById('page-admins'),
+            settings: document.getElementById('page-settings'),
+            profile: document.getElementById('page-profile')
+        };
+        const nav = document.getElementById('nav');
+        const pageTitle = document.getElementById('pageTitle');
+        function showPage(id){ Object.values(pages).forEach(p=>p.classList.add('hidden')); pages[id].classList.remove('hidden'); pageTitle.textContent = id.charAt(0).toUpperCase()+id.slice(1); nav.querySelectorAll('button[data-page]').forEach(b=>b.classList.remove('active')); const nb=nav.querySelector(`button[data-page="${id}"]`); if(nb){ nb.classList.add('active'); } }
+        nav.querySelectorAll('button[data-page]').forEach(btn=> btn.addEventListener('click', ()=> showPage(btn.dataset.page)) );
+
+        // Export helper
+        function downloadCSV(filename, rows){
+            const escape = (v)=>(''+(v??'')).replace(/"/g,'\"');
+            const csv = rows.map(r=> r.map(escape).join(',')).join('\n');
+            const blob = new Blob([csv], {type:'text/csv'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
+        }
+
+        // Helper: wrap a function to toggle loading state on a button
+        function withLoading(btn, fn){
+            return async function(...args){
+                if (btn){ btn.classList.add('is-loading'); btn.disabled = true; }
+                try { return await fn.apply(this, args); }
+                finally { if (btn){ btn.classList.remove('is-loading'); btn.disabled = false; } }
+            };
+        }
+
+        // Admin gate: only allow emails present in `Admin Users` collection
+        async function isAllowedAdmin(user){
+            if (!user) return false;
+            const email = (user.email || '').trim().toLowerCase();
+            // Try common field names first
+            try {
+                const tryFields = ['Admin Email', 'Admin Email:', 'email', 'Email'];
+                for (const field of tryFields) {
+                    const q = await db.collection('Admin Users').where(field, '==', user.email).get();
+                    if (!q.empty) return true;
+                }
+            } catch(_) { /* fallthrough */ }
+            // Fallback: scan and compare case-insensitively across field values
+            try {
+                const all = await db.collection('Admin Users').get();
+                let ok = false;
+                all.forEach(doc => {
+                    const d = doc.data() || {};
+                    const vals = Object.values(d).map(v => (''+v).trim().toLowerCase());
+                    if (vals.includes(email)) ok = true;
+                });
+                return ok;
+            } catch(_) {
+                return false;
+            }
+        }
+
+        // Resolve role for current user (defaults to 'admin' if not set)
+        async function getAdminRole(user){
+            const email = user?.email || '';
+            const snap = await db.collection('Admin Users').where('Admin Email', '==', email).get().catch(()=>null);
+            if (snap && !snap.empty) {
+                const data = snap.docs[0].data() || {};
+                return (data.role || 'admin').toLowerCase();
+            }
+            // Try alternate field name
+            const snap2 = await db.collection('Admin Users').where('Admin Email:', '==', email).get().catch(()=>null);
+            if (snap2 && !snap2.empty) {
+                const data = snap2.docs[0].data() || {};
+                return (data.role || 'admin').toLowerCase();
+            }
+            return 'admin';
+        }
+
+        // Populate stats and tables
+        async function loadDashboard(){
+            const [usersSnap, fbSnap, adminsSnap] = await Promise.all([
+                db.collection('users').get(),
+                db.collection('feedbacks').orderBy('timestamp','desc').limit(10).get(),
+                db.collection('Admin Users').get()
+            ]);
+            document.getElementById('statUsers').textContent = usersSnap.size;
+            document.getElementById('statFeedbacks').textContent = fbSnap.size ? fbSnap.size : 0;
+            document.getElementById('statAdmins').textContent = adminsSnap.size;
+            const tbody = document.querySelector('#recentFeedbacksTbl tbody');
+            tbody.innerHTML = '';
+            fbSnap.forEach(doc=>{
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${(d.message||'').slice(0,80)}</td><td><span class="badge ${d.status==='verified'?'badge-success':'badge-muted'}">${d.status||'unverified'}</span></td><td>${d.timestamp? d.timestamp.toDate().toLocaleString() : ''}</td>`;
+                tbody.appendChild(tr);
+            });
+            const expBtn = document.getElementById('exportRecentFeedbacks');
+            expBtn.onclick = withLoading(expBtn, () => {
+                const rows = [['name','email','message','status','date']];
+                fbSnap.forEach(doc=>{
+                    const d = doc.data();
+                    rows.push([d.name,d.email,d.message,d.status, d.timestamp? d.timestamp.toDate().toISOString():'' ]);
+                });
+                downloadCSV('recent_feedbacks.csv', rows);
+            });
+        }
+
+        async function loadFeedbacks(){
+            const snap = await db.collection('feedbacks').orderBy('timestamp','desc').get();
+            const tbody = document.querySelector('#feedbacksTbl tbody');
+            tbody.innerHTML = '';
+            snap.forEach(doc=>{
+                const d = doc.data();
+                const status = (d.status||'').toLowerCase();
+                const normalized = status==='verified' ? 'verified' : 'unverified';
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${(d.message||'').replace(/\n/g,' ')}</td><td><span class="badge ${normalized==='verified'?'badge-success':'badge-muted'}">${normalized}</span></td><td>${d.timestamp? d.timestamp.toDate().toLocaleString() : ''}</td><td><button class='btn btn-secondary btn-xs mr-6' data-action='toggle' data-id='${doc.id}'>Toggle Status</button><button class='btn btn-danger btn-xs' data-action='delete' data-id='${doc.id}'>Delete</button></td>`
+                tbody.appendChild(tr);
+            });
+            tbody.addEventListener('click', async (e)=>{
+                const btn = e.target.closest('button[data-action]'); if(!btn) return;
+                btn.classList.add('is-loading'); btn.disabled = true;
+                const id = btn.getAttribute('data-id'); const action = btn.getAttribute('data-action');
+                try {
+                    if (action==='delete'){ await db.collection('feedbacks').doc(id).delete(); loadFeedbacks(); loadDashboard(); }
+                    if (action==='toggle'){
+                        const ref = db.collection('feedbacks').doc(id); const snap = await ref.get();
+                        const curVal = (snap.data().status||'').toLowerCase() === 'verified' ? 'unverified' : 'verified';
+                        await ref.set({ status: curVal }, { merge:true }); loadFeedbacks(); loadDashboard();
+                    }
+                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+            });
+            const expBtn2 = document.getElementById('exportFeedbacks');
+            expBtn2.onclick = withLoading(expBtn2, () => {
+                const rows = [['name','email','message','status','date','uid','pageUrl']];
+                snap.forEach(doc=>{ const d=doc.data(); const status=(d.status||'').toLowerCase()==='verified'?'verified':'unverified'; rows.push([d.name,d.email,d.message,status,d.timestamp?d.timestamp.toDate().toISOString():'', d.uid||'', d.pageUrl||'']); });
+                downloadCSV('feedbacks.csv', rows);
+            });
+        }
+
+        async function loadUsers(){
+            const snap = await db.collection('users').get();
+            const tbody = document.querySelector('#usersTbl tbody');
+            tbody.innerHTML = '';
+            snap.forEach(doc=>{
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${doc.id}</td><td>${d.disabled? 'Yes':'No'}</td><td><button class='btn btn-warning' data-action='toggle' data-id='${doc.id}'>${d.disabled?'Enable':'Disable'}</button> <button class='btn btn-secondary' data-action='reset' data-email='${d.email||''}'>Send Reset</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
+                tbody.appendChild(tr);
+            });
+            tbody.addEventListener('click', async (e)=>{
+                const btn = e.target.closest('button[data-action]'); if(!btn) return;
+                btn.classList.add('is-loading'); btn.disabled = true;
+                const action = btn.getAttribute('data-action');
+                try {
+                    if (action==='toggle'){ const id = btn.getAttribute('data-id'); const ref=db.collection('users').doc(id); const s=await ref.get(); await ref.set({disabled: !s.data().disabled},{merge:true}); loadUsers(); }
+                    if (action==='reset'){ const email = btn.getAttribute('data-email'); if(email){ try{ await auth.sendPasswordResetEmail(email); alert('Password reset email sent'); }catch(_){ alert('Failed to send reset'); } } }
+                    if (action==='delete'){ const id = btn.getAttribute('data-id'); await db.collection('users').doc(id).delete(); loadUsers(); }
+                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+            });
+            const expBtn3 = document.getElementById('exportUsers');
+            expBtn3.onclick = withLoading(expBtn3, () => {
+                const rows = [['uid','name','email','disabled']];
+                snap.forEach(doc=>{ const d=doc.data(); rows.push([doc.id,d.name,d.email,d.disabled? 'Yes':'No']); });
+                downloadCSV('users.csv', rows);
+            });
+        }
+
+        async function loadAdmins(){
+            const snap = await db.collection('Admin Users').get();
+            const tbody = document.querySelector('#adminsTbl tbody');
+            tbody.innerHTML = '';
+            snap.forEach(doc=>{
+                const d = doc.data();
+                const tr = document.createElement('tr');
+                const role = d['role'] || 'admin';
+                tr.innerHTML = `<td>${d['Admin Name']||''}</td><td>${d['Admin Email']||''}</td><td>${role}</td><td><button class='btn btn-secondary' data-action='edit' data-id='${doc.id}'>Edit</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Remove</button></td>`;
+                tbody.appendChild(tr);
+            });
+            tbody.addEventListener('click', async (e)=>{
+                const btn = e.target.closest('button[data-action]'); if(!btn) return;
+                btn.classList.add('is-loading'); btn.disabled = true;
+                const id = btn.getAttribute('data-id');
+                try {
+                    if (btn.getAttribute('data-action')==='delete'){ await db.collection('Admin Users').doc(id).delete(); loadAdmins(); }
+                    if (btn.getAttribute('data-action')==='edit'){
+                        openAdminForm('Edit Admin', async (values)=>{ await db.collection('Admin Users').doc(id).set(values, { merge:true }); loadAdmins(); });
+                    }
+                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+            });
+            document.getElementById('addAdminBtn').onclick = () => openAdminForm('Add Admin', async (values)=>{ await db.collection('Admin Users').add(values); loadAdmins(); });
+            const expBtn4 = document.getElementById('exportAdmins');
+            expBtn4.onclick = withLoading(expBtn4, () => {
+                const rows = [['name','email','role','id']];
+                snap.forEach(doc=>{ const d=doc.data(); rows.push([d['Admin Name']||'', d['Admin Email']||'', d['role']||'admin', doc.id]); });
+                downloadCSV('admins.csv', rows);
+            });
+        }
+
+        // Settings
+        async function loadSettings(){
+            const doc = await db.collection('settings').doc('app').get();
+            const data = doc.exists ? doc.data() : {};
+            document.getElementById('siteTitle').value = data.title || '';
+        }
+        const saveSettingsBtn = document.getElementById('saveSettings');
+        saveSettingsBtn.addEventListener('click', withLoading(saveSettingsBtn, async ()=>{
+            const title = document.getElementById('siteTitle').value.trim();
+            try { await db.collection('settings').doc('app').set({ title }, { merge:true }); document.getElementById('settingsMsg').textContent='Saved!'; setTimeout(()=>document.getElementById('settingsMsg').textContent='',2000);} catch(_){ document.getElementById('settingsMsg').textContent='Failed to save'; }
+        }));
+
+        // Profile
+        function setProfile(user){
+            document.getElementById('profEmail').value = user?.email || '';
+            document.getElementById('profName').value = user?.displayName || (user?.email? user.email.split('@')[0] : '');
+        }
+        const saveProfileBtn = document.getElementById('saveProfile');
+        saveProfileBtn.addEventListener('click', withLoading(saveProfileBtn, async ()=>{
+            const user = auth.currentUser; if(!user) return;
+            const name = document.getElementById('profName').value.trim();
+            try{ await user.updateProfile({ displayName: name }); await db.collection('users').doc(user.uid).set({ name, email:user.email }, { merge:true }); document.getElementById('profileMsg').textContent='Profile updated'; setTimeout(()=>document.getElementById('profileMsg').textContent='',2000);}catch(_){ document.getElementById('profileMsg').textContent='Failed'; }
+        }));
+        const sendResetBtn = document.getElementById('sendReset');
+        sendResetBtn.addEventListener('click', withLoading(sendResetBtn, async ()=>{ const email = auth.currentUser?.email; if(email){ try{ await auth.sendPasswordResetEmail(email); alert('Password reset email sent'); }catch(_){ alert('Failed to send'); } } }));
+
+        // Logout - stay on admin page and show login card
+        document.getElementById('logoutBtn').addEventListener('click', async (e)=>{ 
+            const btn = e.currentTarget; if(btn){ btn.classList.add('is-loading'); btn.disabled = true; }
+            await auth.signOut();
+            showGuard('You have been signed out.');
+            const card = document.getElementById('loginCard'); if(card){ card.classList.remove('hidden'); }
+            document.getElementById('adminInfo').textContent = '';
+            hideAllPages();
+            if(btn){ btn.classList.remove('is-loading'); btn.disabled = false; }
+        });
+
+        // Avoid auto-redirects; show an inline guard message instead
+        const guardEl = document.getElementById('guardMsg');
+        function showGuard(msg){ if(!guardEl) return; guardEl.textContent = msg; guardEl.classList.remove('hidden'); }
+        const loginCard = document.getElementById('loginCard');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        const adminForgotBtn = document.getElementById('adminForgotBtn');
+        const adminLoginEmail = document.getElementById('adminLoginEmail');
+        const adminLoginPassword = document.getElementById('adminLoginPassword');
+        const adminLoginMsg = document.getElementById('adminLoginMsg');
+        const noUserGuardTimer = setTimeout(()=>{ if(!auth.currentUser){ showGuard('Please sign in to access the admin panel.'); if(loginCard){ loginCard.classList.remove('hidden'); } hideAllPages(); } }, 1500);
+
+        function hideAllPages(){ Object.values(pages).forEach(p=>p.classList.add('hidden')); }
+        function showAllPages(){ showPage('dashboard'); }
+
+        auth.onAuthStateChanged(async (user)=>{
+            if(!user){ hideAllPages(); return; } // keep waiting; inline guard handles the message
+            clearTimeout(noUserGuardTimer);
+            document.getElementById('adminInfo').textContent = user.email || '';
+            setProfile(user);
+            // Hide login card and guard message when user is authenticated
+            if(loginCard){ loginCard.classList.add('hidden'); }
+            if(guardEl){ guardEl.classList.add('hidden'); }
+            let allowed = false;
+            try { allowed = await isAllowedAdmin(user); } catch(_) { allowed = false; }
+            if(!allowed){ showGuard('You are not authorized to access the admin panel. Please add your email to the "Admin Users" collection.'); hideAllPages(); return; }
+            const role = await getAdminRole(user);
+            // Apply role-based UI restrictions
+            const adminsSectionBtn = nav.querySelector('button[data-page="admins"]');
+            if (role !== 'admin') {
+                // Hide Admins section for manager and viewer
+                if (adminsSectionBtn) adminsSectionBtn.style.display = 'none';
+                // If current page is admins, switch to dashboard
+                if (!pages.dashboard.classList.contains('hidden') === false && !pages.admins.classList.contains('hidden')) { showPage('dashboard'); }
+            }
+            // For viewer: disable toolbar buttons and actions
+            const isViewer = role === 'viewer';
+            // Show dashboard and load data
+            showAllPages();
+            await Promise.all([loadDashboard(), loadFeedbacks(), loadUsers(), loadAdmins(), loadSettings()]);
+            if (isViewer) {
+                // Disable buttons across sections
+                document.querySelectorAll('.toolbar .btn, [data-action]').forEach(el=>{ el.disabled = true; el.style.opacity = '0.6'; el.style.pointerEvents = 'none'; });
+            }
+        });
+
+        if (adminLoginBtn) adminLoginBtn.addEventListener('click', withLoading(adminLoginBtn, async ()=>{
+            adminLoginMsg.textContent = '';
+            try{ 
+                await auth.signInWithEmailAndPassword(adminLoginEmail.value.trim(), adminLoginPassword.value); 
+                adminLoginMsg.textContent='Signed in!'; 
+                if(loginCard){ loginCard.classList.add('hidden'); }
+                if(guardEl){ guardEl.classList.add('hidden'); }
+            }catch(e){ 
+                adminLoginMsg.textContent='Login failed. Please check credentials.'; 
+            }
+        }));
+        if (adminForgotBtn) adminForgotBtn.addEventListener('click', withLoading(adminForgotBtn, async ()=>{ const email = adminLoginEmail.value.trim(); if(!email){ adminLoginMsg.textContent='Enter your email first.'; return;} try{ await auth.sendPasswordResetEmail(email); adminLoginMsg.textContent='Reset email sent.'; }catch(_){ adminLoginMsg.textContent='Could not send reset email.'; } }));
+
+        // Modal helpers
+        const modal = document.getElementById('modal');
+        const modalBody = document.getElementById('modalBody');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalClose = document.getElementById('modalClose');
+        function openModal(title, innerHtml){ modalTitle.textContent=title; modalBody.innerHTML = innerHtml; modal.style.display='flex'; }
+        function closeModal(){ modal.style.display='none'; modalBody.innerHTML=''; }
+        modalClose.addEventListener('click', closeModal);
+
+        function openAdminForm(title, onSubmit){
+            openModal(title, `
+                <div class="form-row">
+                    <input id="fAdminName" class="form-control" placeholder="Admin name">
+                    <input id="fAdminEmail" class="form-control" placeholder="Admin email">
+                </div>
+                <div class="form-row" style="margin-top:10px;">
+                    <select id="fAdminRole" class="form-control">
+                        <option value="admin">Admin</option>
+                        <option value="manager">Manager</option>
+                        <option value="viewer">Viewer</option>
+                    </select>
+                    <input id="fAdminPassword" class="form-control" type="password" placeholder="Password (optional)">
+                </div>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                    <button id="modalSave" class="btn btn-primary">Save</button>
+                </div>
+            `);
+            document.getElementById('modalSave').onclick = async ()=>{
+                const btn = document.getElementById('modalSave'); btn.classList.add('is-loading'); btn.disabled = true;
+                const values = { 'Admin Name': document.getElementById('fAdminName').value.trim(), 'Admin Email': document.getElementById('fAdminEmail').value.trim(), 'role': document.getElementById('fAdminRole').value, 'Admin Password': document.getElementById('fAdminPassword').value };
+                try { await onSubmit(values); closeModal(); }
+                finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+            };
+        }
+
+        // Add User form
+        const addUserBtn = document.getElementById('addUserBtn');
+        if (addUserBtn) addUserBtn.addEventListener('click', ()=>{
+            openModal('Add User', `
+                <div class="form-row">
+                    <input id="uName" class="form-control" placeholder="Full name">
+                    <input id="uEmail" class="form-control" placeholder="Email">
+                </div>
+                <div style="margin-top:10px; color:#666; font-size:12px;">We will add this user to Firestore and you can send a password reset to set their password.</div>
+                <div style="margin-top:12px; display:flex; gap:8px;">
+                    <button id="uSave" class="btn btn-primary">Create</button>
+                </div>
+            `);
+            document.getElementById('uSave').onclick = async ()=>{
+                const btn = document.getElementById('uSave'); btn.classList.add('is-loading'); btn.disabled = true;
+                const name = document.getElementById('uName').value.trim();
+                const email = document.getElementById('uEmail').value.trim();
+                if (!email){ alert('Email required'); btn.classList.remove('is-loading'); btn.disabled = false; return; }
+                const ref = db.collection('users').doc();
+                try {
+                    await ref.set({ name, email, createdAt: firebase.firestore.FieldValue.serverTimestamp(), disabled:false });
+                    try { await auth.sendPasswordResetEmail(email); } catch(_) {}
+                    closeModal(); loadUsers();
+                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
+            };
+        });
+    </script>
+</body>
+</html>
+
+

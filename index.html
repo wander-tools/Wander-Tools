@@ -1748,13 +1748,18 @@
             try {
                 // Save feedback to Firestore
                 const activeUser = auth.currentUser;
+                const displayName = activeUser ? (activeUser.displayName || (activeUser.email ? activeUser.email.split('@')[0] : '')) : '';
+                const nameToSave = activeUser ? (displayName || name) : name;
+                const emailToSave = activeUser ? (activeUser.email || email) : email;
+                const statusToSave = activeUser ? 'verified' : 'unverified';
                 await db.collection("feedbacks").add({
-                    name: name,
-                    email: email,
+                    name: nameToSave,
+                    email: emailToSave,
                     message: message,
                     timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                     pageUrl: window.location.href,
-                    uid: activeUser ? activeUser.uid : null
+                    uid: activeUser ? activeUser.uid : null,
+                    status: statusToSave
                 });
                 
                 // Show success message
