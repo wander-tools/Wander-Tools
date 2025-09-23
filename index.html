@@ -1973,28 +1973,83 @@
             });
         }
 
-        if (googleLoginBtn) {
-            googleLoginBtn.addEventListener('click', () => {
+        // Handle Google sign-in (popup with graceful fallback to redirect)
+        // Also processes results if we returned from a redirect flow
+        (function setupGoogleAuth() {
+            if (!googleLoginBtn) return;
+
+            // If we came back from a redirect, complete the sign-in
+            auth.getRedirectResult()
+                .then((result) => {
+                    if (result && result.user) {
+                        showLoginSuccess('Successfully signed in with Google!');
+                        authModal.style.display = 'none';
+                    }
+                })
+                .catch((error) => {
+                    // Surface clearer messages
+                    const msg = (() => {
+                        switch (error.code) {
+                            case 'auth/unauthorized-domain':
+                                return 'This domain is not authorized for Google sign-in. Please use the published site URL or add this domain in Firebase Auth settings.';
+                            case 'auth/operation-not-supported-in-this-environment':
+                                return 'This environment does not support popup sign-in. Please try again or use a supported browser.';
+                            default:
+                                return 'An error occurred completing Google sign-in. Please try again.';
+                        }
+                    })();
+                    showLoginError(msg);
+                });
+
+            googleLoginBtn.addEventListener('click', async () => {
                 const provider = new firebase.auth.GoogleAuthProvider();
                 googleLoginBtn.disabled = true;
                 googleLoginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
-                auth.signInWithPopup(provider)
-                    .then(() => {
-                        showLoginSuccess('Successfully signed in with Google!');
-                        authModal.style.display = 'none';
-                    })
-                    .catch((error) => {
-                        googleLoginBtn.disabled = false;
-                        googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
-                        showLoginError((() => {
-                            switch(error.code){
-                                case 'auth/popup-closed-by-user': return 'Google sign-in was canceled.';
-                                default: return 'An error occurred during Google sign-in. Please try again.';
+                try {
+                    await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                } catch (_) { /* ignore */ }
+
+                try {
+                    await auth.signInWithPopup(provider);
+                    showLoginSuccess('Successfully signed in with Google!');
+                    authModal.style.display = 'none';
+                } catch (error) {
+                    // Fallback to redirect for environments where popup fails
+                    const fallbackCodes = new Set([
+                        'auth/popup-blocked',
+                        'auth/popup-closed-by-user',
+                        'auth/operation-not-supported-in-this-environment'
+                    ]);
+
+                    if (fallbackCodes.has(error.code)) {
+                        try {
+                            await auth.signInWithRedirect(provider);
+                            return; // control will continue after redirect
+                        } catch (redirectErr) {
+                            const msg = redirectErr && redirectErr.code === 'auth/unauthorized-domain'
+                                ? 'This domain is not authorized for Google sign-in. Please open the site from its configured domain.'
+                                : 'Google sign-in failed. Please try again.';
+                            showLoginError(msg);
+                        }
+                    } else {
+                        const msg = (() => {
+                            switch (error.code) {
+                                case 'auth/unauthorized-domain':
+                                    return 'This domain is not authorized for Google sign-in. Please open the site from its configured domain.';
+                                case 'auth/cancelled-popup-request':
+                                    return 'Another sign-in attempt was in progress. Please try again.';
+                                default:
+                                    return 'An error occurred during Google sign-in. Please try again.';
                             }
-                        })());
-                    });
+                        })();
+                        showLoginError(msg);
+                    }
+                } finally {
+                    googleLoginBtn.disabled = false;
+                    googleLoginBtn.innerHTML = '<i class="fab fa-google"></i> Sign in with Google';
+                }
             });
-        }
+        })();
 
         if (signUpBtn) {
             signUpBtn.addEventListener('click', () => {
