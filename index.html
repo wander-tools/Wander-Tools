@@ -359,6 +359,7 @@
         .profile { position: relative; }
         .profile-toggle { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 14px; border-radius: 22px; cursor: pointer; }
         .profile-toggle .fa-user-circle { font-size: 1.35rem; }
+        .profile-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; display: inline-block; }
         .profile-menu { position: absolute; top: 110%; right: 0; background: white; border-radius: var(--border-radius); box-shadow: var(--box-shadow); display: none; min-width: 180px; overflow: hidden; z-index: 100; }
         [data-theme="dark"] .profile-menu { background: #2d2d2d; }
         .profile-menu a, .profile-menu button { display: block; width: 100%; text-align: left; padding: 10px 14px; border: none; background: transparent; cursor: pointer; color: var(--dark-color); text-decoration: none; }
@@ -1856,9 +1857,10 @@
                 authArea.innerHTML = '';
                 const profileDiv = document.createElement('div');
                 profileDiv.className = 'profile';
+                const avatar = user.photoURL ? `<img class=\"profile-avatar\" src=\"${user.photoURL}\" alt=\"avatar\">` : `<i class=\"fas fa-user-circle\"></i>`;
                 profileDiv.innerHTML = `
                     <button class="profile-toggle" id="profileToggle">
-                        <i class="fas fa-user-circle"></i>
+                        ${avatar}
                         <span id="profileName">${displayName}</span>
                     </button>
                     <div class="profile-menu" id="profileMenu">
@@ -1900,6 +1902,16 @@
                     const data = doc.exists ? doc.data() : null;
                     if (data && data.name) {
                         await user.updateProfile({ displayName: data.name }).catch(() => {});
+                    }
+                } catch (_) { /* ignore */ }
+            }
+            // If Firestore stores a photoURL, sync it as well
+            if (user && !user.photoURL) {
+                try {
+                    const doc = await db.collection('users').doc(user.uid).get();
+                    const data = doc.exists ? doc.data() : null;
+                    if (data && data.photoURL) {
+                        await user.updateProfile({ photoURL: data.photoURL }).catch(() => {});
                     }
                 } catch (_) { /* ignore */ }
             }
@@ -2029,11 +2041,16 @@
                         loginBtn.innerHTML = '<span>Sign In</span>';
                         showLoginError((() => {
                             switch(error.code){
-                                case 'auth/invalid-email': return 'Invalid email address format.';
-                                case 'auth/user-disabled': return 'This user account has been disabled.';
-                                case 'auth/user-not-found': return 'No user found with this email.';
-                                case 'auth/wrong-password': return 'Incorrect password.';
-                                default: return 'An error occurred during authentication. Please try again.';
+                                case 'auth/invalid-email':
+                                case 'auth/user-not-found':
+                                case 'auth/wrong-password':
+                                case 'auth/invalid-credential':
+                                case 'auth/invalid-login-credentials':
+                                    return 'Invalid credentials';
+                                case 'auth/user-disabled':
+                                    return 'This user account has been disabled.';
+                                default:
+                                    return 'An error occurred during authentication. Please try again.';
                             }
                         })());
                     });
