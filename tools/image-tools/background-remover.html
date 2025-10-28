@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Background Remover - AI Powered</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="icon" href="../../favicon.png" sizes="32x32" type="image/png">
     <meta name="description" content="AI-powered background removal tool with high accuracy. Remove backgrounds from images instantly with professional results.">
     
@@ -113,19 +114,7 @@
             cursor: not-allowed;
         }
 
-        .theme-toggle {
-            position: fixed;
-            top: 1rem;
-            right: 1rem;
-            z-index: 1000;
-            width: 2.5rem;
-            height: 2.5rem;
-            border-radius: 50%;
-            background: hsl(var(--background) / 0.8);
-            backdrop-filter: blur(8px);
-            border: 1px solid hsl(var(--border));
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        }
+        .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: hsl(var(--primary)); color:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; box-shadow: 0 10px 20px rgba(0,0,0,.12); z-index: 100; border:none; }
 
         .title-section {
             text-align: center;
@@ -192,8 +181,38 @@
             border: 1px solid hsl(var(--border));
             border-radius: var(--radius);
             padding: 1.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
         }
+
+        .tool-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .tool-header h1 {
+            font-size: 2.2rem;
+            color: hsl(var(--primary));
+            margin-bottom: 0.5rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tool-header p { color: hsl(var(--muted-foreground)); }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            background-color: hsl(var(--primary));
+            color: #fff;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all .2s ease;
+            box-shadow: 0 6px 16px rgba(67,97,238,.25);
+        }
+        .back-button:hover{ background: hsl(var(--primary) / .9); transform: translateY(-2px); }
 
         .upload-area {
             border: 2px dashed hsl(var(--upload-border));
@@ -498,32 +517,16 @@
 </head>
 <body>
     <div class="container">
-        <!-- Theme Toggle -->
-        <button class="theme-toggle btn" id="themeToggle" aria-label="Toggle theme">
-            <svg class="icon sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="5"/>
-                <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
-            </svg>
-            <svg class="icon moon-icon hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
-            </svg>
-        </button>
+        
 
         <!-- Header -->
         <div class="header">
         </div>
 
-        <!-- Title Section -->
-        <div class="title-section">
-            <h1 class="title">
-                <svg class="icon icon-lg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M6 3h12l4 6-10 13L2 9l4-6z"/>
-                    <path d="M11 3L8 9l4 13 4-13-3-6"/>
-                    <path d="M2 9h20"/>
-                </svg>
-                Advanced Background Remover
-            </h1>
-            <p class="subtitle">AI-powered background removal using advanced client-side processing - no API needed!</p>
+        <!-- Header like other image tools -->
+        <div class="tool-header">
+            <h1><i class="fas fa-scissors"></i> Background Remover</h1>
+            <p>Remove image backgrounds cleanly. Upload, preview, and download instantly.</p>
         </div>
 
         <!-- Info Card -->
@@ -696,6 +699,11 @@
         </div>
     </div>
 
+    <!-- Theme Toggle (bottom-right like Image Resizer) -->
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+        <i class="fas fa-moon" id="faThemeIcon"></i>
+    </button>
+
     <script>
         class BackgroundRemover {
             constructor() {
@@ -773,7 +781,7 @@
             }
 
             initializeTheme() {
-                const savedTheme = localStorage.getItem('theme');
+                const savedTheme = localStorage.getItem('wander-tools-theme');
                 const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
                 const theme = savedTheme || systemTheme;
                 
@@ -782,18 +790,12 @@
 
             setTheme(theme) {
                 document.documentElement.classList.toggle('dark', theme === 'dark');
-                const sunIcon = document.querySelector('.sun-icon');
-                const moonIcon = document.querySelector('.moon-icon');
-                
-                if (theme === 'dark') {
-                    sunIcon.classList.add('hidden');
-                    moonIcon.classList.remove('hidden');
-                } else {
-                    sunIcon.classList.remove('hidden');
-                    moonIcon.classList.add('hidden');
+                const ico = document.getElementById('faThemeIcon');
+                if (ico) {
+                    if (theme === 'dark') { ico.classList.remove('fa-moon'); ico.classList.add('fa-sun'); }
+                    else { ico.classList.remove('fa-sun'); ico.classList.add('fa-moon'); }
                 }
-                
-                localStorage.setItem('theme', theme);
+                localStorage.setItem('wander-tools-theme', theme);
             }
 
             toggleTheme() {
@@ -1074,3 +1076,5 @@
     </script>
 </body>
 </html>
+<!-- home logo -->
+<script src="../home-logo.js"></script>

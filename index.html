@@ -225,6 +225,21 @@
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         
+        .clear-icon {
+            position: absolute;
+            right: 42px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-color);
+            font-size: 1.1rem;
+            cursor: pointer;
+            display: none;
+            padding: 6px;
+            border-radius: 50%;
+            transition: var(--transition);
+        }
+        .clear-icon:hover { background: rgba(0,0,0,0.06); }
+
         .header-search-bar:focus {
             outline: none;
             box-shadow: 0 8px 20px rgba(67, 97, 238, 0.3);
@@ -583,6 +598,18 @@
             height: 3px;
             background-color: var(--primary-color);
         }
+
+        /* Category Filter Buttons */
+        .category-filter-section { margin: 1.5rem 0 2rem; }
+        .filter-bar { display:flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .filter-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background:#fff; color: var(--dark-color); cursor:pointer; transition: var(--transition); font-weight:600; box-shadow: var(--box-shadow); }
+        [data-theme="dark"] .filter-btn { background: #2d2d2d; color:#e9ecef; border-color:#444; }
+        .filter-btn:hover { transform: translateY(-2px); }
+        .filter-btn.active { background: var(--primary-color); color:#fff; border-color: transparent; }
+
+        /* Smooth show/hide animations for sections */
+        .category-section { transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.25s ease; overflow: visible; }
+        .category-section.is-hidden { opacity: 0; transform: scale(0.98); max-height: 0 !important; margin-top: 0 !important; margin-bottom: 0 !important; padding-top: 0 !important; padding-bottom: 0 !important; overflow: hidden; }
 
         .tools-grid {
             display: grid;
@@ -979,6 +1006,7 @@
                 
                 <div class="header-search-container">
                     <input type="text" class="header-search-bar" placeholder="Search a tool..." id="headerSearchInput">
+                    <i class="fas fa-times clear-icon" id="searchClear" title="Clear"></i>
                     <i class="fas fa-search search-icon"></i>
                     <div class="search-results" id="searchResults"></div>
                 </div>
@@ -1116,6 +1144,11 @@
                 <h2>Your Complete Online Toolkit</h2>
                 <p>Free, fast and easy-to-use tools for developers, designers, and everyone else</p>
             </div>
+        </section>
+
+        <!-- Dynamic Category Filter -->
+        <section id="category-filter" class="category-filter-section">
+            <div class="filter-bar" id="filterBar"></div>
         </section>
 
         <!-- Image Tools Section -->
@@ -1487,6 +1520,20 @@
         const db = firebase.firestore();
         const auth = firebase.auth();
 
+        // App settings (from Firestore)
+        const appSettings = { loginRequired: false, title: null };
+        async function loadAppSettings(){
+            try{
+                const doc = await db.collection('settings').doc('app').get();
+                const data = doc.exists ? doc.data() : {};
+                appSettings.loginRequired = !!data.loginRequired;
+                appSettings.title = data.title || null;
+                if (appSettings.title) { try { document.title = appSettings.title + ' - Wander Tools'; } catch(_){} }
+            }catch(_){ appSettings.loginRequired = false; }
+        }
+        // Load settings ASAP (non-blocking)
+        loadAppSettings();
+
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
         const themeIcon = document.getElementById('themeIcon');
@@ -1573,6 +1620,7 @@
 
         // Search Functionality
         const headerSearchInput = document.getElementById('headerSearchInput');
+        const searchClear = document.getElementById('searchClear');
         const searchResults = document.getElementById('searchResults');
         
         // Sample tools data for search
@@ -1617,6 +1665,7 @@
 
         headerSearchInput.addEventListener('input', () => {
             const searchTerm = headerSearchInput.value.toLowerCase().trim();
+            if (searchClear) searchClear.style.display = searchTerm.length ? 'block' : 'none';
             
             // Clear previous results
             searchResults.innerHTML = '';
@@ -1659,6 +1708,16 @@
             
             searchResults.style.display = 'block';
         });
+
+        if (searchClear) {
+            searchClear.addEventListener('click', () => {
+                headerSearchInput.value = '';
+                searchResults.innerHTML = '';
+                searchResults.style.display = 'none';
+                searchClear.style.display = 'none';
+                headerSearchInput.focus();
+            });
+        }
 
         // Hide search results when clicking outside
         document.addEventListener('click', (e) => {
@@ -1925,20 +1984,17 @@
 
         function navigateTo(url) {
             const user = auth.currentUser;
-            if (!user) {
-                openAuthModal('login');
-                return;
-            }
+            if (appSettings.loginRequired && !user) { openAuthModal('login'); return; }
             window.location.href = url;
         }
 
-        // Intercept "Use Tool" clicks when not authenticated
+        // Intercept "Use Tool" clicks based on settings.loginRequired
         document.addEventListener('click', function(e) {
             const target = e.target;
             if (target.closest && target.closest('.tool-card a')) {
                 const anchor = target.closest('.tool-card a');
                 const url = anchor.getAttribute('href');
-                if (!auth.currentUser) {
+                if (appSettings.loginRequired && !auth.currentUser) {
                     e.preventDefault();
                     openAuthModal('login');
                 } else {
@@ -1946,6 +2002,66 @@
                 }
             }
         }, true);
+
+        // ===== Category Filter (auto-generated) =====
+        (function setupCategoryFilter(){
+            const filterBar = document.getElementById('filterBar');
+            if (!filterBar) return;
+            const toolSections = Array.from(document.querySelectorAll('.category-section'));
+            // Prepare list: include an All button first
+            const categories = [{ id:'all', title:'All' }].concat(
+                toolSections.map(sec => ({ id: sec.id, title: (sec.querySelector('.section-title')?.textContent || sec.id).trim() }))
+            );
+            // Build buttons
+            categories.forEach(({id, title}, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'filter-btn' + (index===0 ? ' active' : '');
+                btn.setAttribute('data-filter', id);
+                btn.textContent = title;
+                filterBar.appendChild(btn);
+            });
+            // Initialize sections' max-height for smooth collapse
+            const syncHeights = () => {
+                toolSections.forEach(sec => {
+                    if (sec.classList.contains('is-hidden')) return; // collapsed state controls max-height
+                    sec.style.maxHeight = sec.scrollHeight + 'px';
+                });
+            };
+            window.addEventListener('resize', () => { syncHeights(); });
+            // Initial sizing
+            setTimeout(syncHeights, 50);
+
+            function filter(catId){
+                // toggle active button
+                filterBar.querySelectorAll('.filter-btn').forEach(b=>{
+                    b.classList.toggle('active', b.getAttribute('data-filter')===catId);
+                    if (catId==='all' && b.getAttribute('data-filter')==='all') b.classList.add('active');
+                });
+                toolSections.forEach(sec => {
+                    const show = (catId==='all' || sec.id===catId);
+                    if (show){
+                        sec.style.display = '';
+                        // allow layout to calculate then animate open
+                        requestAnimationFrame(()=>{
+                            sec.classList.remove('is-hidden');
+                            sec.style.maxHeight = sec.scrollHeight + 'px';
+                        });
+                    } else {
+                        sec.style.maxHeight = sec.scrollHeight + 'px'; // set current height
+                        // next frame collapse to zero
+                        requestAnimationFrame(()=>{
+                            sec.classList.add('is-hidden');
+                            sec.style.maxHeight = '0px';
+                        });
+                    }
+                });
+            }
+            filterBar.addEventListener('click', (e)=>{
+                const btn = e.target.closest('.filter-btn'); if(!btn) return;
+                const cat = btn.getAttribute('data-filter');
+                filter(cat);
+            });
+        })();
 
         // ===== Inline Auth Handlers =====
         const loginEmailInput = document.getElementById('loginEmail');
