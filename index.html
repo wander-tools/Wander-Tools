@@ -30,6 +30,11 @@
             --transition: all 0.3s ease;
             --footer-bg: #212529;
             --footer-text: #f8f9fa;
+            /* Electric border theme-aware colors */
+            --electric-1: #00caff;
+            --electric-2: #7cffd4;
+            --electric-3: #4c6fff;
+            --electric-glow: rgba(72, 149, 239, 0.55);
         }
 
         [data-theme="dark"] {
@@ -41,6 +46,10 @@
             --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             --footer-bg: #121416;
             --footer-text: #e9ecef;
+            --electric-1: #00f0ff;
+            --electric-2: #9cffb8;
+            --electric-3: #6f86ff;
+            --electric-glow: rgba(0, 240, 255, 0.35);
         }
 
         [data-theme="dark"] .tool-card {
@@ -144,7 +153,7 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
-            padding: 2rem 0;
+            padding: 1.4rem 0; /* reduced top/bottom spacing */
         }
         
         .header-content h2 {
@@ -153,20 +162,22 @@
             margin-bottom: 1rem;
             max-width: 700px;
             line-height: 1.3;
+            min-height: 1.3em; /* prevent layout shift during type/erase */
         }
         
         .header-content p {
             font-size: 1.2rem;
-            margin-bottom: 2rem;
+            margin-bottom: 1.1rem; /* tighter gap under subtitle */
             max-width: 700px;
             opacity: 0.9;
             line-height: 1.5;
+            min-height: 1.6em; /* keep header height fixed while text is erased */
         }
         
         .header-buttons {
             display: flex;
-            gap: 15px;
-            margin-bottom: 2rem;
+            gap: 12px;
+            margin-bottom: 1.1rem; /* tighter below buttons */
             flex-wrap: wrap;
             justify-content: center;
         }
@@ -208,7 +219,7 @@
         }
         
         .header-search-container {
-            margin-top: 2.5rem;
+            margin-top: 1.1rem; /* reduced gap above search */
             width: 100%;
             max-width: 600px;
             position: relative;
@@ -315,16 +326,22 @@
         }
 
         .dropdown-content {
-            display: none;
             position: absolute;
-            min-width: 200px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            min-width: 220px;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.20);
             z-index: 1;
             border-radius: var(--border-radius);
             overflow: hidden;
             top: 100%;
             left: 0;
             background-color: white;
+            /* animated reveal */
+            opacity: 0;
+            transform: translateY(8px) scaleY(0.96);
+            transform-origin: top center;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
         }
 
         [data-theme="dark"] .dropdown-content {
@@ -357,9 +374,34 @@
             color: var(--primary-color);
         }
 
-        .dropdown:hover .dropdown-content {
-            display: block;
+        .dropdown-content::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; height: 3px; width: 0;
+            background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+            transition: width .3s ease;
         }
+
+        .dropdown:hover .dropdown-content {
+            opacity: 1;
+            transform: translateY(0) scaleY(1);
+            visibility: visible;
+            pointer-events: auto;
+        }
+        .dropdown:hover .dropdown-content::before { width: 100%; }
+
+        /* Dropdown button underline + chevron rotate */
+        .dropdown-button { position: relative; }
+        .dropdown-button i.fa-chevron-down { transition: transform .25s ease; }
+        .dropdown:hover .dropdown-button i.fa-chevron-down { transform: rotate(180deg); }
+        .dropdown-button::after {
+            content: '';
+            position: absolute;
+            left: 0; bottom: -4px; height: 2px; width: 0;
+            background: rgba(255,255,255,0.85);
+            transition: width .25s ease;
+        }
+        .dropdown:hover .dropdown-button::after { width: 100%; }
 
         /* Auth/Profile Dropdown */
         .auth-area { display: flex; align-items: center; gap: 10px; }
@@ -542,7 +584,7 @@
             border-radius: var(--border-radius);
             box-shadow: var(--box-shadow);
             z-index: 10;
-            max-height: 300px;
+            max-height: 360px;
             overflow-y: auto;
             display: none;
             animation: fadeIn 0.3s ease;
@@ -560,6 +602,10 @@
             display: flex;
             flex-direction: column;
         }
+        .search-result-item .badge { display:inline-block; font-size: .72rem; padding: 2px 8px; border-radius: 999px; background: rgba(67,97,238,.12); color: var(--primary-color); margin-top: 4px; width:max-content; }
+        .search-result-item.active { background: rgba(67,97,238,0.08); }
+        .search-results .empty { padding: 12px 20px; color: var(--gray-color); }
+        .search-results .section-title-small { padding:8px 12px; font-size:.8rem; color: var(--gray-color); background: rgba(0,0,0,0.03); position: sticky; top:0; }
 
         .search-result-item:hover {
             background-color: rgba(67, 97, 238, 0.1);
@@ -602,10 +648,36 @@
         /* Category Filter Buttons */
         .category-filter-section { margin: 1.5rem 0 2rem; }
         .filter-bar { display:flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
-        .filter-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background:#fff; color: var(--dark-color); cursor:pointer; transition: var(--transition); font-weight:600; box-shadow: var(--box-shadow); }
+        .filter-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background:#fff; color: var(--dark-color); cursor:pointer; transition: var(--transition); font-weight:600; box-shadow: var(--box-shadow); position: relative; z-index: 0; }
         [data-theme="dark"] .filter-btn { background: #2d2d2d; color:#e9ecef; border-color:#444; }
-        .filter-btn:hover { transform: translateY(-2px); }
+        .filter-btn:hover { transform: translateY(-2px); border-color: transparent; }
         .filter-btn.active { background: var(--primary-color); color:#fff; border-color: transparent; }
+
+        /* Multi-color animated border ring for category buttons */
+        .filter-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 22px;
+            padding: 2px;
+            --angle: 0deg;
+            background: conic-gradient(from var(--angle), #4285F4, #34A853, #FBBC05, #EA4335, #4285F4);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0; /* show on hover/active */
+            transition: opacity .2s ease;
+            z-index: -1;
+        }
+        .filter-btn:hover::after, .filter-btn.active::after {
+            opacity: 1;
+            animation: spinAngle 2.2s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(66,133,244,0.35)) drop-shadow(0 0 6px rgba(52,168,83,0.28)) drop-shadow(0 0 6px rgba(251,188,5,0.26)) drop-shadow(0 0 6px rgba(234,67,53,0.28));
+        }
+        [data-theme="dark"] .filter-btn:hover::after, [data-theme="dark"] .filter-btn.active::after {
+            filter: drop-shadow(0 0 7px rgba(66,133,244,0.45)) drop-shadow(0 0 7px rgba(52,168,83,0.36)) drop-shadow(0 0 7px rgba(251,188,5,0.34)) drop-shadow(0 0 7px rgba(234,67,53,0.36));
+        }
 
         /* Smooth show/hide animations for sections */
         .category-section { transition: max-height 0.35s ease, opacity 0.25s ease, transform 0.25s ease; overflow: visible; }
@@ -613,7 +685,7 @@
 
         .tools-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(275px, 1fr));
             gap: 20px;
         }
 
@@ -623,13 +695,131 @@
             box-shadow: var(--box-shadow);
             padding: 20px;
             transition: var(--transition);
-            border: 1px solid rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--primary-color);
+            position: relative;
+            overflow: visible;
         }
 
         .tool-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            border-color: var(--primary-color);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 0 18px rgba(72,149,239,0.18), 0 0 32px rgba(67,97,238,0.12);
+            border-color: transparent; /* remove blue border on hover */
+            animation: toolCardGlow 2.2s ease-in-out infinite alternate;
+        }
+
+        /* Google TV-style multi-color animated border for tool cards */
+        .tool-card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--border-radius);
+            padding: 4px; /* thicker ring to avoid any bleed onto content */
+            --angle: 0deg; /* drives color circulation */
+            background: conic-gradient(
+                from var(--angle),
+                #4285F4,
+                #34A853,
+                #FBBC05,
+                #EA4335,
+                #4285F4
+            );
+            background-size: 100% 100%;
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+            opacity: 0; /* hidden until hover */
+            animation: none; /* static by default */
+            transform: scale(0.965);
+            transition: opacity .45s ease, transform .45s ease;
+            z-index: 0; /* stay behind gloss/content rendering order but still above background via masking */
+        }
+
+        .tool-card:hover::after {
+            opacity: 0.9;
+            transform: scale(1);
+            animation: spinAngle 2.4s linear infinite .2s; /* slower circulation and slightly longer reveal delay */
+            filter: drop-shadow(0 0 6px rgba(66,133,244,0.35))
+                    drop-shadow(0 0 6px rgba(52,168,83,0.28))
+                    drop-shadow(0 0 6px rgba(251,188,5,0.26))
+                    drop-shadow(0 0 6px rgba(234,67,53,0.28));
+        }
+
+        /* Border-only glow using drop-shadows on the border ring */
+        .tool-card:hover::after {
+            filter: drop-shadow(0 0 6px rgba(66,133,244,0.35))
+                    drop-shadow(0 0 6px rgba(52,168,83,0.28))
+                    drop-shadow(0 0 6px rgba(251,188,5,0.26))
+                    drop-shadow(0 0 6px rgba(234,67,53,0.28));
+        }
+        [data-theme="dark"] .tool-card:hover::after {
+            filter: drop-shadow(0 0 7px rgba(66,133,244,0.45))
+                    drop-shadow(0 0 7px rgba(52,168,83,0.36))
+                    drop-shadow(0 0 7px rgba(251,188,5,0.34))
+                    drop-shadow(0 0 7px rgba(234,67,53,0.36));
+        }
+
+        /* Animate gradient angle instead of rotating element */
+        @property --angle {
+            syntax: '<angle>';
+            inherits: false;
+            initial-value: 0deg;
+        }
+        @keyframes spinAngle {
+            to { --angle: 360deg; }
+        }
+
+        /* Soft pulsing glow for tool cards */
+        @keyframes toolCardGlow {
+            0% { box-shadow: 0 10px 20px rgba(0,0,0,0.1), 0 0 14px rgba(72,149,239,0.14), 0 0 26px rgba(67,97,238,0.10); }
+            100% { box-shadow: 0 14px 26px rgba(0,0,0,0.12), 0 0 22px rgba(72,149,239,0.22), 0 0 36px rgba(67,97,238,0.16); }
+        }
+
+        /* Dark mode tuning for card glow */
+        [data-theme="dark"] .tool-card:hover {
+            box-shadow: 0 12px 26px rgba(0,0,0,0.35), 0 0 18px rgba(72,149,239,0.24), 0 0 34px rgba(67,97,238,0.18);
+        }
+
+        /* Typewriter caret helper */
+        .typing-caret::after {
+            content: '';
+            display: inline-block;
+            width: 2px;
+            height: 1em;
+            background: currentColor;
+            margin-left: 3px;
+            animation: caretBlink 1s steps(1, end) infinite;
+            vertical-align: -0.1em;
+        }
+        @keyframes caretBlink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+
+        .rotating-line { font-size: 1.05rem; opacity: 0.95; min-height: 1.4em; }
+
+        /* ===== Mouse Tracing (cursor trail) ===== */
+        .cursor-trail-dot {
+            position: fixed;
+            top: 0; left: 0;
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: 0;
+            transform: translate(-50%, -50%) scale(1);
+            filter: blur(2px);
+            background: radial-gradient(circle at 30% 30%, var(--accent-color), var(--primary-color));
+            mix-blend-mode: screen;
+            transition: opacity 0.25s ease;
+        }
+        .cursor-trail-dot.is-active { opacity: 0.9; }
+        .cursor-trail-dot.is-fading { opacity: 0; transition: opacity 0.6s ease; }
+        @media (prefers-reduced-motion: reduce) { .cursor-trail-dot { display: none !important; } }
+
+        /* Dark mode: keep border clear without extra glow */
+        [data-theme="dark"] .tool-card::after { opacity: 0; }
+        [data-theme="dark"] .tool-card:hover::after {
+            opacity: 0.9;
+            transform: scale(1);
+            animation: spinAngle 2.4s linear infinite .2s;
         }
 
         .tool-card h3 {
@@ -649,17 +839,119 @@
         .tool-card a {
             display: inline-block;
             padding: 8px 15px;
-            background-color: var(--primary-color);
             color: white;
             text-decoration: none;
             border-radius: var(--border-radius);
             transition: var(--transition);
             font-size: 0.9rem;
+            position: relative;
+            z-index: 0;
+            outline: 2px solid transparent;
+            border: 2px solid transparent;
+            /* Default: no visible border */
+            background: linear-gradient(var(--primary-color), var(--primary-color)) padding-box;
+            background-origin: padding-box;
+            background-clip: padding-box;
+            background-size: auto;
+            background-position: 0 0;
+            overflow: hidden; /* contain gloss sweep */
         }
 
         .tool-card a:hover {
-            background-color: var(--secondary-color);
+            outline-color: transparent; /* border handled by ring */
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 18px rgba(67, 97, 238, 0.18);
         }
+
+        /* Multi-color border ring for Use Tool buttons (hover like filter buttons) */
+        .tool-card a::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: var(--border-radius);
+            padding: 2px;
+            --angle: 0deg;
+            background: conic-gradient(from var(--angle), #4285F4, #34A853, #FBBC05, #EA4335, #4285F4);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .2s ease;
+            z-index: -1;
+        }
+        .tool-card a:hover::before {
+            opacity: 1;
+            animation: spinAngle 2.2s linear infinite;
+            filter: drop-shadow(0 0 6px rgba(66,133,244,0.35)) drop-shadow(0 0 6px rgba(52,168,83,0.28)) drop-shadow(0 0 6px rgba(251,188,5,0.26)) drop-shadow(0 0 6px rgba(234,67,53,0.28));
+        }
+
+        /* Static gloss effect (no animation) */
+        .tool-card a::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border-radius: calc(var(--border-radius) - 2px);
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.35) 0%,
+                rgba(255,255,255,0.15) 35%,
+                rgba(255,255,255,0.06) 55%,
+                rgba(255,255,255,0.00) 100%
+            );
+            pointer-events: none;
+            z-index: 1;
+            mix-blend-mode: screen;
+            opacity: 0.6;
+            transition: opacity .25s ease;
+        }
+
+        /* Tone down gloss in dark mode */
+        [data-theme="dark"] .tool-card a::after {
+            background: linear-gradient(180deg,
+                rgba(255,255,255,0.12) 0%,
+                rgba(255,255,255,0.06) 35%,
+                rgba(255,255,255,0.02) 55%,
+                rgba(255,255,255,0.00) 100%
+            );
+            mix-blend-mode: screen;
+            opacity: 0.45;
+        }
+
+        /* Slight gloss lift on hover for Use Tool button */
+        .tool-card a:hover::after { opacity: 0.85; }
+        [data-theme="dark"] .tool-card a:hover::after { opacity: 0.6; }
+
+        @keyframes electricBorderBg {
+            0% { background-position: 0 0, 0% 50%; }
+            100% { background-position: 0 0, 200% 50%; }
+        }
+
+        /* Dark mode: no border by default (only on hover) */
+        [data-theme="dark"] .tool-card a {
+            background: linear-gradient(var(--primary-color), var(--primary-color)) padding-box;
+            background-origin: padding-box;
+            background-clip: padding-box;
+            background-size: auto;
+            background-position: 0 0;
+        }
+        
+        /* Dark mode: same hover behaviour */
+        [data-theme="dark"] .tool-card a:hover {
+            animation: none;
+            outline-color: transparent;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 18px rgba(67, 97, 238, 0.22);
+        }
+        
+        @keyframes electricBorderBgDark {
+            0% { background-position: 0 0, 0% 50%; }
+            100% { background-position: 0 0, 220% 50%; }
+        }
+        /* keep single definition above */
+
+        /* Dark mode: ring with tuned glow */
+        [data-theme="dark"] .tool-card a::before { opacity: 0; }
+        [data-theme="dark"] .tool-card a:hover::before { opacity: 1; animation: spinAngle 2.2s linear infinite; filter: drop-shadow(0 0 7px rgba(66,133,244,0.45)) drop-shadow(0 0 7px rgba(52,168,83,0.36)) drop-shadow(0 0 7px rgba(251,188,5,0.34)) drop-shadow(0 0 7px rgba(234,67,53,0.36)); }
 
         /* Feedback Section Styles */
         .feedback-section {
@@ -794,6 +1086,19 @@
             margin-top: 0;
         }
 
+        /* FAQ Styles */
+        .faq-section { padding: 2.5rem 0; }
+        .faq-title { text-align: center; margin-bottom: 1.5rem; color: var(--primary-color); }
+        .faq { max-width: 900px; margin: 0 auto; }
+        .faq-item { border: 1px solid rgba(0,0,0,0.1); border-radius: var(--border-radius); margin-bottom: 10px; background: var(--light-color); box-shadow: var(--box-shadow); overflow: hidden; }
+        [data-theme="dark"] .faq-item { background: rgb(30,30,30); border-color: #444; }
+        .faq-question { width: 100%; text-align: left; padding: 14px 16px; font-weight: 600; background: none; border: none; cursor: pointer; display:flex; justify-content: space-between; align-items:center; color: var(--dark-color); }
+        [data-theme="dark"] .faq-question { color: #e9ecef; }
+        .faq-question i { color: var(--primary-color); transition: transform .25s ease; }
+        .faq-answer { padding: 0 16px; max-height: 0; overflow: hidden; transition: max-height .35s ease, padding .25s ease; color: var(--gray-color); }
+        .faq-item.active .faq-answer { padding: 0 16px 14px; }
+        .faq-item.active .faq-question i { transform: rotate(180deg); }
+
         .footer-content {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -827,7 +1132,9 @@
         }
 
         .footer-column ul li a:hover {
-            color: var(--primary-color);
+            color: var(--footer-text);
+            text-decoration: underline;
+            text-underline-offset: 2px;
         }
 
         .social-links {
@@ -852,6 +1159,49 @@
             color: var(--gray-color);
             font-size: 0.9rem;
         }
+
+        /* Improved Back-to-Top floating button */
+        #scrollToTop {
+            position: fixed;
+            right: 24px;
+            bottom: 24px;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            border-radius: 50%;
+            display: none; /* will show after scroll */
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            backdrop-filter: blur(4px);
+            background: rgba(255,255,255,0.92);
+            color: var(--primary-color);
+            border: 1px solid rgba(67,97,238,0.25);
+            transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
+        }
+        #scrollToTop i { pointer-events: none; }
+        #scrollToTop::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            padding: 3px;
+            background: conic-gradient(var(--primary-color) calc(var(--progress, 0%) ), rgba(0,0,0,0.12) 0);
+            -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+        #scrollToTop:hover { transform: translateY(-2px) scale(1.04); box-shadow: 0 12px 24px rgba(67,97,238,0.25); }
+        
+        /* Dark mode highlight for Back-to-Top */
+        [data-theme="dark"] #scrollToTop {
+            background: rgba(20,22,26,0.85);
+            color: #8bd3ff;
+            border: 1px solid rgba(0,240,255,0.25);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.45);
+        }
+        [data-theme="dark"] #scrollToTop:hover { box-shadow: 0 14px 28px rgba(0, 240, 255, 0.25); }
 
         /* Highlight effect for search navigation */
         .highlight {
@@ -975,6 +1325,7 @@
                         </div>
                     </div>
                     
+                    <a href="#faq">FAQ</a>
                     <a href="#feedback">Feedback</a>
                     <a href="#contact">Contact</a>
                 </nav>
@@ -994,6 +1345,7 @@
             <div class="header-content">
                 <h2>Your Daily Tools, All in One Place</h2>
                 <p>Convert, calculate, compress, and simplify your everyday tasks - fast and free.</p>
+                <p id="rotatingLine" class="rotating-line"></p>
                 
                 <div class="header-buttons">
                     <a href="#home" class="cta-button">Explore Tools</a>
@@ -1411,6 +1763,43 @@
             </div>
         </section>
 
+        <!-- FAQ Section -->
+        <section id="faq" class="faq-section">
+            <h2 class="faq-title"><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+            <div class="faq">
+                <div class="faq-item">
+                    <button class="faq-question">Is Wander Tools free to use? <i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer">
+                        <p>Yes. Most tools are completely free to use. We may add optional sign-in for saving preferences, but basic usage remains free.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Do I need to create an account to use the tools? <i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer">
+                        <p>No account is required to use the tools unless specifically noted. If login is ever required, we’ll clearly indicate it and offer Google sign-in for convenience.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">What happens to my files and data? <i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer">
+                        <p>Your files are processed only for the requested operation (e.g., converting or compressing) and are not stored permanently. For text-based tools, processing is done in your browser whenever possible.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Will you add more tools in the future? <i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer">
+                        <p>Yes. We’re continuously expanding. Send requests via the Feedback form below—popular requests are prioritized.</p>
+                    </div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Why do some features ask me to verify my email? <i class="fas fa-chevron-down"></i></button>
+                    <div class="faq-answer">
+                        <p>Email verification helps protect your account and enables features like saving preferences or history. It’s only needed for account-related features.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
         <!-- Feedback Section -->
         <section id="feedback" class="feedback-section">
             <div class="feedback-container">
@@ -1491,8 +1880,8 @@
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2023 Wander Tools. All rights reserved.</p>
-                <button id="scrollToTop" class="cta-button" style="margin-top: 15px; padding: 8px 20px;">
-                    <i class="fas fa-arrow-up"></i> Back to Top
+                <button id="scrollToTop" class="cta-button" style="margin-top: 15px; padding: 0;">
+                    <i class="fas fa-arrow-up"></i>
                 </button>
             </div>
         </div>
@@ -1663,51 +2052,137 @@
             { name: 'Contrast Checker', category: 'Color Tools', url: 'tools/color-tools/color-code-generator.html' }
         ];
 
-        headerSearchInput.addEventListener('input', () => {
-            const searchTerm = headerSearchInput.value.toLowerCase().trim();
-            if (searchClear) searchClear.style.display = searchTerm.length ? 'block' : 'none';
-            
-            // Clear previous results
-            searchResults.innerHTML = '';
-            
-            if (searchTerm.length < 2) {
-                searchResults.style.display = 'none';
-                return;
+        // Professional search: debounce, keyboard nav, recent searches, better scoring
+        (function setupSmartSearch(){
+            const RECENT_KEY = 'wt_recent_searches';
+            const MAX_RECENT = 5;
+            let selectedIndex = -1;
+            let visibleItems = [];
+            let debTimer = null;
+
+            function loadRecent(){
+                try{ return JSON.parse(localStorage.getItem(RECENT_KEY)||'[]'); }catch(_){ return []; }
             }
-            
-            // Filter tools based on search term
-            const filteredTools = tools.filter(tool => 
-                tool.name.toLowerCase().includes(searchTerm) || 
-                tool.category.toLowerCase().includes(searchTerm)
-            );
-            
-            if (filteredTools.length === 0) {
-                searchResults.style.display = 'none';
-                return;
+            function saveRecent(term){
+                if(!term) return;
+                const list = loadRecent().filter(t=>t!==term);
+                list.unshift(term);
+                localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0,MAX_RECENT)));
             }
-            
-            // Display results
-            filteredTools.forEach(tool => {
-                const resultItem = document.createElement('div');
-                resultItem.className = 'search-result-item';
-                
-                // Highlight matching text
-                const highlightedName = tool.name.replace(new RegExp(searchTerm, 'gi'), match => `<strong>${match}</strong>`);
-                
-                resultItem.innerHTML = `
-                    ${highlightedName}
-                    <span>${tool.category}</span>
-                `;
-                
-                resultItem.addEventListener('click', () => {
-                    navigateTo(tool.url);
+
+            function clearResults(){ searchResults.innerHTML = ''; selectedIndex=-1; visibleItems=[]; }
+            function show(){ searchResults.style.display='block'; }
+            function hide(){ searchResults.style.display='none'; clearResults(); }
+
+            function score(tool, q){
+                const n = tool.name.toLowerCase();
+                const c = tool.category.toLowerCase();
+                if(n.startsWith(q)) return 100;
+                if(n.includes(q)) return 80;
+                if(c.startsWith(q)) return 60;
+                if(c.includes(q)) return 40;
+                return 0;
+            }
+
+            function renderItems(items, q){
+                clearResults();
+                if(!items.length){
+                    const empty = document.createElement('div');
+                    empty.className='empty';
+                    empty.textContent = q ? `No results for "${q}"` : 'No recent searches';
+                    searchResults.appendChild(empty);
+                    show();
+                    return;
+                }
+                items.slice(0,8).forEach((tool, idx)=>{
+                    const el = document.createElement('div');
+                    el.className='search-result-item';
+                    const highlighted = tool.name.replace(new RegExp(q,'gi'), m=>`<strong>${m}</strong>`);
+                    el.innerHTML = `${highlighted}<span class="badge">${tool.category}</span>`;
+                    el.addEventListener('mouseenter', ()=>{ setActive(idx); });
+                    el.addEventListener('click', ()=>{ saveRecent(q); navigateTo(tool.url); });
+                    searchResults.appendChild(el);
                 });
-                
-                searchResults.appendChild(resultItem);
+                visibleItems = Array.from(searchResults.querySelectorAll('.search-result-item'));
+                show();
+            }
+
+            function setActive(i){
+                selectedIndex = i;
+                visibleItems.forEach((el,idx)=> el.classList.toggle('active', idx===i));
+            }
+
+            function handleQuery(){
+                const q = headerSearchInput.value.toLowerCase().trim();
+                if (searchClear) searchClear.style.display = q.length ? 'block' : 'none';
+                if(q.length<2){
+                    const recent = loadRecent().map(t=>({ name:t, category:'Recent', url:'#' }));
+                    if(recent.length){
+                        clearResults();
+                        const label = document.createElement('div');
+                        label.className='section-title-small';
+                        label.textContent='Recent searches';
+                        searchResults.appendChild(label);
+                        recent.forEach((r, idx)=>{
+                            const el = document.createElement('div');
+                            el.className='search-result-item';
+                            el.innerHTML = `${r.name}<span class='badge'>${r.category}</span>`;
+                            el.addEventListener('click', ()=>{ headerSearchInput.value=r.name; runSearch(); });
+                            searchResults.appendChild(el);
+                        });
+                        show();
+                    } else hide();
+                    return;
+                }
+                runSearch();
+            }
+
+            function runSearch(){
+                const q = headerSearchInput.value.toLowerCase().trim();
+                const results = tools
+                    .map(t=>({ t, s: score(t,q) }))
+                    .filter(x=>x.s>0)
+                    .sort((a,b)=>b.s-a.s)
+                    .map(x=>x.t);
+                renderItems(results, q);
+            }
+
+            headerSearchInput.addEventListener('input', () => {
+                clearTimeout(debTimer); debTimer = setTimeout(handleQuery, 160);
             });
-            
-            searchResults.style.display = 'block';
-        });
+
+            headerSearchInput.addEventListener('keydown', (e)=>{
+                if (searchResults.style.display !== 'block') return;
+                if(e.key==='ArrowDown'){ e.preventDefault(); setActive(Math.min((selectedIndex+1), visibleItems.length-1)); }
+                if(e.key==='ArrowUp'){ e.preventDefault(); setActive(Math.max((selectedIndex-1), 0)); }
+                if(e.key==='Enter'){
+                    e.preventDefault();
+                    if(selectedIndex>=0 && visibleItems[selectedIndex]){
+                        const text = visibleItems[selectedIndex].textContent.trim();
+                        const hit = tools.find(t=>text.startsWith(t.name));
+                        if(hit){ saveRecent(headerSearchInput.value.trim()); navigateTo(hit.url); }
+                    } else {
+                        runSearch();
+                        if(visibleItems[0]) visibleItems[0].click();
+                    }
+                }
+                if(e.key==='Escape'){ hide(); }
+            });
+
+            if (searchClear) {
+                searchClear.addEventListener('click', () => {
+                    headerSearchInput.value = '';
+                    clearResults();
+                    hide();
+                    searchClear.style.display = 'none';
+                    headerSearchInput.focus();
+                });
+            }
+
+            document.addEventListener('click', (e) => {
+                if (!headerSearchInput.contains(e.target) && !searchResults.contains(e.target)) hide();
+            });
+        })();
 
         if (searchClear) {
             searchClear.addEventListener('click', () => {
@@ -1863,13 +2338,32 @@
 
         // Scroll to top functionality
         const scrollToTopButton = document.getElementById('scrollToTop');
+        if (scrollToTopButton) {
+            scrollToTopButton.setAttribute('aria-label', 'Back to top');
+            scrollToTopButton.title = 'Back to top';
+        }
         
-        scrollToTopButton.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
+        function updateBackToTop(){
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const docHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+            const pct = Math.max(0, Math.min(1, docHeight ? (scrollTop / docHeight) : 0));
+            if (scrollToTopButton) {
+                scrollToTopButton.style.setProperty('--progress', (pct*100)+'%');
+                scrollToTopButton.style.display = scrollTop > 300 ? 'flex' : 'none';
+            }
+        }
+        updateBackToTop();
+        window.addEventListener('scroll', updateBackToTop, { passive: true });
+        window.addEventListener('resize', updateBackToTop);
+
+        if (scrollToTopButton) {
+            scrollToTopButton.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             });
-        });
+            scrollToTopButton.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+            });
+        }
 
         // Highlight navigation when scrolling to sections
         const sections = document.querySelectorAll('section[id]');
@@ -1895,23 +2389,7 @@
             });
         });
 
-        // Footer link hover effect with Use Tool button color
-        const footerLinks = document.querySelectorAll('.footer-column ul li a');
-        const useToolButton = document.querySelector('.tool-card a');
-        
-        if (useToolButton) {
-            const useToolColor = getComputedStyle(useToolButton).backgroundColor;
-            
-            footerLinks.forEach(link => {
-                link.addEventListener('mouseenter', () => {
-                    link.style.color = useToolColor;
-                });
-                
-                link.addEventListener('mouseleave', () => {
-                    link.style.color = '';
-                });
-            });
-        }
+        // Footer links: keep CSS-controlled hover (no JS color override for contrast)
 
         // ===== Auth UI and gating =====
         function renderAuthUI(user) {
@@ -2348,6 +2826,147 @@
                     .catch((error) => { showLoginError('Failed to send reset email. Please try again.'); });
             });
         }
+
+        // ===== Mouse tracing effect =====
+        (function setupCursorTrail(){
+            const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (prefersReduced) return;
+
+            const DOT_COUNT = 16;
+            const dots = [];
+            let targetX = window.innerWidth / 2;
+            let targetY = window.innerHeight / 2;
+            let isMoving = false;
+            let inactivityTimer = null;
+
+            for (let i = 0; i < DOT_COUNT; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'cursor-trail-dot';
+                // Staggered hues for a subtle spectrum
+                const hueShift = i * (360 / DOT_COUNT);
+                dot.style.background = `radial-gradient(circle at 30% 30%, hsl(${(210 + hueShift)%360}, 90%, 65%), hsl(${(240 + hueShift)%360}, 85%, 58%))`;
+                dot.style.width = dot.style.height = `${Math.max(6, 12 - i * 0.3)}px`;
+                document.body.appendChild(dot);
+                dots.push({ el: dot, x: targetX, y: targetY });
+            }
+
+            const lerp = (a, b, t) => a + (b - a) * t;
+
+            function animate(){
+                // Lead follows mouse closely, others follow previous
+                for (let i = 0; i < dots.length; i++) {
+                    const d = dots[i];
+                    const prev = i === 0 ? { x: targetX, y: targetY } : dots[i - 1];
+                    const t = i === 0 ? 0.35 : 0.25; // responsiveness
+                    d.x = lerp(d.x, prev.x, t);
+                    d.y = lerp(d.y, prev.y, t);
+                    d.el.style.transform = `translate(${d.x}px, ${d.y}px)`;
+                    if (isMoving) d.el.classList.add('is-active');
+                }
+                requestAnimationFrame(animate);
+            }
+            requestAnimationFrame(animate);
+
+            function handleMove(e){
+                isMoving = true;
+                const p = (e.touches && e.touches[0]) || e;
+                targetX = p.clientX; targetY = p.clientY;
+                clearTimeout(inactivityTimer);
+                inactivityTimer = setTimeout(()=>{
+                    isMoving = false;
+                    dots.forEach(d=>d.el.classList.add('is-fading'));
+                    setTimeout(()=>dots.forEach(d=>d.el.classList.remove('is-active','is-fading')), 650);
+                }, 160);
+            }
+            window.addEventListener('mousemove', handleMove, { passive: true });
+            window.addEventListener('touchmove', handleMove, { passive: true });
+
+            // Hide trail when leaving window
+            window.addEventListener('mouseleave', ()=>{
+                isMoving = false;
+                dots.forEach(d=>d.el.classList.remove('is-active'));
+            });
+        })();
+
+        // ===== Typewriter animation for header title and rotating subtitle =====
+        (function setupHeaderTypewriter(){
+            const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const titleEl = document.querySelector('.header-content h2');
+            const subEl = document.querySelector('.header-content p');
+            if (!titleEl || !subEl || prefersReduced) return;
+
+            const originalTitle = titleEl.textContent.trim();
+            const originalSub = subEl.textContent.trim();
+            const altSub = '30+ free tools for images, files, SEO, dev and more.';
+            titleEl.textContent = '';
+            subEl.textContent = '';
+
+            function typeText(el, text, speed, startDelay, done){
+                el.classList.add('typing-caret');
+                let i = 0;
+                setTimeout(function tick(){
+                    if (i < text.length){
+                        el.textContent += text.charAt(i++);
+                        setTimeout(tick, speed);
+                    } else {
+                        el.classList.remove('typing-caret');
+                        if (done) done();
+                    }
+                }, startDelay);
+            }
+            function eraseText(el, speed, done){
+                el.classList.add('typing-caret');
+                function back(){
+                    if (el.textContent.length){
+                        el.textContent = el.textContent.slice(0, -1);
+                        setTimeout(back, speed);
+                    } else {
+                        el.classList.remove('typing-caret');
+                        if (done) done();
+                    }
+                }
+                back();
+            }
+
+            // Start typing title, then rotate subtitle every 5s
+            typeText(titleEl, originalTitle, 45, 320, function(){
+                const messages = [originalSub, altSub];
+                let idx = 0;
+                function cycle(){
+                    const msg = messages[idx % messages.length];
+                    typeText(subEl, msg, 25, 260, ()=>{
+                        // Hold for 5s, then erase and show next
+                        setTimeout(()=>{
+                            eraseText(subEl, 14, ()=>{
+                                idx++;
+                                setTimeout(cycle, 260);
+                            });
+                        }, 5000);
+                    });
+                }
+                cycle();
+            });
+        })();
+
+        // ===== FAQ accordion =====
+        (function setupFAQ(){
+            const items = document.querySelectorAll('.faq-item');
+            items.forEach(item => {
+                const q = item.querySelector('.faq-question');
+                const a = item.querySelector('.faq-answer');
+                q.addEventListener('click', () => {
+                    const isActive = item.classList.contains('active');
+                    // close others
+                    items.forEach(it => { it.classList.remove('active'); const ans = it.querySelector('.faq-answer'); if (ans) ans.style.maxHeight = 0; });
+                    if (!isActive) {
+                        item.classList.add('active');
+                        a.style.maxHeight = a.scrollHeight + 'px';
+                    }
+                });
+                // initialize sizes for accessibility
+                a.style.maxHeight = 0;
+            });
+        })();
     </script>
 </body>
 </html>
