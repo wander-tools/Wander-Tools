@@ -544,39 +544,9 @@ console.log("The sum is:", result);</textarea>
                 }
             });
             
-            // Run code functionality
-            runCodeBtn.addEventListener('click', runCode);
-            executeCodeBtn.addEventListener('click', runCode);
-            
-            function runCode() {
-                try {
-                    // Clear previous output
-                    codeOutput.textContent = '';
-                    
-                    // Capture console.log output
-                    const originalConsoleLog = console.log;
-                    let output = '';
-                    
-                    console.log = function() {
-                        for (let i = 0; i < arguments.length; i++) {
-                            output += arguments[i] + ' ';
-                        }
-                        output += '\n';
-                    };
-                    
-                    // Execute the code
-                    eval(codeArea.value);
-                    
-                    // Restore console.log
-                    console.log = originalConsoleLog;
-                    
-                    // Display the output
-                    codeOutput.textContent = output || 'Code executed successfully (no output)';
-                } catch (error) {
-                    codeOutput.textContent = 'Error: ' + error.message;
-                    codeOutput.style.color = 'var(--error-color)';
-                }
-            }
+            // Disable arbitrary code execution for security. Provide a sandboxed preview instead.
+            runCodeBtn.addEventListener('click', () => { codeOutput.textContent = 'Execution disabled for security.'; });
+            executeCodeBtn.addEventListener('click', () => { codeOutput.textContent = 'Execution disabled for security.'; });
             
             // Function to convert JSON to XML
             function jsonToXml(obj, rootName = 'root') {
@@ -726,4 +696,3 @@ console.log("The sum is:", result);</textarea>
 </body>
 </html>
 <!-- home logo -->
-<script src="../home-logo.js"></script>

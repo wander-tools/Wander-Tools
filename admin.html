@@ -225,6 +225,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        // Global HTML escaper used in table renderers
+        function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
         try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(_) {}
 
         const pages = {
@@ -313,10 +315,11 @@
             document.getElementById('statAdmins').textContent = adminsSnap.size;
             const tbody = document.querySelector('#recentFeedbacksTbl tbody');
             tbody.innerHTML = '';
+            function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
             fbSnap.forEach(doc=>{
                 const d = doc.data();
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${(d.message||'').slice(0,80)}</td><td><span class="badge ${d.status==='verified'?'badge-success':'badge-muted'}">${d.status||'unverified'}</span></td><td>${d.timestamp? d.timestamp.toDate().toLocaleString() : ''}</td>`;
+                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc((d.message||'').slice(0,80))}</td><td><span class="badge ${d.status==='verified'?'badge-success':'badge-muted'}">${esc(d.status||'unverified')}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td>`;
                 tbody.appendChild(tr);
             });
             const expBtn = document.getElementById('exportRecentFeedbacks');
@@ -339,7 +342,7 @@
                 const status = (d.status||'').toLowerCase();
                 const normalized = status==='verified' ? 'verified' : 'unverified';
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${(d.message||'').replace(/\n/g,' ')}</td><td><span class="badge ${normalized==='verified'?'badge-success':'badge-muted'}">${normalized}</span></td><td>${d.timestamp? d.timestamp.toDate().toLocaleString() : ''}</td><td><button class='btn btn-secondary btn-xs mr-6' data-action='toggle' data-id='${doc.id}'>Toggle Status</button><button class='btn btn-danger btn-xs' data-action='delete' data-id='${doc.id}'>Delete</button></td>`
+                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc((d.message||'').replace(/\n/g,' '))}</td><td><span class='badge ${normalized==='verified'?'badge-success':'badge-muted'}'>${normalized}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td><td><button class='btn btn-secondary btn-xs mr-6' data-action='toggle' data-id='${doc.id}'>Toggle Status</button><button class='btn btn-danger btn-xs' data-action='delete' data-id='${doc.id}'>Delete</button></td>`
                 tbody.appendChild(tr);
             });
             tbody.addEventListener('click', async (e)=>{
@@ -370,7 +373,7 @@
             snap.forEach(doc=>{
                 const d = doc.data();
                 const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${d.name||''}</td><td>${d.email||''}</td><td>${doc.id}</td><td>${d.disabled? 'Yes':'No'}</td><td><button class='btn btn-warning' data-action='toggle' data-id='${doc.id}'>${d.disabled?'Enable':'Disable'}</button> <button class='btn btn-secondary' data-action='reset' data-email='${d.email||''}'>Send Reset</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
+                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc(doc.id)}</td><td>${d.disabled? 'Yes':'No'}</td><td><button class='btn btn-warning' data-action='toggle' data-id='${doc.id}'>${d.disabled?'Enable':'Disable'}</button> <button class='btn btn-secondary' data-action='reset' data-email='${esc(d.email||'') }'>Send Reset</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
                 tbody.appendChild(tr);
             });
             tbody.addEventListener('click', async (e)=>{
@@ -399,7 +402,7 @@
                 const d = doc.data();
                 const tr = document.createElement('tr');
                 const role = d['role'] || 'admin';
-                tr.innerHTML = `<td>${d['Admin Name']||''}</td><td>${d['Admin Email']||''}</td><td>${role}</td><td><button class='btn btn-secondary' data-action='edit' data-id='${doc.id}'>Edit</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Remove</button></td>`;
+                tr.innerHTML = `<td>${esc(d['Admin Name'])}</td><td>${esc(d['Admin Email'])}</td><td>${esc(role)}</td><td><button class='btn btn-secondary' data-action='edit' data-id='${doc.id}'>Edit</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Remove</button></td>`;
                 tbody.appendChild(tr);
             });
             tbody.addEventListener('click', async (e)=>{

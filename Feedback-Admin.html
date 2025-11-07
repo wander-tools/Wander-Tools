@@ -1004,15 +1004,16 @@
                 return;
             }
             usersTableBody.innerHTML = '';
+            function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
             filtered.forEach(u => {
                 const tr = document.createElement('tr');
                 const created = (u.createdAt && u.createdAt.toDate) ? formatDate(u.createdAt) : '—';
                 const suspended = !!u.suspended;
                 tr.innerHTML = `
-                    <td>${u.name || '-'} ${suspended ? '<span class="badge badge-warning" style="margin-left:6px;">Suspended</span>' : ''}</td>
-                    <td>${u.email || '-'}</td>
-                    <td>${created}</td>
-                    <td style="font-family: monospace;">${u.id}</td>
+                    <td>${esc(u.name || '-') } ${suspended ? '<span class="badge badge-warning" style="margin-left:6px;">Suspended</span>' : ''}</td>
+                    <td>${esc(u.email || '-')}</td>
+                    <td>${esc(created)}</td>
+                    <td style="font-family: monospace;">${esc(u.id)}</td>
                     <td class="action-buttons">
                         <button class="btn btn-primary" data-action="editUser" data-id="${u.id}"><i class="fas fa-edit"></i> Edit</button>
                         <button class="btn btn-warning" data-action="toggleSuspend" data-id="${u.id}" data-suspended="${suspended}"><i class="fas fa-user-slash"></i> ${suspended ? 'Unsuspend' : 'Suspend'}</button>

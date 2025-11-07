@@ -77,6 +77,36 @@
             padding: 0 20px;
         }
 
+        /* Sticky Navigation Bar */
+        .sticky-nav {
+            position: fixed;
+            top: -100px;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            background: rgba(67, 97, 238, 0.75);
+            backdrop-filter: blur(12px) saturate(180%);
+            -webkit-backdrop-filter: blur(12px) saturate(180%);
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: top 0.3s ease;
+        }
+        
+        [data-theme="dark"] .sticky-nav {
+            background: rgba(18, 22, 30, 0.8);
+        }
+        
+        .sticky-nav.show {
+            top: 0;
+        }
+        
+        .sticky-nav .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         /* Header Styles */
         .header {
             background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
@@ -90,6 +120,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 2rem;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
         }
         
         .logo {
@@ -307,101 +338,48 @@
             text-decoration: underline;
         }
 
-        /* Dropdown Menu - Fixed for dark mode */
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
+        /* Dropdown Menu - improved animation, themes, and accessibility */
+        .dropdown { position: relative; display: inline-block; }
 
-        .dropdown-button {
-            color: white;
-            background: none;
-            border: none;
-            font-weight: 500;
-            cursor: pointer;
-            padding: 8px 0;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
+        .dropdown-button { color: white; background: none; border: none; cursor: pointer; font-weight: 600; padding: 8px 12px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; }
+        .dropdown-button:focus-visible { outline: 3px solid rgba(255,255,255,.6); outline-offset: 2px; border-radius: 10px; }
 
         .dropdown-content {
-            position: absolute;
-            min-width: 220px;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.20);
-            z-index: 1;
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            top: 100%;
-            left: 0;
-            background-color: white;
-            /* animated reveal */
-            opacity: 0;
-            transform: translateY(8px) scaleY(0.96);
-            transform-origin: top center;
-            visibility: hidden;
-            pointer-events: none;
-            transition: opacity .22s ease, transform .22s ease, visibility .22s ease;
+            position: absolute; left: 0; right: auto; margin-top: 10px; min-width: 240px;
+            background: white; border-radius: 14px; box-shadow: 0 18px 36px rgba(0,0,0,0.16);
+            overflow: hidden; opacity: 0; visibility: hidden; pointer-events: none; z-index: 150;
+            transform: translateY(8px) scale(0.98); transform-origin: top center;
+            transition: opacity .18s ease, transform .18s ease;
+            backdrop-filter: saturate(120%) blur(2px);
         }
 
-        [data-theme="dark"] .dropdown-content {
-            background-color: #2d2d2d;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
-        }
+        [data-theme="dark"] .dropdown-content { background-color: #2d2d2d; box-shadow: 0 18px 36px rgba(0,0,0,0.4); }
+        [data-theme="dark"] .dropdown-content a { color: #e9ecef; background-color: #2d2d2d; }
+        [data-theme="dark"] .dropdown-content a:hover { background-color: rgba(72, 149, 239, 0.14); color: #eaf2ff; }
+        [data-theme="dark"] .dropdown-content a::after { opacity:.22; }
 
-        .dropdown-content a {
-            color: var(--dark-color);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            transition: var(--transition);
-            font-size: 0.9rem;
-            background-color: white;
-        }
+        .dropdown-content a { color: var(--dark-color); padding: 12px 16px; text-decoration: none; display: block; transition: background-color 0.18s, color 0.18s, transform .12s ease, box-shadow .18s ease; background-color: white; position: relative; overflow: hidden; }
+        .dropdown-content a::after { content:''; position:absolute; inset:auto 0 0 0; height:0; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); opacity:.22; transition: height .18s ease, opacity .18s ease; }
+        /* Light mode hover: make more visible */
+        .dropdown-content a:hover { background-color: rgba(67, 97, 238, 0.14); color: var(--primary-color); transform: translateY(-1px); box-shadow: inset 0 0 0 1px rgba(67,97,238,0.22); }
+        .dropdown-content a:hover::after { height: 4px; opacity:.45; }
 
-        [data-theme="dark"] .dropdown-content a {
-            color: #e9ecef;
-            background-color: #2d2d2d;
-        }
+        .dropdown-content::before { content: ''; position: absolute; top: 0; left: 0; height: 3px; width: 0; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); transition: width .25s ease; }
 
-        .dropdown-content a:hover {
-            background-color: rgba(67, 97, 238, 0.1);
-            color: var(--primary-color);
-        }
+        /* Open state via JS/touch/keyboard */
+        .dropdown.open .dropdown-content { opacity: 1; visibility: visible; pointer-events: auto; transform: translateY(0) scale(1); }
+        .dropdown.open .dropdown-content::before { width: 100%; }
 
-        [data-theme="dark"] .dropdown-content a:hover {
-            background-color: rgba(72, 149, 239, 0.2);
-            color: var(--primary-color);
-        }
-
-        .dropdown-content::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; height: 3px; width: 0;
-            background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
-            transition: width .3s ease;
-        }
-
-        .dropdown:hover .dropdown-content {
-            opacity: 1;
-            transform: translateY(0) scaleY(1);
-            visibility: visible;
-            pointer-events: auto;
-        }
-        .dropdown:hover .dropdown-content::before { width: 100%; }
+        /* Open upwards when constrained */
+        .dropdown.open-up .dropdown-content { margin-top: 0; margin-bottom: 10px; bottom: 100%; top: auto; transform-origin: bottom center; }
 
         /* Dropdown button underline + chevron rotate */
         .dropdown-button { position: relative; }
         .dropdown-button i.fa-chevron-down { transition: transform .25s ease; }
-        .dropdown:hover .dropdown-button i.fa-chevron-down { transform: rotate(180deg); }
-        .dropdown-button::after {
-            content: '';
-            position: absolute;
-            left: 0; bottom: -4px; height: 2px; width: 0;
-            background: rgba(255,255,255,0.85);
-            transition: width .25s ease;
-        }
-        .dropdown:hover .dropdown-button::after { width: 100%; }
+        .dropdown.open .dropdown-button i.fa-chevron-down { transform: rotate(180deg); }
+        .dropdown-button::after { content: ''; position: absolute; left: 0; bottom: -4px; height: 2px; width: 0; background: rgba(255,255,255,0.85); transition: width .25s ease, background-color .25s ease; }
+        [data-theme="dark"] .dropdown-button::after { background: rgba(255,255,255,0.7); }
+        .dropdown.open .dropdown-button::after { width: 100%; }
 
         /* Auth/Profile Dropdown */
         .auth-area { display: flex; align-items: center; gap: 10px; }
@@ -623,6 +601,7 @@
         /* Category Section Styles */
         .category-section {
             margin: 3rem 0;
+            scroll-margin-top: 90px; /* Offset for sticky nav when hash navigation */
         }
 
         .section-title {
@@ -646,8 +625,43 @@
         }
 
         /* Category Filter Buttons */
-        .category-filter-section { margin: 1.5rem 0 2rem; }
-        .filter-bar { display:flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        #category-filter.category-filter-section { 
+            margin-top: 4rem !important;
+            margin-bottom: 2.5rem !important;
+            position: relative;
+            padding-top: 0;
+        }
+        .category-filter-label {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            padding: 10px 24px;
+            background: rgba(67, 97, 238, 0.08);
+            border-radius: 25px;
+            margin-bottom: 1.5rem !important;
+            margin-top: 0;
+            width: fit-content;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .category-filter-label i {
+            font-size: 1rem;
+        }
+        [data-theme="dark"] .category-filter-label {
+            background: rgba(72, 149, 239, 0.15);
+            color: var(--accent-color);
+        }
+        #filterBar.filter-bar { 
+            display:flex !important; 
+            flex-wrap: wrap; 
+            gap: 10px; 
+            justify-content: center;
+            margin-top: 0;
+        }
         .filter-btn { padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.1); background:#fff; color: var(--dark-color); cursor:pointer; transition: var(--transition); font-weight:600; box-shadow: var(--box-shadow); position: relative; z-index: 0; }
         [data-theme="dark"] .filter-btn { background: #2d2d2d; color:#e9ecef; border-color:#444; }
         .filter-btn:hover { transform: translateY(-2px); border-color: transparent; }
@@ -1295,8 +1309,64 @@
             }
         }
     </style>
+    <style>
+        /* Home Profile Summary (shows when user is logged in) */
+        .home-profile { display:none; margin: 24px auto; max-width: 1100px; padding: 0 20px; }
+        .home-profile-card { position: relative; display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; border-radius: 16px; background: linear-gradient(135deg, rgba(71,118,230,.12), rgba(142,84,233,.12)); border: 1px solid rgba(67,97,238,0.22); box-shadow: 0 14px 32px rgba(67,97,238,0.12); padding: 14px 16px; }
+        .home-profile-avatar { width: 60px; height: 60px; border-radius: 50%; border: 3px solid #fff; object-fit: cover; background: #fff; box-shadow: 0 8px 18px rgba(0,0,0,.15); }
+        .home-profile-info h3 { margin: 0; font-size: 1.15rem; }
+        .home-profile-info p { margin: 4px 0 0; color: #495057; }
+        [data-theme="dark"] .home-profile-card { background: linear-gradient(135deg, rgba(71,118,230,.18), rgba(142,84,233,.18)); border-color: rgba(255,255,255,.18); }
+        [data-theme="dark"] .home-profile-info p { color: #cbd5e1; }
+        .home-profile-actions { display: flex; gap: 8px; }
+        .home-prof-btn { padding: 9px 12px; border-radius: 10px; border: 1px solid rgba(67,97,238,.28); background: #fff; color: var(--dark-color); font-weight: 700; cursor: pointer; box-shadow: var(--box-shadow); }
+        .home-prof-btn.primary { background: var(--primary-color); color: #fff; border-color: transparent; }
+        .home-prof-btn:hover { transform: translateY(-1px); }
+        @media (max-width: 640px){ .home-profile-card { grid-template-columns: auto 1fr; gap: 12px; } .home-profile-actions { grid-column: span 2; } }
+    </style>
 </head>
 <body>
+    <!-- Sticky Navigation Bar -->
+    <nav class="sticky-nav" id="stickyNav">
+        <div class="container">
+            <div class="logo">
+                <i class="fas fa-tools"></i>
+                <h1>Wander Tools</h1>
+            </div>
+            
+            <div class="nav-links">
+                <a href="#header">Home</a>
+                <a href="#home">Tools</a>
+                
+                <!-- Dropdown Menu -->
+                <div class="dropdown">
+                    <button class="dropdown-button">Categories <i class="fas fa-chevron-down"></i></button>
+                    <div class="dropdown-content">
+                        <a href="#image-tools">Image Tools</a>
+                        <a href="#file-tools">File Tools</a>
+                        <a href="#analytics-tools">Analytics Tools</a>
+                        <a href="#seo-tools">SEO & Web Tools</a>
+                        <a href="#math-tools">Math & Utility Tools</a>
+                        <a href="#text-tools">Text Tools</a>
+                        <a href="#developer-tools">Developer Tools</a>
+                        <a href="#color-tools">Color Tools</a>
+                    </div>
+                </div>
+                
+                <a href="#faq">FAQ</a>
+                <a href="#feedback">Feedback</a>
+                <a href="#contact">Contact</a>
+            </div>
+            
+                <div class="contact-info">
+                    <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="auth-area" id="authArea"></div>
+            </div>
+        </div>
+    </nav>
+
     <!-- Header Section -->
     <header class="header" id="header">
         <div class="container">
@@ -1331,14 +1401,10 @@
                 </nav>
                 
                 <div class="contact-info">
-                    <a href="mailto:wander.tools.site@gmail.com" class="email-link">
-                        <i class="fas fa-envelope"></i>
-                        <span>wander.tools.site@gmail.com</span>
-                    </a>
-                    <button class="theme-toggle" id="themeToggle">
-                        <i class="fas fa-moon" id="themeIcon"></i>
+                    <button class="theme-toggle" id="themeToggle2">
+                        <i class="fas fa-moon" id="themeIcon2"></i>
                     </button>
-                    <div class="auth-area" id="authArea"></div>
+                    <div class="auth-area" id="authArea2"></div>
                 </div>
             </div>
             
@@ -1499,7 +1565,11 @@
         </section>
 
         <!-- Dynamic Category Filter -->
-        <section id="category-filter" class="category-filter-section">
+        <section id="category-filter" class="category-filter-section" style="margin-top: 4rem; margin-bottom: 2.5rem; position: relative;">
+            <div class="category-filter-label" style="display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.1rem; font-weight: 600; color: var(--primary-color); padding: 10px 24px; background: rgba(67, 97, 238, 0.08); border-radius: 25px; margin-bottom: 1.5rem; width: fit-content; margin-left: auto; margin-right: auto;">
+                <i class="fas fa-filter"></i>
+                <span>Categories</span>
+            </div>
             <div class="filter-bar" id="filterBar"></div>
         </section>
 
@@ -1776,7 +1846,7 @@
                 <div class="faq-item">
                     <button class="faq-question">Do I need to create an account to use the tools? <i class="fas fa-chevron-down"></i></button>
                     <div class="faq-answer">
-                        <p>No account is required to use the tools unless specifically noted. If login is ever required, we’ll clearly indicate it and offer Google sign-in for convenience.</p>
+                        <p>No account is required to use the tools unless specifically noted. If login is ever required, we'll clearly indicate it and offer Google sign-in for convenience.</p>
                     </div>
                 </div>
                 <div class="faq-item">
@@ -1788,13 +1858,13 @@
                 <div class="faq-item">
                     <button class="faq-question">Will you add more tools in the future? <i class="fas fa-chevron-down"></i></button>
                     <div class="faq-answer">
-                        <p>Yes. We’re continuously expanding. Send requests via the Feedback form below—popular requests are prioritized.</p>
+                        <p>Yes. We're continuously expanding. Send requests via the Feedback form below—popular requests are prioritized.</p>
                     </div>
                 </div>
                 <div class="faq-item">
                     <button class="faq-question">Why do some features ask me to verify my email? <i class="fas fa-chevron-down"></i></button>
                     <div class="faq-answer">
-                        <p>Email verification helps protect your account and enables features like saving preferences or history. It’s only needed for account-related features.</p>
+                        <p>Email verification helps protect your account and enables features like saving preferences or history. It's only needed for account-related features.</p>
                     </div>
                 </div>
             </div>
@@ -1849,6 +1919,12 @@
                         <a href="#"><i class="fab fa-instagram"></i></a>
                         <a href="#"><i class="fab fa-github"></i></a>
                     </div>
+                    <div class="footer-contact" style="margin-top:10px;">
+                        <a href="mailto:wander.tools.site@gmail.com" class="email-link" style="opacity:.9;">
+                            <i class="fas fa-envelope"></i>
+                            <span>wander.tools.site@gmail.com</span>
+                        </a>
+                    </div>
                 </div>
                 <div class="footer-column">
                     <h3>Quick Links</h3>
@@ -1887,12 +1963,48 @@
         </div>
     </footer>
 
+    <!-- Home Profile Summary (visible when logged in) -->
+    <div class="home-profile" id="homeProfile">
+        <div class="home-profile-card">
+            <img id="homeProfileAvatar" class="home-profile-avatar" alt="Avatar">
+            <div class="home-profile-info">
+                <h3 id="homeProfileName">Welcome</h3>
+                <p id="homeProfileEmail"></p>
+            </div>
+            <div class="home-profile-actions">
+                <a class="home-prof-btn" href="profile.html"><i class="fas fa-id-badge"></i> Profile</a>
+                <button class="home-prof-btn primary" id="homeLogout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 
     <script>
+        // Immediate fix for category filter section
+        (function(){
+            function applyCategoryFilterFix() {
+                const catSection = document.getElementById('category-filter');
+                const label = document.querySelector('.category-filter-label');
+                if (catSection) {
+                    catSection.style.cssText += 'margin-top: 4rem !important; margin-bottom: 2.5rem !important;';
+                }
+                if (label) {
+                    label.style.cssText += 'display: flex !important; visibility: visible !important; opacity: 1 !important;';
+                }
+            }
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', applyCategoryFilterFix);
+            } else {
+                applyCategoryFilterFix();
+            }
+            setTimeout(applyCategoryFilterFix, 100);
+            setTimeout(applyCategoryFilterFix, 500);
+        })();
+        
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyBCIRviVtANQrb72IZzyNlQMuCzsIATP7k",
@@ -1935,17 +2047,105 @@
             themeIcon.classList.replace('fa-moon', 'fa-sun');
         }
 
-        themeToggle.addEventListener('click', () => {
+        const themeToggle2 = document.getElementById('themeToggle2');
+        const themeIcon2 = document.getElementById('themeIcon2');
+        
+        const updateThemeIcons = () => {
+            const isDark = body.getAttribute('data-theme') === 'dark';
+            themeIcon.classList.toggle('fa-sun', isDark);
+            themeIcon.classList.toggle('fa-moon', !isDark);
+            if (themeIcon2) {
+                themeIcon2.classList.toggle('fa-sun', isDark);
+                themeIcon2.classList.toggle('fa-moon', !isDark);
+            }
+        };
+
+        const toggleTheme = () => {
             if (body.getAttribute('data-theme') === 'dark') {
                 body.removeAttribute('data-theme');
-                themeIcon.classList.replace('fa-sun', 'fa-moon');
                 localStorage.setItem('theme', 'light');
             } else {
                 body.setAttribute('data-theme', 'dark');
-                themeIcon.classList.replace('fa-moon', 'fa-sun');
                 localStorage.setItem('theme', 'dark');
             }
-        });
+            updateThemeIcons();
+        };
+
+        themeToggle.addEventListener('click', toggleTheme);
+        if (themeToggle2) themeToggle2.addEventListener('click', toggleTheme);
+        updateThemeIcons();
+
+        // Dropdowns: click/keyboard/open-up positioning, outside/escape close
+        (function enhanceDropdowns(){
+            const dropdowns = Array.from(document.querySelectorAll('.dropdown'));
+            function closeAll(except){
+                dropdowns.forEach(d => { if (d !== except) { d.classList.remove('open','open-up'); d.querySelector('.dropdown-button')?.setAttribute('aria-expanded','false'); }});
+            }
+            function toggle(drop){
+                const btn = drop.querySelector('.dropdown-button');
+                const menu = drop.querySelector('.dropdown-content');
+                if (!btn || !menu) return;
+                const willOpen = !drop.classList.contains('open');
+                closeAll(willOpen ? drop : null);
+                if (willOpen){
+                    drop.classList.add('open');
+                    btn.setAttribute('aria-expanded','true');
+                    // smart positioning
+                    drop.classList.remove('open-up');
+                    const rect = menu.getBoundingClientRect();
+                    const overBottom = rect.bottom > (window.innerHeight - 12);
+                    if (overBottom) drop.classList.add('open-up');
+                    // fit viewport horizontally
+                    if (rect.right > window.innerWidth - 8){ menu.style.left = 'auto'; menu.style.right = '0'; }
+                    else { menu.style.left = ''; menu.style.right = ''; }
+                } else {
+                    drop.classList.remove('open','open-up');
+                    btn.setAttribute('aria-expanded','false');
+                }
+            }
+            dropdowns.forEach(drop => {
+                const btn = drop.querySelector('.dropdown-button');
+                if (!btn) return;
+                btn.setAttribute('aria-haspopup','menu');
+                btn.setAttribute('aria-expanded','false');
+                btn.addEventListener('click', (e)=>{ e.preventDefault(); toggle(drop); });
+                btn.addEventListener('keydown', (e)=>{
+                    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(drop); }
+                    if (e.key === 'ArrowDown') { e.preventDefault(); drop.classList.add('open'); drop.querySelector('.dropdown-content a')?.focus(); }
+                });
+                drop.addEventListener('keydown', (e)=>{ if (e.key === 'Escape'){ closeAll(); btn.focus(); }});
+            });
+            document.addEventListener('click', (e)=>{ if (!e.target.closest('.dropdown')) closeAll(); });
+            window.addEventListener('resize', ()=> closeAll());
+            window.addEventListener('scroll', ()=> closeAll());
+        })();
+
+        // Sticky Navigation on Scroll
+        (function setupStickyNav(){
+            const stickyNav = document.getElementById('stickyNav');
+            const headerTop = document.querySelector('.header-top');
+            const header = document.getElementById('header');
+            if (!stickyNav || !headerTop || !header) return;
+
+            const headerBottom = header.offsetTop + header.offsetHeight;
+            const showThreshold = headerBottom - 100;
+
+            function handleScroll(){
+                const scrollY = window.scrollY || window.pageYOffset;
+                if (scrollY > showThreshold) {
+                    stickyNav.classList.add('show');
+                    headerTop.style.opacity = '0';
+                    headerTop.style.visibility = 'hidden';
+                } else {
+                    stickyNav.classList.remove('show');
+                    headerTop.style.opacity = '1';
+                    headerTop.style.visibility = 'visible';
+                }
+            }
+
+            window.addEventListener('scroll', handleScroll, { passive: true });
+            handleScroll(); // initial check
+        })();
 
         // Modal Functionality
         const downloadButton = document.getElementById('downloadButton');
@@ -1957,6 +2157,12 @@
         const openSignUpBtn = document.getElementById('openSignUp');
         const authArea = document.getElementById('authArea');
         const headerAuthButtons = document.getElementById('headerAuthButtons');
+        // Home profile elements
+        const homeProfile = document.getElementById('homeProfile');
+        const homeProfileName = document.getElementById('homeProfileName');
+        const homeProfileEmail = document.getElementById('homeProfileEmail');
+        const homeProfileAvatar = document.getElementById('homeProfileAvatar');
+        const homeLogout = document.getElementById('homeLogout');
 
         downloadButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -2393,45 +2599,55 @@
 
         // ===== Auth UI and gating =====
         function renderAuthUI(user) {
+            const authArea2 = document.getElementById('authArea2');
             if (user) {
                 headerAuthButtons.style.display = 'none';
                 const displayName = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
-                authArea.innerHTML = '';
-                const profileDiv = document.createElement('div');
-                profileDiv.className = 'profile';
                 const avatar = user.photoURL ? `<img class=\"profile-avatar\" src=\"${user.photoURL}\" alt=\"avatar\">` : `<i class=\"fas fa-user-circle\"></i>`;
-                profileDiv.innerHTML = `
-                    <button class="profile-toggle" id="profileToggle">
+                const profileHTML = (suffix) => `
+                    <button class="profile-toggle" id="profileToggle${suffix}">
                         ${avatar}
-                        <span id="profileName">${displayName}</span>
+                        <span id="profileName${suffix}">${displayName}</span>
                     </button>
-                    <div class="profile-menu" id="profileMenu">
-                        <a href="profile.html" id="viewProfile">View Profile</a>
-                        <button id="logoutBtn">Logout</button>
+                    <div class="profile-menu" id="profileMenu${suffix}">
+                        <a href="profile.html" id="viewProfile${suffix}">View Profile</a>
+                        <button class="logout-btn" data-suffix="${suffix}">Logout</button>
                     </div>
                 `;
-                authArea.appendChild(profileDiv);
+                
+                // Update both auth areas
+                authArea.innerHTML = `<div class="profile">${profileHTML('1')}</div>`;
+                if (authArea2) authArea2.innerHTML = `<div class="profile">${profileHTML('2')}</div>`;
 
-                const profileToggle = document.getElementById('profileToggle');
-                const profileMenu = document.getElementById('profileMenu');
-                const logoutBtn = document.getElementById('logoutBtn');
+                // Handle multiple profile toggles (sticky nav and header)
+                const allProfileToggles = document.querySelectorAll('.profile-toggle');
+                const allProfileMenus = document.querySelectorAll('.profile-menu');
 
-                profileToggle.addEventListener('click', () => {
-                    profileMenu.style.display = profileMenu.style.display === 'block' ? 'none' : 'block';
+                allProfileToggles.forEach(toggle => {
+                    toggle.addEventListener('click', (e) => {
+                        const suffix = toggle.id.replace('profileToggle', '');
+                        const menu = document.getElementById('profileMenu' + suffix);
+                        if (menu) {
+                            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+                        }
+                    });
                 });
 
                 document.addEventListener('click', (evt) => {
-                    if (!profileDiv.contains(evt.target)) {
-                        profileMenu.style.display = 'none';
+                    if (!evt.target.closest('.profile')) {
+                        allProfileMenus.forEach(menu => menu.style.display = 'none');
                     }
                 });
 
-                logoutBtn.addEventListener('click', async () => {
-                    await auth.signOut();
-                    profileMenu.style.display = 'none';
+                document.querySelectorAll('.logout-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        await auth.signOut();
+                        allProfileMenus.forEach(menu => menu.style.display = 'none');
+                    });
                 });
             } else {
                 authArea.innerHTML = '';
+                if (authArea2) authArea2.innerHTML = '';
                 headerAuthButtons.style.display = 'flex';
             }
         }
@@ -2517,20 +2733,33 @@
                 });
                 toolSections.forEach(sec => {
                     const show = (catId==='all' || sec.id===catId);
+                    const cards = Array.from(sec.querySelectorAll('.tool-card'));
                     if (show){
                         sec.style.display = '';
                         // allow layout to calculate then animate open
                         requestAnimationFrame(()=>{
                             sec.classList.remove('is-hidden');
                             sec.style.maxHeight = sec.scrollHeight + 'px';
+                            // stagger cards in
+                            cards.forEach((c,i)=>{
+                                c.style.transitionDelay = (i*40)+'ms';
+                                c.classList.remove('card-hidden');
+                            });
+                            setTimeout(()=>cards.forEach(c=>c.style.transitionDelay=''), cards.length*40 + 450);
                         });
                     } else {
+                        // stagger cards out (reverse order)
+                        cards.slice().reverse().forEach((c,i)=>{
+                            c.style.transitionDelay = (i*35)+'ms';
+                            c.classList.add('card-hidden');
+                        });
                         sec.style.maxHeight = sec.scrollHeight + 'px'; // set current height
                         // next frame collapse to zero
                         requestAnimationFrame(()=>{
                             sec.classList.add('is-hidden');
                             sec.style.maxHeight = '0px';
                         });
+                        setTimeout(()=>cards.forEach(c=>c.style.transitionDelay=''), cards.length*35 + 420);
                     }
                 });
             }
@@ -2538,6 +2767,49 @@
                 const btn = e.target.closest('.filter-btn'); if(!btn) return;
                 const cat = btn.getAttribute('data-filter');
                 filter(cat);
+            });
+        })();
+
+        // ===== Hash Navigation Scroll Fix =====
+        (function fixHashNavigation(){
+            const stickyNav = document.getElementById('stickyNav');
+            const navHeight = stickyNav ? (stickyNav.classList.contains('show') ? stickyNav.offsetHeight : 0) : 0;
+            const offset = Math.max(90, navHeight + 20);
+
+            function scrollToHash() {
+                if (window.location.hash) {
+                    const hash = window.location.hash.substring(1);
+                    const element = document.getElementById(hash);
+                    if (element) {
+                        const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+                        const offsetPosition = elementPosition - offset;
+                        window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            }
+
+            // Handle hash on page load
+            if (window.location.hash) {
+                setTimeout(scrollToHash, 100);
+            }
+
+            // Handle hash changes
+            window.addEventListener('hashchange', () => {
+                setTimeout(scrollToHash, 100);
+            });
+
+            // Handle anchor clicks
+            document.addEventListener('click', (e) => {
+                const anchor = e.target.closest('a[href^="#"]');
+                if (anchor && anchor.getAttribute('href') !== '#') {
+                    const href = anchor.getAttribute('href');
+                    if (href.startsWith('#') && href.length > 1) {
+                        setTimeout(scrollToHash, 50);
+                    }
+                }
             });
         })();
 
@@ -2966,6 +3238,150 @@
                 // initialize sizes for accessibility
                 a.style.maxHeight = 0;
             });
+        })();
+
+        // Firebase Auth integration for Home Profile Summary
+        try {
+            if (window.firebase && firebase.auth) {
+                firebase.auth().onAuthStateChanged(function(user){
+                    if (user) {
+                        if (homeProfile) homeProfile.style.display = 'block';
+                        if (homeProfileName) homeProfileName.textContent = user.displayName || (user.email ? user.email.split('@')[0] : 'User');
+                        if (homeProfileEmail) homeProfileEmail.textContent = user.email || '';
+                        if (homeProfileAvatar) homeProfileAvatar.src = user.photoURL || 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><rect width="100%" height="100%" fill="%23ffffff"/></svg>';
+                        if (homeLogout) homeLogout.onclick = async () => { try { await firebase.auth().signOut(); } catch(_) {} };
+                    } else {
+                        if (homeProfile) homeProfile.style.display = 'none';
+                    }
+                });
+            }
+        } catch(_) {}
+    </script>
+
+    <!-- Creative Theme: Aurora + Glass -->
+    <style>
+        :root {
+            --aurora-a: #00eaff;
+            --aurora-b: #7cffd4;
+            --aurora-c: #6f86ff;
+            --aurora-d: #ff8ec9;
+            --glass-bg: rgba(255, 255, 255, 0.65);
+            --glass-stroke: rgba(255, 255, 255, 0.55);
+            --glass-shadow: rgba(13, 32, 62, 0.18);
+        }
+        [data-theme="dark"] {
+            --aurora-a: #00f0ff;
+            --aurora-b: #9cffb8;
+            --aurora-c: #7a8bff;
+            --aurora-d: #ff99d6;
+            --glass-bg: rgba(18, 22, 30, 0.55);
+            --glass-stroke: rgba(240, 248, 255, 0.08);
+            --glass-shadow: rgba(0, 0, 0, 0.35);
+        }
+        @keyframes floatAurora {
+            0% { transform: translate(-10%, -6%) rotate(0deg) scale(1); }
+            50% { transform: translate(8%, 6%) rotate(20deg) scale(1.05); }
+            100% { transform: translate(-10%, -6%) rotate(0deg) scale(1); }
+        }
+        .header { position: relative; overflow: hidden; }
+        .header::before,
+        .header::after {
+            content: '';
+            position: absolute; inset: -20%;
+            background:
+                radial-gradient(40% 35% at 20% 30%, var(--aurora-a) 0%, transparent 60%),
+                radial-gradient(45% 40% at 80% 20%, var(--aurora-b) 0%, transparent 60%),
+                radial-gradient(35% 45% at 30% 80%, var(--aurora-c) 0%, transparent 60%),
+                radial-gradient(30% 35% at 85% 75%, var(--aurora-d) 0%, transparent 60%);
+            filter: blur(50px);
+            opacity: 0.32;
+            animation: floatAurora 18s ease-in-out infinite;
+            pointer-events: none; z-index: 0;
+        }
+        .header::after { animation-duration: 24s; animation-direction: reverse; opacity: 0.22; }
+        .header .container { position: relative; z-index: 1; }
+        .header-top { position: sticky; top: 0; z-index: 1000; }
+
+        /* Glass buttons */
+        .cta-button, .download-button {
+            background: var(--glass-bg);
+            color: var(--dark-color);
+            border: 1px solid var(--glass-stroke);
+            backdrop-filter: saturate(140%) blur(8px);
+            -webkit-backdrop-filter: saturate(140%) blur(8px);
+            box-shadow: 0 8px 24px var(--glass-shadow);
+        }
+        .cta-button:hover, .download-button:hover { transform: translateY(-3px); }
+
+        /* Glass cards */
+        .tool-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-stroke);
+            backdrop-filter: saturate(140%) blur(8px);
+            -webkit-backdrop-filter: saturate(140%) blur(8px);
+            box-shadow: 0 10px 30px var(--glass-shadow);
+        }
+
+        /* Subtle gradient underline */
+        .section-title, .modal-title { position: relative; }
+        .section-title::after, .modal-title::after {
+            content: '';
+            display: block; height: 3px; margin-top: 10px; border-radius: 999px;
+            background: linear-gradient(90deg, var(--aurora-a), var(--aurora-c), var(--aurora-d));
+            opacity: .7;
+        }
+
+        /* Reveal animations (reuse) */
+        .reveal { opacity: 0; transform: translateY(12px); }
+        .reveal.revealed { opacity: 1; transform: none; transition: opacity .6s ease, transform .6s ease; }
+
+        /* Animated filtering for tool cards */
+        .category-section .tool-card {
+            transition: transform .35s ease, opacity .35s ease, filter .35s ease;
+            will-change: transform, opacity;
+        }
+        .category-section .tool-card.card-hidden {
+            opacity: 0;
+            transform: translateY(8px) scale(0.98);
+            filter: blur(1px);
+        }
+        
+        /* Force category filter section positioning - Final override */
+        section#category-filter.category-filter-section {
+            margin-top: 4rem !important;
+            margin-bottom: 2.5rem !important;
+            padding-top: 0 !important;
+        }
+        section#category-filter .category-filter-label {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+        }
+    </style>
+    <script>
+        (function applyAuroraTheme(){
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('revealed'); observer.unobserve(e.target); } });
+            }, { threshold: 0.12 });
+            document.querySelectorAll('.tool-card, section, .faq-item, .feature-card').forEach(el => {
+                el.classList.add('reveal');
+                observer.observe(el);
+            });
+        })();
+        
+        // Force category filter section positioning
+        (function fixCategoryFilterPosition(){
+            const catFilterSection = document.getElementById('category-filter');
+            if (catFilterSection) {
+                catFilterSection.style.marginTop = '4rem';
+                catFilterSection.style.marginBottom = '2.5rem';
+            }
+            const label = document.querySelector('.category-filter-label');
+            if (label) {
+                label.style.display = 'flex';
+                label.style.visibility = 'visible';
+                label.style.opacity = '1';
+            }
         })();
     </script>
 </body>

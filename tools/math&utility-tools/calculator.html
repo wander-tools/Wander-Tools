@@ -507,6 +507,16 @@
             updateDisplay();
         }
         
+        function safeEvaluate(expr){
+            // allow only numbers, spaces, and basic operators
+            if (!/^[0-9+\-*/().%\s]+$/.test(expr)) throw new Error('Invalid expression');
+            // disallow sequences like .. or leading operators
+            if (/\.{2,}/.test(expr)) throw new Error('Invalid number');
+            // evaluate in strict mode scope
+            // eslint-disable-next-line no-new-func
+            return Function('"use strict"; return (' + expr + ')')();
+        }
+
         function calculate() {
             try {
                 // Replace × with * for evaluation
@@ -517,7 +527,7 @@
                 });
                 
                 expressionText = displayValue + ' =';
-                const result = eval(calculationExpression);
+                const result = safeEvaluate(calculationExpression);
                 displayValue = formatResult(result);
                 updateDisplay();
             } catch (error) {
@@ -630,4 +640,3 @@
 </body>
 </html>
 <!-- home logo -->
-<script src="../home-logo.js"></script>
