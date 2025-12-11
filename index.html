@@ -859,6 +859,58 @@
             animation: spinAngle 2.4s linear infinite .2s;
         }
 
+        /* Disable colorful borders when setting is off and add simple border */
+        .no-colorful-border .tool-card::after,
+        .no-colorful-border .tool-card:hover::after {
+            display: none !important;
+        }
+        .no-colorful-border .filter-btn::after,
+        .no-colorful-border .filter-btn:hover::after,
+        .no-colorful-border .filter-btn.active::after {
+            display: none !important;
+        }
+        .no-colorful-border .tool-card a::before,
+        .no-colorful-border .tool-card a:hover::before {
+            display: none !important;
+        }
+        
+        /* Simple border when colorful border is off */
+        .no-colorful-border .tool-card {
+            border: 1px solid rgba(67, 97, 238, 0.3) !important;
+            border-color: rgba(67, 97, 238, 0.3) !important;
+        }
+        .no-colorful-border .tool-card:hover {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .tool-card {
+            border-color: rgba(72, 149, 239, 0.3) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .tool-card:hover {
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* Simple border for filter buttons when colorful border is off */
+        .no-colorful-border .filter-btn {
+            border: 1px solid rgba(67, 97, 238, 0.3) !important;
+        }
+        .no-colorful-border .filter-btn:hover {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--primary-color) !important;
+        }
+        .no-colorful-border .filter-btn.active {
+            border-color: var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn {
+            border-color: rgba(72, 149, 239, 0.3) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn:hover {
+            border-color: var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn.active {
+            border-color: var(--primary-color) !important;
+        }
+
         .tool-card h3 {
             margin-bottom: 10px;
             color: var(--primary-color);
@@ -1047,6 +1099,58 @@
         /* Dark mode: ring with tuned glow */
         [data-theme="dark"] .tool-card a::before { opacity: 0; }
         [data-theme="dark"] .tool-card a:hover::before { opacity: 1; animation: spinAngle 2.2s linear infinite; filter: drop-shadow(0 0 7px rgba(66,133,244,0.45)) drop-shadow(0 0 7px rgba(52,168,83,0.36)) drop-shadow(0 0 7px rgba(251,188,5,0.34)) drop-shadow(0 0 7px rgba(234,67,53,0.36)); }
+
+        /* Disable colorful borders when setting is off and add simple border */
+        .no-colorful-border .tool-card::after,
+        .no-colorful-border .tool-card:hover::after {
+            display: none !important;
+        }
+        .no-colorful-border .filter-btn::after,
+        .no-colorful-border .filter-btn:hover::after,
+        .no-colorful-border .filter-btn.active::after {
+            display: none !important;
+        }
+        .no-colorful-border .tool-card a::before,
+        .no-colorful-border .tool-card a:hover::before {
+            display: none !important;
+        }
+        
+        /* Simple border when colorful border is off */
+        .no-colorful-border .tool-card {
+            border: 1px solid rgba(67, 97, 238, 0.3) !important;
+            border-color: rgba(67, 97, 238, 0.3) !important;
+        }
+        .no-colorful-border .tool-card:hover {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .tool-card {
+            border-color: rgba(72, 149, 239, 0.3) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .tool-card:hover {
+            border-color: var(--primary-color) !important;
+        }
+        
+        /* Simple border for filter buttons when colorful border is off */
+        .no-colorful-border .filter-btn {
+            border: 1px solid rgba(67, 97, 238, 0.3) !important;
+        }
+        .no-colorful-border .filter-btn:hover {
+            border-color: var(--primary-color) !important;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1), 0 0 0 1px var(--primary-color) !important;
+        }
+        .no-colorful-border .filter-btn.active {
+            border-color: var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn {
+            border-color: rgba(72, 149, 239, 0.3) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn:hover {
+            border-color: var(--primary-color) !important;
+        }
+        [data-theme="dark"] .no-colorful-border .filter-btn.active {
+            border-color: var(--primary-color) !important;
+        }
 
         /* Feedback Section Styles */
         .feedback-section {
@@ -1751,6 +1855,11 @@
                     <p>Analyze YouTube channel performance, statistics, and engagement metrics.</p>
                     <a href="tools/analytics-tools/youtube-analyzer.html">Use Tool</a>
                 </div>
+                <div class="tool-card">
+                    <h3><i class="fas fa-qrcode"></i> Scanner</h3>
+                    <p>Scan QR codes, barcodes, and extract information from various formats.</p>
+                    <a href="tools/analytics-tools/scanner.html">Use Tool</a>
+                </div>
             </div>
         </section>
 
@@ -2103,18 +2212,70 @@
         const auth = firebase.auth();
 
         // App settings (from Firestore)
-        const appSettings = { loginRequired: false, title: null };
+        const appSettings = { loginRequired: false, title: null, mouseTracking: true, colorfulBorder: true };
+        let toolLoginSettings = {}; // Store individual tool login requirements
+        
         async function loadAppSettings(){
             try{
-                const doc = await db.collection('settings').doc('app').get();
-                const data = doc.exists ? doc.data() : {};
+                const [appDoc, toolsDoc] = await Promise.all([
+                    db.collection('settings').doc('app').get(),
+                    db.collection('settings').doc('tools').get()
+                ]);
+                const data = appDoc.exists ? appDoc.data() : {};
                 appSettings.loginRequired = !!data.loginRequired;
                 appSettings.title = data.title || null;
+                appSettings.mouseTracking = data.mouseTracking !== false; // default to true if not set
+                appSettings.colorfulBorder = data.colorfulBorder !== false; // default to true if not set
                 if (appSettings.title) { try { document.title = appSettings.title + ' - Wander Tools'; } catch(_){} }
-            }catch(_){ appSettings.loginRequired = false; }
+                // Apply colorful border setting
+                applyColorfulBorderSetting();
+                
+                // Load tool login settings
+                if (toolsDoc.exists) {
+                    toolLoginSettings = toolsDoc.data() || {};
+                } else {
+                    toolLoginSettings = {};
+                }
+            }catch(_){ 
+                appSettings.loginRequired = false; 
+                appSettings.mouseTracking = true; 
+                appSettings.colorfulBorder = true;
+                toolLoginSettings = {};
+                applyColorfulBorderSetting();
+            }
         }
-        // Load settings ASAP (non-blocking)
-        loadAppSettings();
+        
+        // Function to check if a specific tool requires login
+        function toolRequiresLogin(toolUrl) {
+            // Check global setting first - if enabled, all tools require login
+            if (appSettings.loginRequired) return true;
+            // Check individual tool setting
+            if (!toolUrl) return false;
+            // Normalize URL - remove leading slash if present, handle relative paths
+            let normalizedUrl = toolUrl.startsWith('/') ? toolUrl.substring(1) : toolUrl;
+            // Ensure consistent format (no leading/trailing spaces)
+            normalizedUrl = normalizedUrl.trim();
+            // Generate toolId same way as admin panel (exact match)
+            const toolId = normalizedUrl.replace(/[\/\.]/g, '_');
+            // Check if this specific tool requires login
+            const requiresLogin = toolLoginSettings && toolLoginSettings[toolId] === true;
+            return requiresLogin;
+        }
+        
+        // Function to apply colorful border setting
+        function applyColorfulBorderSetting(){
+            if (appSettings.colorfulBorder === false) {
+                // Disable colorful borders
+                document.body.classList.add('no-colorful-border');
+            } else {
+                document.body.classList.remove('no-colorful-border');
+            }
+        }
+        // Load settings ASAP and then setup cursor trail
+        loadAppSettings().then(() => {
+            // Setup cursor trail after settings are loaded
+            if (typeof setupCursorTrail === 'function') setupCursorTrail();
+        });
 
         // Theme Toggle Functionality
         const themeToggle = document.getElementById('themeToggle');
@@ -2324,6 +2485,7 @@
             { name: 'Log File / IP Analyzer', category: 'Analytics Tools', url: 'tools/analytics-tools/log-ip-analyzer.html' },
             { name: 'Readability & Word Frequency Analyzer', category: 'Analytics Tools', url: 'tools/analytics-tools/readability-analyzer.html' },
             { name: 'YouTube Channel Analyzer', category: 'Analytics Tools', url: 'tools/analytics-tools/youtube-analyzer.html' },
+            { name: 'Scanner', category: 'Analytics Tools', url: 'tools/analytics-tools/scanner.html' },
             { name: 'Meta Tag Generator', category: 'SEO & Web Tools', url: 'tools/seo&web-tools/meta-tag-generator.html' },
             { name: 'Domain WHOIS Lookup', category: 'SEO & Web Tools', url: 'tools/seo&web-tools/domain-whois-lookup.html' },
             { name: 'URL Shortener', category: 'SEO & Web Tools', url: 'tools/seo&web-tools/url-shortener.html' },
@@ -2768,17 +2930,20 @@
 
         function navigateTo(url) {
             const user = auth.currentUser;
-            if (appSettings.loginRequired && !user) { openAuthModal('login'); return; }
+            if (toolRequiresLogin(url) && !user) { 
+                openAuthModal('login'); 
+                return; 
+            }
             window.location.href = url;
         }
 
-        // Intercept "Use Tool" clicks based on settings.loginRequired
+        // Intercept "Use Tool" clicks based on tool-specific login requirements
         document.addEventListener('click', function(e) {
             const target = e.target;
             if (target.closest && target.closest('.tool-card a')) {
                 const anchor = target.closest('.tool-card a');
                 const url = anchor.getAttribute('href');
-                if (appSettings.loginRequired && !auth.currentUser) {
+                if (toolRequiresLogin(url) && !auth.currentUser) {
                     e.preventDefault();
                     openAuthModal('login');
                 } else {
@@ -3190,9 +3355,12 @@
         }
 
         // ===== Mouse tracing effect =====
-        (function setupCursorTrail(){
+        function setupCursorTrail(){
             const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (prefersReduced) return;
+            
+            // Check admin setting for mouse tracking
+            if (appSettings.mouseTracking === false) return;
 
             const DOT_COUNT = 16;
             const dots = [];
@@ -3248,7 +3416,7 @@
                 isMoving = false;
                 dots.forEach(d=>d.el.classList.remove('is-active'));
             });
-        })();
+        }
 
         // ===== Typewriter animation for header title and rotating subtitle =====
         (function setupHeaderTypewriter(){

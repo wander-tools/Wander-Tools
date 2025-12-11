@@ -65,6 +65,11 @@
         @keyframes fadeInUp{ from{ opacity:0; transform: translateY(6px);} to{ opacity:1; transform: translateY(0);} }
         @keyframes modalopen{ from{ opacity:0; transform: translateY(-50px);} to{ opacity:1; transform: translateY(0);} }
         @keyframes spin{ to{ transform: rotate(360deg);} }
+        /* Dropdown menu styles */
+        #toolsDropdownMenu { font-size:14px; }
+        #toolsDropdownMenu label { margin:0; }
+        #toolsDropdownMenu input[type="checkbox"] { width:16px; height:16px; cursor:pointer; }
+        #toolsDropdownMenu input[type="checkbox"]:indeterminate { background:var(--primary); border-color:var(--primary); }
         @media (max-width: 900px){ .layout{ grid-template-columns:1fr; } .sidebar{ position:sticky; top:0; z-index:10; border-bottom:1px solid #334; } .grid.cols-3{ grid-template-columns:1fr; } }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -173,9 +178,50 @@
                             <input id="loginRequiredToggle" type="checkbox">
                             <span class="toggle-slider"></span>
                         </label>
+                        <div style="position:relative; display:inline-block;">
+                            <button class="btn btn-secondary" id="toolsDropdownBtn" style="display:inline-flex; align-items:center; gap:6px;">
+                                <i class="fas fa-list"></i> Select Tools for Login
+                                <i class="fas fa-chevron-down" style="font-size:12px;"></i>
+                            </button>
+                            <div id="toolsDropdownMenu" style="display:none; position:absolute; top:100%; left:0; margin-top:8px; background:#fff; border:1px solid #ddd; border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,0.15); min-width:300px; max-width:500px; max-height:400px; overflow-y:auto; z-index:1000;">
+                                <div style="padding:8px; border-bottom:1px solid #e0e0e0; background:#f8f9fa;">
+                                    <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:600; user-select:none;">
+                                        <input type="checkbox" id="selectAllTools" style="cursor:pointer;">
+                                        <span>Select All Tools</span>
+                                    </label>
+                                </div>
+                                <div id="toolsDropdownList" style="padding:8px;"></div>
+                            </div>
+                        </div>
+                        <label class="toggle" for="mouseTrackingToggle" style="cursor:pointer; user-select:none;">
+                            <span>Mouse Tracking</span>
+                            <input id="mouseTrackingToggle" type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle" for="colorfulBorderToggle" style="cursor:pointer; user-select:none;">
+                            <span>Colorful Border</span>
+                            <input id="colorfulBorderToggle" type="checkbox">
+                            <span class="toggle-slider"></span>
+                        </label>
                         <button class="btn btn-primary" id="saveSettings">Save</button>
                     </div>
                     <div id="settingsMsg" style="margin-top:10px; font-weight:600;"></div>
+                </div>
+            </section>
+
+            <section id="page-tools" class="hidden">
+                <div class="card">
+                    <h3 style="margin-top:0;">Tool Login Requirements</h3>
+                    <p class="muted">Manage which tools require login. You can set individual tools or apply to all tools.</p>
+                    <div class="toolbar" style="margin-bottom:16px;">
+                        <button class="btn btn-primary" id="enableAllTools">Enable Login for All Tools</button>
+                        <button class="btn btn-secondary" id="disableAllTools">Disable Login for All Tools</button>
+                        <button class="btn btn-secondary" id="saveToolSettings">Save Changes</button>
+                    </div>
+                    <div style="max-height:600px; overflow-y:auto; border:1px solid #e0e0e0; border-radius:8px; padding:10px;">
+                        <div id="toolsList" style="display:grid; gap:8px;"></div>
+                    </div>
+                    <div id="toolsMsg" style="margin-top:10px; font-weight:600;"></div>
                 </div>
             </section>
 
@@ -229,18 +275,277 @@
         function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
         try { auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{}); } catch(_) {}
 
-        const pages = {
-            dashboard: document.getElementById('page-dashboard'),
-            feedbacks: document.getElementById('page-feedbacks'),
-            users: document.getElementById('page-users'),
-            admins: document.getElementById('page-admins'),
-            settings: document.getElementById('page-settings'),
-            profile: document.getElementById('page-profile')
-        };
-        const nav = document.getElementById('nav');
-        const pageTitle = document.getElementById('pageTitle');
-        function showPage(id){ Object.values(pages).forEach(p=>p.classList.add('hidden')); pages[id].classList.remove('hidden'); pageTitle.textContent = id.charAt(0).toUpperCase()+id.slice(1); nav.querySelectorAll('button[data-page]').forEach(b=>b.classList.remove('active')); const nb=nav.querySelector(`button[data-page="${id}"]`); if(nb){ nb.classList.add('active'); } }
-        nav.querySelectorAll('button[data-page]').forEach(btn=> btn.addEventListener('click', ()=> showPage(btn.dataset.page)) );
+        let pages, nav, pageTitle;
+        let isAuthenticated = false;
+        let isAuthorized = false;
+        
+        // Initialize DOM elements
+        function initPages() {
+            if (!pages) {
+                pages = {
+                    dashboard: document.getElementById('page-dashboard'),
+                    feedbacks: document.getElementById('page-feedbacks'),
+                    users: document.getElementById('page-users'),
+                    admins: document.getElementById('page-admins'),
+                    settings: document.getElementById('page-settings'),
+                    profile: document.getElementById('page-profile')
+                };
+                nav = document.getElementById('nav');
+                pageTitle = document.getElementById('pageTitle');
+            }
+            return pages && nav && pageTitle;
+        }
+        
+        // Initialize immediately
+        initPages();
+        
+        function showPage(id){ 
+            if (!initPages()) {
+                console.error('Pages not initialized');
+                return;
+            }
+            // Check authentication before showing any page
+            if (!isAuthenticated || !isAuthorized) {
+                showGuard('Please sign in to access the admin panel.');
+                const loginCard = document.getElementById('loginCard');
+                if(loginCard){ loginCard.classList.remove('hidden'); }
+                hideAllPages();
+                return;
+            }
+            Object.values(pages).forEach(p=>{ if(p) p.classList.add('hidden'); }); 
+            if (pages[id]) pages[id].classList.remove('hidden'); 
+            if (pageTitle) pageTitle.textContent = id.charAt(0).toUpperCase()+id.slice(1); 
+            if (nav) {
+                nav.querySelectorAll('button[data-page]').forEach(b=>b.classList.remove('active')); 
+                const nb=nav.querySelector(`button[data-page="${id}"]`); 
+                if(nb){ nb.classList.add('active'); }
+            }
+        }
+        
+        // Setup navigation
+        function setupNavigation() {
+            if (!initPages() || !nav) return;
+            nav.querySelectorAll('button[data-page]').forEach(btn=> {
+                btn.addEventListener('click', ()=> {
+                    if (!isAuthenticated || !isAuthorized) {
+                        showGuard('Please sign in to access the admin panel.');
+                        const loginCard = document.getElementById('loginCard');
+                        if(loginCard){ loginCard.classList.remove('hidden'); }
+                        hideAllPages();
+                        return;
+                    }
+                    showPage(btn.dataset.page);
+                });
+            });
+        }
+        
+        // Initialize all event listeners when DOM is ready
+        function initializeAllEventListeners() {
+            setupNavigation();
+            setupToolsDropdown();
+            
+            // Login handlers
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            const adminForgotBtn = document.getElementById('adminForgotBtn');
+            const adminLoginEmail = document.getElementById('adminLoginEmail');
+            const adminLoginPassword = document.getElementById('adminLoginPassword');
+            const adminLoginMsg = document.getElementById('adminLoginMsg');
+            
+            if (adminLoginBtn && adminLoginEmail && adminLoginPassword && adminLoginMsg) {
+                adminLoginBtn.addEventListener('click', withLoading(adminLoginBtn, async ()=>{
+                    adminLoginMsg.textContent = '';
+                    try{ 
+                        await auth.signInWithEmailAndPassword(adminLoginEmail.value.trim(), adminLoginPassword.value); 
+                        adminLoginMsg.textContent='Signed in!'; 
+                        const loginCard = document.getElementById('loginCard');
+                        const guardEl = document.getElementById('guardMsg');
+                        if(loginCard){ loginCard.classList.add('hidden'); }
+                        if(guardEl){ guardEl.classList.add('hidden'); }
+                    }catch(e){ 
+                        console.error('Login error:', e);
+                        adminLoginMsg.textContent='Login failed. Please check credentials.'; 
+                        adminLoginMsg.style.color = 'var(--danger)';
+                    }
+                }));
+            }
+            
+            if (adminForgotBtn && adminLoginEmail && adminLoginMsg) {
+                adminForgotBtn.addEventListener('click', withLoading(adminForgotBtn, async ()=>{ 
+                    const email = adminLoginEmail.value.trim(); 
+                    if(!email){ 
+                        adminLoginMsg.textContent='Enter your email first.'; 
+                        adminLoginMsg.style.color = 'var(--danger)';
+                        return;
+                    } 
+                    try{ 
+                        await auth.sendPasswordResetEmail(email); 
+                        adminLoginMsg.textContent='Reset email sent.'; 
+                        adminLoginMsg.style.color = 'var(--success)';
+                    }catch(e){ 
+                        console.error('Password reset error:', e);
+                        adminLoginMsg.textContent='Could not send reset email.'; 
+                        adminLoginMsg.style.color = 'var(--danger)';
+                    } 
+                }));
+            }
+            
+            // Logout handler
+            const logoutBtn = document.getElementById('logoutBtn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', async (e)=>{ 
+                    const btn = e.currentTarget; 
+                    if(btn){ btn.classList.add('is-loading'); btn.disabled = true; }
+                    try {
+                        await auth.signOut();
+                        showGuard('You have been signed out.');
+                        const card = document.getElementById('loginCard'); 
+                        if(card){ card.classList.remove('hidden'); }
+                        const adminInfo = document.getElementById('adminInfo');
+                        if (adminInfo) adminInfo.textContent = '';
+                        hideAllPages();
+                    } catch(error) {
+                        console.error('Logout error:', error);
+                    } finally {
+                        if(btn){ btn.classList.remove('is-loading'); btn.disabled = false; }
+                    }
+                });
+            }
+            
+            // Settings save handler
+            const saveSettingsBtn = document.getElementById('saveSettings');
+            if (saveSettingsBtn) {
+                saveSettingsBtn.addEventListener('click', withLoading(saveSettingsBtn, async ()=>{
+                    try {
+                        const title = document.getElementById('siteTitle').value.trim();
+                        const loginRequiredToggle = document.getElementById('loginRequiredToggle');
+                        const loginRequired = !!loginRequiredToggle?.checked;
+                        const mouseTracking = !!document.getElementById('mouseTrackingToggle')?.checked;
+                        const colorfulBorder = !!document.getElementById('colorfulBorderToggle')?.checked;
+                        
+                        // Collect selected tools for login
+                        const container = document.getElementById('toolsDropdownList');
+                        const toolsSettings = {};
+                        let selectedCount = 0;
+                        
+                        // First, get all tool IDs from the toolsList
+                        const allToolIds = toolsList.map(tool => tool.url.replace(/[\/\.]/g, '_'));
+                        
+                        if (container) {
+                            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                            // Initialize all tools as false
+                            allToolIds.forEach(toolId => {
+                                toolsSettings[toolId] = false;
+                            });
+                            // Then set selected ones to true
+                            checkboxes.forEach(cb => {
+                                if (cb.id !== 'selectAllTools') {
+                                    const toolId = cb.getAttribute('data-tool-id');
+                                    toolsSettings[toolId] = cb.checked;
+                                    if (cb.checked) selectedCount++;
+                                }
+                            });
+                        }
+                        
+                        // Validate: If login required is checked but no tools selected, show error
+                        if (loginRequired && selectedCount === 0) {
+                            const settingsMsg = document.getElementById('settingsMsg');
+                            if (settingsMsg) {
+                                settingsMsg.textContent = 'Please select at least one tool before enabling login required.';
+                                settingsMsg.style.color = 'var(--danger)';
+                                setTimeout(() => {
+                                    settingsMsg.textContent = '';
+                                    settingsMsg.style.color = '';
+                                }, 3000);
+                            }
+                            return;
+                        }
+                        
+                        console.log('Saving settings - Tools Settings:', toolsSettings);
+                        console.log('Saving settings - Selected Count:', selectedCount);
+                        console.log('Saving settings - Login Required:', loginRequired);
+                        
+                        await Promise.all([
+                            db.collection('settings').doc('app').set({ title, loginRequired, mouseTracking, colorfulBorder }, { merge:true }),
+                            db.collection('settings').doc('tools').set(toolsSettings)
+                        ]);
+                        
+                        console.log('Settings saved successfully to Firebase');
+                        selectedToolsForLogin = toolsSettings;
+                        
+                        const settingsMsg = document.getElementById('settingsMsg');
+                        if (settingsMsg) {
+                            settingsMsg.textContent='Saved!'; 
+                            settingsMsg.style.color = 'var(--success)';
+                            setTimeout(()=>{
+                                settingsMsg.textContent='';
+                                settingsMsg.style.color = '';
+                            }, 2000);
+                        }
+                    } catch(error) {
+                        console.error('Save settings error:', error);
+                        const settingsMsg = document.getElementById('settingsMsg');
+                        if (settingsMsg) {
+                            settingsMsg.textContent='Failed to save'; 
+                            settingsMsg.style.color = 'var(--danger)';
+                        }
+                    }
+                }));
+            }
+            
+            // Profile save handler
+            const saveProfileBtn = document.getElementById('saveProfile');
+            if (saveProfileBtn) {
+                saveProfileBtn.addEventListener('click', withLoading(saveProfileBtn, async ()=>{
+                    const user = auth.currentUser; 
+                    if(!user) return;
+                    try {
+                        const name = document.getElementById('profName').value.trim();
+                        await user.updateProfile({ displayName: name }); 
+                        await db.collection('users').doc(user.uid).set({ name, email:user.email }, { merge:true }); 
+                        const profileMsg = document.getElementById('profileMsg');
+                        if (profileMsg) {
+                            profileMsg.textContent='Profile updated'; 
+                            profileMsg.style.color = 'var(--success)';
+                            setTimeout(()=>{
+                                profileMsg.textContent='';
+                                profileMsg.style.color = '';
+                            }, 2000);
+                        }
+                    } catch(error) {
+                        console.error('Profile update error:', error);
+                        const profileMsg = document.getElementById('profileMsg');
+                        if (profileMsg) {
+                            profileMsg.textContent='Failed to update profile'; 
+                            profileMsg.style.color = 'var(--danger)';
+                        }
+                    }
+                }));
+            }
+            
+            // Password reset handler
+            const sendResetBtn = document.getElementById('sendReset');
+            if (sendResetBtn) {
+                sendResetBtn.addEventListener('click', withLoading(sendResetBtn, async ()=>{ 
+                    const email = auth.currentUser?.email; 
+                    if(email){ 
+                        try{ 
+                            await auth.sendPasswordResetEmail(email); 
+                            alert('Password reset email sent'); 
+                        }catch(error){ 
+                            console.error('Password reset error:', error);
+                            alert('Failed to send password reset email'); 
+                        } 
+                    } 
+                }));
+            }
+        }
+        
+        // Setup navigation when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeAllEventListeners);
+        } else {
+            initializeAllEventListeners();
+        }
 
         // Export helper
         function downloadCSV(filename, rows){
@@ -305,232 +610,811 @@
 
         // Populate stats and tables
         async function loadDashboard(){
-            const [usersSnap, fbSnap, adminsSnap] = await Promise.all([
-                db.collection('users').get(),
-                db.collection('feedbacks').orderBy('timestamp','desc').limit(10).get(),
-                db.collection('Admin Users').get()
-            ]);
-            document.getElementById('statUsers').textContent = usersSnap.size;
-            document.getElementById('statFeedbacks').textContent = fbSnap.size ? fbSnap.size : 0;
-            document.getElementById('statAdmins').textContent = adminsSnap.size;
-            const tbody = document.querySelector('#recentFeedbacksTbl tbody');
-            tbody.innerHTML = '';
-            function esc(s){ return (s==null?'':String(s)).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
-            fbSnap.forEach(doc=>{
-                const d = doc.data();
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc((d.message||'').slice(0,80))}</td><td><span class="badge ${d.status==='verified'?'badge-success':'badge-muted'}">${esc(d.status||'unverified')}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td>`;
-                tbody.appendChild(tr);
-            });
-            const expBtn = document.getElementById('exportRecentFeedbacks');
-            expBtn.onclick = withLoading(expBtn, () => {
-                const rows = [['name','email','message','status','date']];
-                fbSnap.forEach(doc=>{
-                    const d = doc.data();
-                    rows.push([d.name,d.email,d.message,d.status, d.timestamp? d.timestamp.toDate().toISOString():'' ]);
-                });
-                downloadCSV('recent_feedbacks.csv', rows);
-            });
+            try {
+                let fbSnap;
+                try {
+                    fbSnap = await db.collection('feedbacks').orderBy('timestamp','desc').limit(10).get();
+                } catch(orderError) {
+                    // If orderBy fails (no index), try without orderBy
+                    console.warn('OrderBy failed, loading without order:', orderError);
+                    try {
+                        fbSnap = await db.collection('feedbacks').limit(10).get();
+                    } catch(err) {
+                        console.error('Error loading feedbacks:', err);
+                        fbSnap = { size: 0, forEach: () => {} };
+                    }
+                }
+                
+                let usersSnap, adminsSnap;
+                try {
+                    [usersSnap, adminsSnap] = await Promise.all([
+                        db.collection('users').get().catch(() => ({ size: 0, forEach: () => {} })),
+                        db.collection('Admin Users').get().catch(() => ({ size: 0, forEach: () => {} }))
+                    ]);
+                } catch(err) {
+                    console.error('Error loading users/admins:', err);
+                    usersSnap = { size: 0, forEach: () => {} };
+                    adminsSnap = { size: 0, forEach: () => {} };
+                }
+                
+                const statUsers = document.getElementById('statUsers');
+                const statFeedbacks = document.getElementById('statFeedbacks');
+                const statAdmins = document.getElementById('statAdmins');
+                if (statUsers) statUsers.textContent = usersSnap.size || 0;
+                if (statFeedbacks) statFeedbacks.textContent = fbSnap.size || 0;
+                if (statAdmins) statAdmins.textContent = adminsSnap.size || 0;
+                
+                const tbody = document.querySelector('#recentFeedbacksTbl tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                    if (fbSnap && fbSnap.size > 0) {
+                        fbSnap.forEach(doc=>{
+                            try {
+                                const d = doc.data();
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `<td>${esc(d.name || '')}</td><td>${esc(d.email || '')}</td><td>${esc((d.message||'').slice(0,80))}</td><td><span class="badge ${d.status==='verified'?'badge-success':'badge-muted'}">${esc(d.status||'unverified')}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td>`;
+                                tbody.appendChild(tr);
+                            } catch(err) {
+                                console.error('Error rendering feedback row:', err);
+                            }
+                        });
+                    }
+                }
+                
+                const expBtn = document.getElementById('exportRecentFeedbacks');
+                if (expBtn && fbSnap) {
+                    expBtn.onclick = withLoading(expBtn, () => {
+                        const rows = [['name','email','message','status','date']];
+                        fbSnap.forEach(doc=>{
+                            try {
+                                const d = doc.data();
+                                rows.push([
+                                    d.name || '', 
+                                    d.email || '', 
+                                    d.message || '', 
+                                    d.status || 'unverified', 
+                                    d.timestamp ? d.timestamp.toDate().toISOString() : ''
+                                ]);
+                            } catch(err) {
+                                console.error('Error exporting feedback:', err);
+                            }
+                        });
+                        downloadCSV('recent_feedbacks.csv', rows);
+                    });
+                }
+            } catch(error) {
+                console.error('Error loading dashboard:', error);
+                // Show error message to user
+                const statUsers = document.getElementById('statUsers');
+                const statFeedbacks = document.getElementById('statFeedbacks');
+                const statAdmins = document.getElementById('statAdmins');
+                if (statUsers) statUsers.textContent = 'Error';
+                if (statFeedbacks) statFeedbacks.textContent = 'Error';
+                if (statAdmins) statAdmins.textContent = 'Error';
+            }
         }
 
         async function loadFeedbacks(){
-            const snap = await db.collection('feedbacks').orderBy('timestamp','desc').get();
-            const tbody = document.querySelector('#feedbacksTbl tbody');
-            tbody.innerHTML = '';
-            snap.forEach(doc=>{
-                const d = doc.data();
-                const status = (d.status||'').toLowerCase();
-                const normalized = status==='verified' ? 'verified' : 'unverified';
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc((d.message||'').replace(/\n/g,' '))}</td><td><span class='badge ${normalized==='verified'?'badge-success':'badge-muted'}'>${normalized}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td><td><button class='btn btn-secondary btn-xs mr-6' data-action='toggle' data-id='${doc.id}'>Toggle Status</button><button class='btn btn-danger btn-xs' data-action='delete' data-id='${doc.id}'>Delete</button></td>`
-                tbody.appendChild(tr);
-            });
-            tbody.addEventListener('click', async (e)=>{
-                const btn = e.target.closest('button[data-action]'); if(!btn) return;
-                btn.classList.add('is-loading'); btn.disabled = true;
-                const id = btn.getAttribute('data-id'); const action = btn.getAttribute('data-action');
+            try {
+                let snap;
                 try {
-                    if (action==='delete'){ await db.collection('feedbacks').doc(id).delete(); loadFeedbacks(); loadDashboard(); }
-                    if (action==='toggle'){
-                        const ref = db.collection('feedbacks').doc(id); const snap = await ref.get();
-                        const curVal = (snap.data().status||'').toLowerCase() === 'verified' ? 'unverified' : 'verified';
-                        await ref.set({ status: curVal }, { merge:true }); loadFeedbacks(); loadDashboard();
+                    snap = await db.collection('feedbacks').orderBy('timestamp','desc').get();
+                } catch(orderError) {
+                    // If orderBy fails (no index), try without orderBy
+                    console.warn('OrderBy failed, loading without order:', orderError);
+                    try {
+                        snap = await db.collection('feedbacks').get();
+                    } catch(err) {
+                        console.error('Error loading feedbacks:', err);
+                        snap = { forEach: () => {} };
                     }
-                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
-            });
-            const expBtn2 = document.getElementById('exportFeedbacks');
-            expBtn2.onclick = withLoading(expBtn2, () => {
-                const rows = [['name','email','message','status','date','uid','pageUrl']];
-                snap.forEach(doc=>{ const d=doc.data(); const status=(d.status||'').toLowerCase()==='verified'?'verified':'unverified'; rows.push([d.name,d.email,d.message,status,d.timestamp?d.timestamp.toDate().toISOString():'', d.uid||'', d.pageUrl||'']); });
-                downloadCSV('feedbacks.csv', rows);
-            });
+                }
+                const tbody = document.querySelector('#feedbacksTbl tbody');
+                if (!tbody) {
+                    console.warn('Feedbacks table tbody not found');
+                    return;
+                }
+                tbody.innerHTML = '';
+                
+                if (snap && snap.forEach) {
+                    snap.forEach(doc=>{
+                        try {
+                            const d = doc.data();
+                            const status = (d.status||'').toLowerCase();
+                            const normalized = status==='verified' ? 'verified' : 'unverified';
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${esc(d.name || '')}</td><td>${esc(d.email || '')}</td><td>${esc((d.message||'').replace(/\n/g,' '))}</td><td><span class='badge ${normalized==='verified'?'badge-success':'badge-muted'}'>${normalized}</span></td><td>${d.timestamp? esc(d.timestamp.toDate().toLocaleString()) : ''}</td><td><button class='btn btn-secondary btn-xs mr-6' data-action='toggle' data-id='${doc.id}'>Toggle Status</button><button class='btn btn-danger btn-xs' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
+                            tbody.appendChild(tr);
+                        } catch(err) {
+                            console.error('Error rendering feedback row:', err);
+                        }
+                    });
+                }
+                
+                // Setup event listener for feedbacks table (remove old listeners first)
+                const newTbody = tbody.cloneNode(true);
+                tbody.parentNode.replaceChild(newTbody, tbody);
+                newTbody.addEventListener('click', async (e)=>{
+                    const btn = e.target.closest('button[data-action]'); 
+                    if(!btn) return;
+                    btn.classList.add('is-loading'); 
+                    btn.disabled = true;
+                    const id = btn.getAttribute('data-id'); 
+                    const action = btn.getAttribute('data-action');
+                    try {
+                        if (action==='delete'){ 
+                            await db.collection('feedbacks').doc(id).delete(); 
+                            await loadFeedbacks(); 
+                            await loadDashboard(); 
+                        }
+                        if (action==='toggle'){
+                            const ref = db.collection('feedbacks').doc(id); 
+                            const snap = await ref.get();
+                            const curVal = (snap.data().status||'').toLowerCase() === 'verified' ? 'unverified' : 'verified';
+                            await ref.set({ status: curVal }, { merge:true }); 
+                            await loadFeedbacks(); 
+                            await loadDashboard();
+                        }
+                    } catch(err) {
+                        console.error('Error processing feedback action:', err);
+                        alert('Error: ' + (err.message || 'Failed to process action'));
+                    } finally { 
+                        btn.classList.remove('is-loading'); 
+                        btn.disabled = false; 
+                    }
+                });
+                
+                const expBtn2 = document.getElementById('exportFeedbacks');
+                if (expBtn2 && snap) {
+                    expBtn2.onclick = withLoading(expBtn2, () => {
+                        const rows = [['name','email','message','status','date','uid','pageUrl']];
+                        snap.forEach(doc=>{ 
+                            try {
+                                const d=doc.data(); 
+                                const status=(d.status||'').toLowerCase()==='verified'?'verified':'unverified'; 
+                                rows.push([
+                                    d.name || '', 
+                                    d.email || '', 
+                                    d.message || '', 
+                                    status, 
+                                    d.timestamp ? d.timestamp.toDate().toISOString() : '', 
+                                    d.uid || '', 
+                                    d.pageUrl || ''
+                                ]); 
+                            } catch(err) {
+                                console.error('Error exporting feedback:', err);
+                            }
+                        }); 
+                        downloadCSV('feedbacks.csv', rows);
+                    });
+                }
+            } catch(error) {
+                console.error('Error loading feedbacks:', error);
+                const tbody = document.querySelector('#feedbacksTbl tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:var(--danger);">Error loading feedbacks. Please refresh the page.</td></tr>';
+                }
+            }
         }
 
         async function loadUsers(){
-            const snap = await db.collection('users').get();
-            const tbody = document.querySelector('#usersTbl tbody');
-            tbody.innerHTML = '';
-            snap.forEach(doc=>{
-                const d = doc.data();
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${esc(d.name)}</td><td>${esc(d.email)}</td><td>${esc(doc.id)}</td><td>${d.disabled? 'Yes':'No'}</td><td><button class='btn btn-warning' data-action='toggle' data-id='${doc.id}'>${d.disabled?'Enable':'Disable'}</button> <button class='btn btn-secondary' data-action='reset' data-email='${esc(d.email||'') }'>Send Reset</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
-                tbody.appendChild(tr);
-            });
-            tbody.addEventListener('click', async (e)=>{
-                const btn = e.target.closest('button[data-action]'); if(!btn) return;
-                btn.classList.add('is-loading'); btn.disabled = true;
-                const action = btn.getAttribute('data-action');
-                try {
-                    if (action==='toggle'){ const id = btn.getAttribute('data-id'); const ref=db.collection('users').doc(id); const s=await ref.get(); await ref.set({disabled: !s.data().disabled},{merge:true}); loadUsers(); }
-                    if (action==='reset'){ const email = btn.getAttribute('data-email'); if(email){ try{ await auth.sendPasswordResetEmail(email); alert('Password reset email sent'); }catch(_){ alert('Failed to send reset'); } } }
-                    if (action==='delete'){ const id = btn.getAttribute('data-id'); await db.collection('users').doc(id).delete(); loadUsers(); }
-                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
-            });
-            const expBtn3 = document.getElementById('exportUsers');
-            expBtn3.onclick = withLoading(expBtn3, () => {
-                const rows = [['uid','name','email','disabled']];
-                snap.forEach(doc=>{ const d=doc.data(); rows.push([doc.id,d.name,d.email,d.disabled? 'Yes':'No']); });
-                downloadCSV('users.csv', rows);
-            });
+            try {
+                const snap = await db.collection('users').get().catch(err => {
+                    console.error('Error fetching users:', err);
+                    return { forEach: () => {} };
+                });
+                const tbody = document.querySelector('#usersTbl tbody');
+                if (!tbody) {
+                    console.warn('Users table tbody not found');
+                    return;
+                }
+                tbody.innerHTML = '';
+                
+                if (snap && snap.forEach) {
+                    snap.forEach(doc=>{
+                        try {
+                            const d = doc.data();
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `<td>${esc(d.name || '')}</td><td>${esc(d.email || '')}</td><td>${esc(doc.id)}</td><td>${d.disabled? 'Yes':'No'}</td><td><button class='btn btn-warning' data-action='toggle' data-id='${doc.id}'>${d.disabled?'Enable':'Disable'}</button> <button class='btn btn-secondary' data-action='reset' data-email='${esc(d.email||'') }'>Send Reset</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Delete</button></td>`;
+                            tbody.appendChild(tr);
+                        } catch(err) {
+                            console.error('Error rendering user row:', err);
+                        }
+                    });
+                }
+                
+                // Setup event listener for users table (remove old listeners first)
+                const newTbody = tbody.cloneNode(true);
+                tbody.parentNode.replaceChild(newTbody, tbody);
+                newTbody.addEventListener('click', async (e)=>{
+                    const btn = e.target.closest('button[data-action]'); 
+                    if(!btn) return;
+                    btn.classList.add('is-loading'); 
+                    btn.disabled = true;
+                    const action = btn.getAttribute('data-action');
+                    try {
+                        if (action==='toggle'){ 
+                            const id = btn.getAttribute('data-id'); 
+                            const ref=db.collection('users').doc(id); 
+                            const s=await ref.get(); 
+                            await ref.set({disabled: !s.data().disabled},{merge:true}); 
+                            await loadUsers(); 
+                        }
+                        if (action==='reset'){ 
+                            const email = btn.getAttribute('data-email'); 
+                            if(email){ 
+                                try{ 
+                                    await auth.sendPasswordResetEmail(email); 
+                                    alert('Password reset email sent'); 
+                                }catch(err){ 
+                                    console.error('Password reset error:', err);
+                                    alert('Failed to send reset: ' + (err.message || 'Unknown error')); 
+                                } 
+                            } 
+                        }
+                        if (action==='delete'){ 
+                            const id = btn.getAttribute('data-id'); 
+                            await db.collection('users').doc(id).delete(); 
+                            await loadUsers(); 
+                        }
+                    } catch(err) {
+                        console.error('Error processing user action:', err);
+                        alert('Error: ' + (err.message || 'Failed to process action'));
+                    } finally { 
+                        btn.classList.remove('is-loading'); 
+                        btn.disabled = false; 
+                    }
+                });
+                
+                const expBtn3 = document.getElementById('exportUsers');
+                if (expBtn3 && snap) {
+                    expBtn3.onclick = withLoading(expBtn3, () => {
+                        const rows = [['uid','name','email','disabled']];
+                        snap.forEach(doc=>{ 
+                            try {
+                                const d=doc.data(); 
+                                rows.push([doc.id, d.name || '', d.email || '', d.disabled? 'Yes':'No']); 
+                            } catch(err) {
+                                console.error('Error exporting user:', err);
+                            }
+                        }); 
+                        downloadCSV('users.csv', rows);
+                    });
+                }
+            } catch(error) {
+                console.error('Error loading users:', error);
+                const tbody = document.querySelector('#usersTbl tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:var(--danger);">Error loading users. Please refresh the page.</td></tr>';
+                }
+            }
         }
 
         async function loadAdmins(){
-            const snap = await db.collection('Admin Users').get();
-            const tbody = document.querySelector('#adminsTbl tbody');
-            tbody.innerHTML = '';
-            snap.forEach(doc=>{
-                const d = doc.data();
-                const tr = document.createElement('tr');
-                const role = d['role'] || 'admin';
-                tr.innerHTML = `<td>${esc(d['Admin Name'])}</td><td>${esc(d['Admin Email'])}</td><td>${esc(role)}</td><td><button class='btn btn-secondary' data-action='edit' data-id='${doc.id}'>Edit</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Remove</button></td>`;
-                tbody.appendChild(tr);
-            });
-            tbody.addEventListener('click', async (e)=>{
-                const btn = e.target.closest('button[data-action]'); if(!btn) return;
-                btn.classList.add('is-loading'); btn.disabled = true;
-                const id = btn.getAttribute('data-id');
-                try {
-                    if (btn.getAttribute('data-action')==='delete'){ await db.collection('Admin Users').doc(id).delete(); loadAdmins(); }
-                    if (btn.getAttribute('data-action')==='edit'){
-                        openAdminForm('Edit Admin', async (values)=>{ await db.collection('Admin Users').doc(id).set(values, { merge:true }); loadAdmins(); });
+            try {
+                const snap = await db.collection('Admin Users').get().catch(err => {
+                    console.error('Error fetching admins:', err);
+                    return { forEach: () => {} };
+                });
+                const tbody = document.querySelector('#adminsTbl tbody');
+                if (!tbody) {
+                    console.warn('Admins table tbody not found');
+                    return;
+                }
+                tbody.innerHTML = '';
+                
+                if (snap && snap.forEach) {
+                    snap.forEach(doc=>{
+                        try {
+                            const d = doc.data();
+                            const tr = document.createElement('tr');
+                            const role = d['role'] || 'admin';
+                            tr.innerHTML = `<td>${esc(d['Admin Name'] || '')}</td><td>${esc(d['Admin Email'] || '')}</td><td>${esc(role)}</td><td><button class='btn btn-secondary' data-action='edit' data-id='${doc.id}'>Edit</button> <button class='btn btn-danger' data-action='delete' data-id='${doc.id}'>Remove</button></td>`;
+                            tbody.appendChild(tr);
+                        } catch(err) {
+                            console.error('Error rendering admin row:', err);
+                        }
+                    });
+                }
+                
+                // Setup event listener for admins table (remove old listeners first)
+                const newTbody = tbody.cloneNode(true);
+                tbody.parentNode.replaceChild(newTbody, tbody);
+                newTbody.addEventListener('click', async (e)=>{
+                    const btn = e.target.closest('button[data-action]'); 
+                    if(!btn) return;
+                    btn.classList.add('is-loading'); 
+                    btn.disabled = true;
+                    const id = btn.getAttribute('data-id');
+                    const action = btn.getAttribute('data-action');
+                    try {
+                        if (action==='delete'){ 
+                            await db.collection('Admin Users').doc(id).delete(); 
+                            await loadAdmins(); 
+                        }
+                        if (action==='edit'){
+                            openAdminForm('Edit Admin', async (values)=>{ 
+                                try {
+                                    await db.collection('Admin Users').doc(id).set(values, { merge:true }); 
+                                    await loadAdmins(); 
+                                } catch(err) {
+                                    console.error('Error updating admin:', err);
+                                    alert('Error updating admin: ' + (err.message || 'Unknown error'));
+                                }
+                            });
+                        }
+                    } catch(err) {
+                        console.error('Error processing admin action:', err);
+                        alert('Error: ' + (err.message || 'Failed to process action'));
+                    } finally { 
+                        btn.classList.remove('is-loading'); 
+                        btn.disabled = false; 
                     }
-                } finally { btn.classList.remove('is-loading'); btn.disabled = false; }
-            });
-            document.getElementById('addAdminBtn').onclick = () => openAdminForm('Add Admin', async (values)=>{ await db.collection('Admin Users').add(values); loadAdmins(); });
-            const expBtn4 = document.getElementById('exportAdmins');
-            expBtn4.onclick = withLoading(expBtn4, () => {
-                const rows = [['name','email','role','id']];
-                snap.forEach(doc=>{ const d=doc.data(); rows.push([d['Admin Name']||'', d['Admin Email']||'', d['role']||'admin', doc.id]); });
-                downloadCSV('admins.csv', rows);
-            });
+                });
+                
+                const addAdminBtn = document.getElementById('addAdminBtn');
+                if (addAdminBtn) {
+                    addAdminBtn.onclick = () => openAdminForm('Add Admin', async (values)=>{ 
+                        try {
+                            await db.collection('Admin Users').add(values); 
+                            await loadAdmins(); 
+                        } catch(err) {
+                            console.error('Error adding admin:', err);
+                            alert('Error adding admin: ' + (err.message || 'Unknown error'));
+                        }
+                    });
+                }
+                
+                const expBtn4 = document.getElementById('exportAdmins');
+                if (expBtn4 && snap) {
+                    expBtn4.onclick = withLoading(expBtn4, () => {
+                        const rows = [['name','email','role','id']];
+                        snap.forEach(doc=>{ 
+                            try {
+                                const d=doc.data(); 
+                                rows.push([d['Admin Name']||'', d['Admin Email']||'', d['role']||'admin', doc.id]); 
+                            } catch(err) {
+                                console.error('Error exporting admin:', err);
+                            }
+                        }); 
+                        downloadCSV('admins.csv', rows);
+                    });
+                }
+            } catch(error) {
+                console.error('Error loading admins:', error);
+                const tbody = document.querySelector('#adminsTbl tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--danger);">Error loading admins. Please refresh the page.</td></tr>';
+                }
+            }
         }
 
         // Settings
+        const toolsList = [
+            { name: 'Image Resizer', url: 'tools/image-tools/image-resizer.html', category: 'Image Tools' },
+            { name: 'Image Format Converter', url: 'tools/image-tools/image-converter.html', category: 'Image Tools' },
+            { name: 'Background Remover', url: 'tools/image-tools/background-remover.html', category: 'Image Tools' },
+            { name: 'Image Compressor', url: 'tools/image-tools/image-compressor.html', category: 'Image Tools' },
+            { name: 'PDF to Word', url: 'tools/file-tools/pdf-to-word.html', category: 'File Tools' },
+            { name: 'Word to PDF', url: 'tools/file-tools/word-to-pdf.html', category: 'File Tools' },
+            { name: 'Image to PDF', url: 'tools/file-tools/image-to-pdf.html', category: 'File Tools' },
+            { name: 'ZIP Extractor', url: 'tools/file-tools/zip-extractor.html', category: 'File Tools' },
+            { name: 'CSV/Excel Analyzer', url: 'tools/analytics-tools/csv-excel-analyzer.html', category: 'Analytics Tools' },
+            { name: 'Keyword Density & SEO Analyzer', url: 'tools/analytics-tools/keyword-seo-analyzer.html', category: 'Analytics Tools' },
+            { name: 'Sentiment Analyzer', url: 'tools/analytics-tools/sentiment-analyzer.html', category: 'Analytics Tools' },
+            { name: 'Log File / IP Analyzer', url: 'tools/analytics-tools/log-ip-analyzer.html', category: 'Analytics Tools' },
+            { name: 'Readability & Word Frequency Analyzer', url: 'tools/analytics-tools/readability-analyzer.html', category: 'Analytics Tools' },
+            { name: 'YouTube Channel Analyzer', url: 'tools/analytics-tools/youtube-analyzer.html', category: 'Analytics Tools' },
+            { name: 'Scanner', url: 'tools/analytics-tools/scanner.html', category: 'Analytics Tools' },
+            { name: 'Meta Tag Generator', url: 'tools/seo&web-tools/meta-tag-generator.html', category: 'SEO & Web Tools' },
+            { name: 'Domain WHOIS Lookup', url: 'tools/seo&web-tools/domain-whois-lookup.html', category: 'SEO & Web Tools' },
+            { name: 'URL Shortener', url: 'tools/seo&web-tools/url-shortener.html', category: 'SEO & Web Tools' },
+            { name: 'QR Code Generator', url: 'tools/seo&web-tools/qr-code-generator.html', category: 'SEO & Web Tools' },
+            { name: 'Calculator', url: 'tools/math&utility-tools/calculator.html', category: 'Math & Utility Tools' },
+            { name: 'Unit Converter', url: 'tools/math&utility-tools/unit-converter.html', category: 'Math & Utility Tools' },
+            { name: 'Currency Converter', url: 'tools/math&utility-tools/currency-converter.html', category: 'Math & Utility Tools' },
+            { name: 'Age Calculator', url: 'tools/math&utility-tools/age-calculator.html', category: 'Math & Utility Tools' },
+            { name: 'Word Counter', url: 'tools/text-tools/word-counter.html', category: 'Text Tools' },
+            { name: 'Translator', url: 'tools/text-tools/lorem-ipsum.html', category: 'Text Tools' },
+            { name: 'Case Converter', url: 'tools/text-tools/case-converter.html', category: 'Text Tools' },
+            { name: 'Text Generator', url: 'tools/text-tools/text-encryption.html', category: 'Text Tools' },
+            { name: 'Base64 Converter', url: 'tools/developer-tools/base64-converter.html', category: 'Developer Tools' },
+            { name: 'JSON to XML Converter', url: 'tools/developer-tools/json-to-xml-converter.html', category: 'Developer Tools' },
+            { name: 'Hash Generator', url: 'tools/developer-tools/hash-generator.html', category: 'Developer Tools' },
+            { name: 'Json Formatter', url: 'tools/developer-tools/json-formatter.html', category: 'Developer Tools' },
+            { name: 'UUID Generator', url: 'tools/developer-tools/uuid-generator.html', category: 'Developer Tools' },
+            { name: 'Regex Tester', url: 'tools/developer-tools/regex-tester.html', category: 'Developer Tools' },
+            { name: 'Color Picker', url: 'tools/color-tools/color-picker.html', category: 'Color Tools' },
+            { name: 'Color Palette Generator', url: 'tools/color-tools/color-palettes.html', category: 'Color Tools' },
+            { name: 'Color Converter', url: 'tools/color-tools/color-combinator.html', category: 'Color Tools' },
+            { name: 'Contrast Checker', url: 'tools/color-tools/color-code-generator.html', category: 'Color Tools' }
+        ];
+        
+        let selectedToolsForLogin = {};
+        
         async function loadSettings(){
-            const doc = await db.collection('settings').doc('app').get();
-            const data = doc.exists ? doc.data() : {};
+            const [appDoc, toolsDoc] = await Promise.all([
+                db.collection('settings').doc('app').get(),
+                db.collection('settings').doc('tools').get()
+            ]);
+            const data = appDoc.exists ? appDoc.data() : {};
             document.getElementById('siteTitle').value = data.title || '';
             const loginToggle = document.getElementById('loginRequiredToggle');
             if (loginToggle) loginToggle.checked = !!data.loginRequired;
+            const mouseTrackingToggle = document.getElementById('mouseTrackingToggle');
+            if (mouseTrackingToggle) mouseTrackingToggle.checked = data.mouseTracking !== false; // default to true if not set
+            const colorfulBorderToggle = document.getElementById('colorfulBorderToggle');
+            if (colorfulBorderToggle) colorfulBorderToggle.checked = data.colorfulBorder !== false; // default to true if not set
+            
+            // Load tool login settings
+            if (toolsDoc.exists) {
+                selectedToolsForLogin = toolsDoc.data() || {};
+                console.log('Loaded tool settings from Firebase:', selectedToolsForLogin);
+            } else {
+                selectedToolsForLogin = {};
+                console.log('No tool settings found in Firebase, using empty object');
+            }
+            renderToolsDropdown();
+            updateSelectedCount();
+            
+            // Disable login required toggle if no tools selected
+            if (loginToggle) {
+                const selectedCount = Object.values(selectedToolsForLogin).filter(v => v === true).length;
+                if (selectedCount === 0 && loginToggle.checked) {
+                    loginToggle.checked = false;
+                }
+                loginToggle.disabled = selectedCount === 0;
+            }
         }
-        const saveSettingsBtn = document.getElementById('saveSettings');
-        saveSettingsBtn.addEventListener('click', withLoading(saveSettingsBtn, async ()=>{
-            const title = document.getElementById('siteTitle').value.trim();
-            const loginRequired = !!document.getElementById('loginRequiredToggle')?.checked;
-            try { await db.collection('settings').doc('app').set({ title, loginRequired }, { merge:true }); document.getElementById('settingsMsg').textContent='Saved!'; setTimeout(()=>document.getElementById('settingsMsg').textContent='',2000);} catch(_){ document.getElementById('settingsMsg').textContent='Failed to save'; }
-        }));
+        
+        function renderToolsDropdown() {
+            const container = document.getElementById('toolsDropdownList');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            // Separate selected and unselected tools
+            const selectedTools = [];
+            const unselectedTools = [];
+            
+            toolsList.forEach(tool => {
+                const toolId = tool.url.replace(/[\/\.]/g, '_');
+                const isSelected = selectedToolsForLogin[toolId] === true;
+                if (isSelected) {
+                    selectedTools.push(tool);
+                } else {
+                    unselectedTools.push(tool);
+                }
+            });
+            
+            // Group selected tools by category
+            const selectedByCategory = {};
+            selectedTools.forEach(tool => {
+                if (!selectedByCategory[tool.category]) {
+                    selectedByCategory[tool.category] = [];
+                }
+                selectedByCategory[tool.category].push(tool);
+            });
+            
+            // Group unselected tools by category
+            const unselectedByCategory = {};
+            unselectedTools.forEach(tool => {
+                if (!unselectedByCategory[tool.category]) {
+                    unselectedByCategory[tool.category] = [];
+                }
+                unselectedByCategory[tool.category].push(tool);
+            });
+            
+            // Render selected tools first
+            if (selectedTools.length > 0) {
+                const selectedHeader = document.createElement('div');
+                selectedHeader.style.cssText = 'padding:8px; background:#e8f5e9; border-bottom:2px solid var(--success); margin-bottom:8px; font-weight:600; color:var(--success);';
+                selectedHeader.innerHTML = `<i class="fas fa-check-circle"></i> Selected Tools (${selectedTools.length})`;
+                container.appendChild(selectedHeader);
+                
+                Object.keys(selectedByCategory).sort().forEach(category => {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.style.marginBottom = '12px';
+                    categoryDiv.innerHTML = `<div style="font-weight:600; color:var(--success); margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #c8e6c9;">${esc(category)}</div>`;
+                    
+                    selectedByCategory[category].forEach(tool => {
+                        const toolId = tool.url.replace(/[\/\.]/g, '_');
+                        const toolItem = document.createElement('label');
+                        toolItem.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 8px; cursor:pointer; border-radius:4px; transition:background .2s; user-select:none; background:#f1f8f4;';
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.setAttribute('data-tool-id', toolId);
+                        checkbox.checked = true;
+                        checkbox.style.cursor = 'pointer';
+                        checkbox.addEventListener('change', () => { 
+                            selectedToolsForLogin[toolId] = checkbox.checked;
+                            updateSelectAllState(); 
+                            updateSelectedCount(); 
+                        });
+                        const span = document.createElement('span');
+                        span.style.cssText = 'flex:1; font-size:14px; color:var(--success); font-weight:500;';
+                        span.textContent = esc(tool.name);
+                        toolItem.appendChild(checkbox);
+                        toolItem.appendChild(span);
+                        toolItem.addEventListener('mouseenter', () => { toolItem.style.background = '#e8f5e9'; });
+                        toolItem.addEventListener('mouseleave', () => { toolItem.style.background = '#f1f8f4'; });
+                        categoryDiv.appendChild(toolItem);
+                    });
+                    
+                    container.appendChild(categoryDiv);
+                });
+            }
+            
+            // Render unselected tools
+            if (unselectedTools.length > 0) {
+                if (selectedTools.length > 0) {
+                    const separator = document.createElement('div');
+                    separator.style.cssText = 'margin:12px 0; border-top:1px solid #e0e0e0;';
+                    container.appendChild(separator);
+                }
+                
+                Object.keys(unselectedByCategory).sort().forEach(category => {
+                    const categoryDiv = document.createElement('div');
+                    categoryDiv.style.marginBottom = '12px';
+                    categoryDiv.innerHTML = `<div style="font-weight:600; color:var(--primary); margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #e0e0e0;">${esc(category)}</div>`;
+                    
+                    unselectedByCategory[category].forEach(tool => {
+                        const toolId = tool.url.replace(/[\/\.]/g, '_');
+                        const toolItem = document.createElement('label');
+                        toolItem.style.cssText = 'display:flex; align-items:center; gap:8px; padding:6px 8px; cursor:pointer; border-radius:4px; transition:background .2s; user-select:none;';
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.setAttribute('data-tool-id', toolId);
+                        checkbox.style.cursor = 'pointer';
+                        checkbox.addEventListener('change', () => { 
+                            selectedToolsForLogin[toolId] = checkbox.checked;
+                            updateSelectAllState(); 
+                            updateSelectedCount(); 
+                        });
+                        const span = document.createElement('span');
+                        span.style.cssText = 'flex:1; font-size:14px;';
+                        span.textContent = esc(tool.name);
+                        toolItem.appendChild(checkbox);
+                        toolItem.appendChild(span);
+                        toolItem.addEventListener('mouseenter', () => { toolItem.style.background = '#f0f0f0'; });
+                        toolItem.addEventListener('mouseleave', () => { toolItem.style.background = 'transparent'; });
+                        categoryDiv.appendChild(toolItem);
+                    });
+                    
+                    container.appendChild(categoryDiv);
+                });
+            }
+            
+            updateSelectAllState();
+            updateSelectedCount();
+        }
+        
+        function updateSelectedCount() {
+            const container = document.getElementById('toolsDropdownList');
+            const btn = document.getElementById('toolsDropdownBtn');
+            if (!container || !btn) return;
+            
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const selectedCount = Array.from(checkboxes).filter(cb => cb.id !== 'selectAllTools' && cb.checked).length;
+            
+            // Update button text
+            const btnText = selectedCount > 0 
+                ? `<i class="fas fa-list"></i> Select Tools for Login (${selectedCount} selected)`
+                : `<i class="fas fa-list"></i> Select Tools for Login`;
+            btn.innerHTML = btnText + ` <i class="fas fa-chevron-down" style="font-size:12px;"></i>`;
+            
+            // Enable/disable login required toggle based on selection
+            const loginToggle = document.getElementById('loginRequiredToggle');
+            if (loginToggle) {
+                loginToggle.disabled = selectedCount === 0;
+                if (selectedCount === 0 && loginToggle.checked) {
+                    loginToggle.checked = false;
+                }
+            }
+        }
+        
+        function updateSelectAllState() {
+            const selectAllCheckbox = document.getElementById('selectAllTools');
+            const container = document.getElementById('toolsDropdownList');
+            if (!selectAllCheckbox || !container) return;
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+            const toolCheckboxes = Array.from(checkboxes).filter(cb => cb.id !== 'selectAllTools');
+            const allChecked = toolCheckboxes.length > 0 && toolCheckboxes.every(cb => cb.checked);
+            const someChecked = toolCheckboxes.some(cb => cb.checked);
+            selectAllCheckbox.checked = allChecked;
+            selectAllCheckbox.indeterminate = someChecked && !allChecked;
+            updateSelectedCount();
+        }
+        
+        // Dropdown toggle - setup after DOM is ready
+        function setupToolsDropdown() {
+            const toolsDropdownBtn = document.getElementById('toolsDropdownBtn');
+            const toolsDropdownMenu = document.getElementById('toolsDropdownMenu');
+            const selectAllTools = document.getElementById('selectAllTools');
+            
+            if (toolsDropdownBtn && toolsDropdownMenu) {
+                toolsDropdownBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isVisible = toolsDropdownMenu.style.display === 'block';
+                    toolsDropdownMenu.style.display = isVisible ? 'none' : 'block';
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!toolsDropdownMenu.contains(e.target) && !toolsDropdownBtn.contains(e.target)) {
+                        toolsDropdownMenu.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Select All functionality
+            if (selectAllTools) {
+                selectAllTools.addEventListener('change', (e) => {
+                    const container = document.getElementById('toolsDropdownList');
+                    if (!container) return;
+                    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(cb => {
+                        if (cb.id !== 'selectAllTools') {
+                            cb.checked = e.target.checked;
+                            const toolId = cb.getAttribute('data-tool-id');
+                            if (toolId) {
+                                selectedToolsForLogin[toolId] = e.target.checked;
+                            }
+                        }
+                    });
+                    updateSelectAllState();
+                    updateSelectedCount();
+                });
+            }
+        }
+        
 
         // Profile
         function setProfile(user){
-            document.getElementById('profEmail').value = user?.email || '';
-            document.getElementById('profName').value = user?.displayName || (user?.email? user.email.split('@')[0] : '');
+            const profEmail = document.getElementById('profEmail');
+            const profName = document.getElementById('profName');
+            if (profEmail) profEmail.value = user?.email || '';
+            if (profName) profName.value = user?.displayName || (user?.email? user.email.split('@')[0] : '');
         }
-        const saveProfileBtn = document.getElementById('saveProfile');
-        saveProfileBtn.addEventListener('click', withLoading(saveProfileBtn, async ()=>{
-            const user = auth.currentUser; if(!user) return;
-            const name = document.getElementById('profName').value.trim();
-            try{ await user.updateProfile({ displayName: name }); await db.collection('users').doc(user.uid).set({ name, email:user.email }, { merge:true }); document.getElementById('profileMsg').textContent='Profile updated'; setTimeout(()=>document.getElementById('profileMsg').textContent='',2000);}catch(_){ document.getElementById('profileMsg').textContent='Failed'; }
-        }));
-        const sendResetBtn = document.getElementById('sendReset');
-        sendResetBtn.addEventListener('click', withLoading(sendResetBtn, async ()=>{ const email = auth.currentUser?.email; if(email){ try{ await auth.sendPasswordResetEmail(email); alert('Password reset email sent'); }catch(_){ alert('Failed to send'); } } }));
-
-        // Logout - stay on admin page and show login card
-        document.getElementById('logoutBtn').addEventListener('click', async (e)=>{ 
-            const btn = e.currentTarget; if(btn){ btn.classList.add('is-loading'); btn.disabled = true; }
-            await auth.signOut();
-            showGuard('You have been signed out.');
-            const card = document.getElementById('loginCard'); if(card){ card.classList.remove('hidden'); }
-            document.getElementById('adminInfo').textContent = '';
-            hideAllPages();
-            if(btn){ btn.classList.remove('is-loading'); btn.disabled = false; }
-        });
 
         // Avoid auto-redirects; show an inline guard message instead
         const guardEl = document.getElementById('guardMsg');
-        function showGuard(msg){ if(!guardEl) return; guardEl.textContent = msg; guardEl.classList.remove('hidden'); }
+        function showGuard(msg){ 
+            if(!guardEl) return; 
+            guardEl.textContent = msg; 
+            guardEl.classList.remove('hidden'); 
+        }
         const loginCard = document.getElementById('loginCard');
-        const adminLoginBtn = document.getElementById('adminLoginBtn');
-        const adminForgotBtn = document.getElementById('adminForgotBtn');
-        const adminLoginEmail = document.getElementById('adminLoginEmail');
-        const adminLoginPassword = document.getElementById('adminLoginPassword');
-        const adminLoginMsg = document.getElementById('adminLoginMsg');
-        const noUserGuardTimer = setTimeout(()=>{ if(!auth.currentUser){ showGuard('Please sign in to access the admin panel.'); if(loginCard){ loginCard.classList.remove('hidden'); } hideAllPages(); } }, 1500);
+        const noUserGuardTimer = setTimeout(()=>{ 
+            if(!auth.currentUser){ 
+                isAuthenticated = false;
+                isAuthorized = false;
+                showGuard('Please sign in to access the admin panel.'); 
+                if(loginCard){ loginCard.classList.remove('hidden'); } 
+                hideAllPages(); 
+            } 
+        }, 1500);
 
-        function hideAllPages(){ Object.values(pages).forEach(p=>p.classList.add('hidden')); }
-        function showAllPages(){ showPage('dashboard'); }
+        function hideAllPages(){ 
+            isAuthenticated = false;
+            isAuthorized = false;
+            if (pages) {
+                Object.values(pages).forEach(p=>{ if(p) p.classList.add('hidden'); });
+            }
+        }
+        function showAllPages(){ 
+            if (!isAuthenticated || !isAuthorized) {
+                hideAllPages();
+                return;
+            }
+            showPage('dashboard'); 
+        }
+        
+        // Prevent direct page access via URL manipulation
+        window.addEventListener('hashchange', () => {
+            if (!isAuthenticated || !isAuthorized) {
+                hideAllPages();
+                showGuard('Please sign in to access the admin panel.');
+                if(loginCard){ loginCard.classList.remove('hidden'); }
+            }
+        });
 
         auth.onAuthStateChanged(async (user)=>{
-            if(!user){ hideAllPages(); return; } // keep waiting; inline guard handles the message
+            if(!user){ 
+                isAuthenticated = false;
+                isAuthorized = false;
+                hideAllPages(); 
+                return; 
+            }
             clearTimeout(noUserGuardTimer);
-            document.getElementById('adminInfo').textContent = user.email || '';
+            isAuthenticated = true;
+            const adminInfo = document.getElementById('adminInfo');
+            if (adminInfo) adminInfo.textContent = user.email || '';
             setProfile(user);
             // Hide login card and guard message when user is authenticated
             if(loginCard){ loginCard.classList.add('hidden'); }
             if(guardEl){ guardEl.classList.add('hidden'); }
             let allowed = false;
             try { allowed = await isAllowedAdmin(user); } catch(_) { allowed = false; }
-            if(!allowed){ showGuard('You are not authorized to access the admin panel. Please add your email to the "Admin Users" collection.'); hideAllPages(); return; }
-            const role = await getAdminRole(user);
-            // Apply role-based UI restrictions
-            const adminsSectionBtn = nav.querySelector('button[data-page="admins"]');
-            if (role !== 'admin') {
-                // Hide Admins section for manager and viewer
-                if (adminsSectionBtn) adminsSectionBtn.style.display = 'none';
-                // If current page is admins, switch to dashboard
-                if (!pages.dashboard.classList.contains('hidden') === false && !pages.admins.classList.contains('hidden')) { showPage('dashboard'); }
+            if(!allowed){ 
+                isAuthorized = false;
+                showGuard('You are not authorized to access the admin panel. Please add your email to the "Admin Users" collection.'); 
+                hideAllPages(); 
+                return; 
             }
+            isAuthorized = true;
+            const role = await getAdminRole(user);
+            
+            // Ensure pages are initialized
+            if (!initPages()) {
+                console.error('Pages not initialized, retrying...');
+                setTimeout(() => {
+                    if (initPages()) {
+                        continueAuthFlow(role);
+                    } else {
+                        console.error('Failed to initialize pages');
+                    }
+                }, 100);
+                return;
+            }
+            
+            continueAuthFlow(role);
+        });
+        
+        async function continueAuthFlow(role) {
+            // Apply role-based UI restrictions
+            if (nav) {
+                const adminsSectionBtn = nav.querySelector('button[data-page="admins"]');
+                if (role !== 'admin') {
+                    // Hide Admins section for manager and viewer
+                    if (adminsSectionBtn) adminsSectionBtn.style.display = 'none';
+                    // If current page is admins, switch to dashboard
+                    if (pages && pages.dashboard && pages.admins && !pages.dashboard.classList.contains('hidden') === false && !pages.admins.classList.contains('hidden')) { 
+                        showPage('dashboard'); 
+                    }
+                }
+            }
+            
             // For viewer: disable toolbar buttons and actions
             const isViewer = role === 'viewer';
+            
             // Show dashboard and load data
             showAllPages();
-            await Promise.all([loadDashboard(), loadFeedbacks(), loadUsers(), loadAdmins(), loadSettings()]);
+            
+            try {
+                console.log('Loading admin data...');
+                await Promise.all([
+                    loadDashboard().catch(err => { console.error('Dashboard load error:', err); return null; }),
+                    loadFeedbacks().catch(err => { console.error('Feedbacks load error:', err); return null; }),
+                    loadUsers().catch(err => { console.error('Users load error:', err); return null; }),
+                    loadAdmins().catch(err => { console.error('Admins load error:', err); return null; }),
+                    loadSettings().catch(err => { console.error('Settings load error:', err); return null; })
+                ]);
+                console.log('Admin data loaded successfully');
+            } catch(error) {
+                console.error('Error loading admin data:', error);
+            }
+            
             if (isViewer) {
                 // Disable buttons across sections
                 document.querySelectorAll('.toolbar .btn, [data-action]').forEach(el=>{ el.disabled = true; el.style.opacity = '0.6'; el.style.pointerEvents = 'none'; });
             }
-        });
+        }
 
-        if (adminLoginBtn) adminLoginBtn.addEventListener('click', withLoading(adminLoginBtn, async ()=>{
-            adminLoginMsg.textContent = '';
-            try{ 
-                await auth.signInWithEmailAndPassword(adminLoginEmail.value.trim(), adminLoginPassword.value); 
-                adminLoginMsg.textContent='Signed in!'; 
-                if(loginCard){ loginCard.classList.add('hidden'); }
-                if(guardEl){ guardEl.classList.add('hidden'); }
-            }catch(e){ 
-                adminLoginMsg.textContent='Login failed. Please check credentials.'; 
-            }
-        }));
-        if (adminForgotBtn) adminForgotBtn.addEventListener('click', withLoading(adminForgotBtn, async ()=>{ const email = adminLoginEmail.value.trim(); if(!email){ adminLoginMsg.textContent='Enter your email first.'; return;} try{ await auth.sendPasswordResetEmail(email); adminLoginMsg.textContent='Reset email sent.'; }catch(_){ adminLoginMsg.textContent='Could not send reset email.'; } }));
 
         // Modal helpers
         const modal = document.getElementById('modal');
         const modalBody = document.getElementById('modalBody');
         const modalTitle = document.getElementById('modalTitle');
         const modalClose = document.getElementById('modalClose');
-        function openModal(title, innerHtml){ modalTitle.textContent=title; modalBody.innerHTML = innerHtml; modal.style.display='flex'; }
-        function closeModal(){ modal.style.display='none'; modalBody.innerHTML=''; }
-        modalClose.addEventListener('click', closeModal);
+        function openModal(title, innerHtml){ 
+            if (modalTitle) modalTitle.textContent=title; 
+            if (modalBody) modalBody.innerHTML = innerHtml; 
+            if (modal) modal.style.display='flex'; 
+        }
+        function closeModal(){ 
+            if (modal) modal.style.display='none'; 
+            if (modalBody) modalBody.innerHTML=''; 
+        }
+        if (modalClose) modalClose.addEventListener('click', closeModal);
 
         function openAdminForm(title, onSubmit){
             openModal(title, `
