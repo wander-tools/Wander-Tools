@@ -243,10 +243,13 @@
             border: 2px solid #e5e7eb;
             font-size: 1rem;
             outline: none;
-            resize: none;
-            transition: border-color 0.2s, background-color 0.2s, color 0.2s, height 0.2s;
+            resize: vertical; /* Allow vertical resize */
+            transition: border-color 0.2s, background-color 0.2s, color 0.2s;
             overflow-y: auto; /* Allow scrollbar for long text */
-            max-height: 1200px; /* Maximum height before scrollbar appears */
+            max-height: 600px; /* Maximum height before scrollbar appears */
+            height: 160px; /* Fixed initial height */
+            white-space: pre-wrap; /* Preserve line breaks and wrap text */
+            word-wrap: break-word; /* Break long words if needed */
         }
 
         textarea:focus {
@@ -318,6 +321,27 @@
             50% {
                 transform: scale(1.08);
             }
+        }
+
+        .icon-btn.speaking {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            color: #f9fafb;
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+            animation: speakingPulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes speakingPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.3);
+            }
+        }
+
+        .dark-mode .icon-btn.speaking {
+            background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.6);
         }
 
         .actions-row {
@@ -537,10 +561,6 @@
 
                 <div class="actions-row">
                     <div class="left-actions">
-                        <button id="translateBtn" class="primary-btn">
-                            <i class="fas fa-play"></i>
-                            Translate
-                        </button>
                         <button id="clearBtn" class="secondary-btn">
                             <i class="fas fa-eraser"></i>
                             Clear
@@ -555,11 +575,6 @@
                     </div>
                 </div>
 
-                <div class="info-box">
-                    <strong>Tips:</strong> This translator uses advanced sentence-based translation for better quality. 
-                    Long texts are automatically split into sentences to maintain context and accuracy. 
-                    The tool supports auto-detection and uses multiple translation engines for optimal results.
-                </div>
             </div>
         </div>
 
@@ -574,11 +589,24 @@
         const body = document.body;
 
         function applyDarkModePreference() {
-            const saved = localStorage.getItem('translator-dark-mode');
+            // Check home page theme first, then translator-specific, then OS preference
+            const homeTheme = localStorage.getItem('theme');
+            const translatorTheme = localStorage.getItem('translator-dark-mode');
             const prefersDark = window.matchMedia &&
                 window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-            if (saved === 'dark' || (!saved && prefersDark)) {
+            let shouldBeDark = false;
+            
+            if (homeTheme === 'dark' || homeTheme === 'light') {
+                // Home page theme takes priority
+                shouldBeDark = homeTheme === 'dark';
+            } else if (translatorTheme === 'dark' || translatorTheme === 'light') {
+                shouldBeDark = translatorTheme === 'dark';
+            } else {
+                shouldBeDark = prefersDark;
+            }
+
+            if (shouldBeDark) {
                 body.classList.add('dark-mode');
                 darkModeToggle.innerHTML = '<i class="fas fa-sun"></i>';
             } else {
@@ -591,6 +619,8 @@
 
         darkModeToggle.addEventListener('click', () => {
             const isDark = body.classList.toggle('dark-mode');
+            // Update both theme storages to keep them in sync
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
             localStorage.setItem('translator-dark-mode', isDark ? 'dark' : 'light');
             darkModeToggle.innerHTML = isDark
                 ? '<i class="fas fa-sun"></i>'
@@ -603,7 +633,6 @@
         const swapLanguages = document.getElementById('swapLanguages');
         const inputText = document.getElementById('inputText');
         const outputText = document.getElementById('outputText');
-        const translateBtn = document.getElementById('translateBtn');
         const clearBtn = document.getElementById('clearBtn');
         const copyOutputBtn = document.getElementById('copyOutputBtn');
         const statusText = document.getElementById('statusText');
@@ -613,19 +642,14 @@
 
         let autoTranslateTimer = null;
         let isRecording = false;
+        let currentSpeakingButton = null; // Track which button is currently speaking
 
         function autoResizeTextArea(el) {
             if (!el) return;
-            el.style.height = 'auto';
-            // Increased max height for very long texts, but ensure scrollbar appears
-            const maxHeight = 1200; // allow very large texts
-            const newHeight = Math.min(el.scrollHeight + 4, maxHeight);
-            el.style.height = newHeight + 'px';
-            // Ensure scrollbar appears if content exceeds maxHeight
-            if (el.scrollHeight > maxHeight) {
+            // Don't auto-resize, just ensure scrollbar works
+            // Let user resize manually with resize: vertical
+            if (el.scrollHeight > el.clientHeight) {
                 el.style.overflowY = 'auto';
-            } else {
-                el.style.overflowY = 'hidden';
             }
         }
 
@@ -658,29 +682,56 @@
         autoResizeTextArea(inputText);
         autoResizeTextArea(outputText);
 
-        sourceLang.addEventListener('change', saveLanguagePreferences);
-        targetLang.addEventListener('change', saveLanguagePreferences);
+        // Auto-translate when language changes if there's text in input
+        function handleLanguageChange() {
+            saveLanguagePreferences();
+            const text = inputText.value.trim();
+            if (text && text.length > 0) {
+                // Clear any pending auto-translate timer
+                if (autoTranslateTimer) {
+                    clearTimeout(autoTranslateTimer);
+                }
+                // Auto-translate immediately after language change
+                setTimeout(() => {
+                    translate();
+                }, 100);
+            }
+        }
 
-        inputText.addEventListener('input', () => autoResizeTextArea(inputText));
-        outputText.addEventListener('input', () => autoResizeTextArea(outputText));
+        sourceLang.addEventListener('change', handleLanguageChange);
+        targetLang.addEventListener('change', handleLanguageChange);
 
         // Helpers for language codes used in speech APIs
+        // Expanded with more variants for better voice selection
         const voiceLangMap = {
-            en: 'en-US',
-            bn: 'bn-BD',
-            hi: 'hi-IN',
-            ur: 'ur-PK',
-            ar: 'ar-SA',
-            es: 'es-ES',
-            fr: 'fr-FR',
-            de: 'de-DE',
-            ru: 'ru-RU',
-            zh: 'zh-CN'
+            en: ['en-US', 'en-GB', 'en-AU', 'en-CA', 'en'],
+            bn: ['bn-BD', 'bn-IN', 'bn'],
+            hi: ['hi-IN', 'hi'],
+            ur: ['ur-PK', 'ur-IN', 'ur'],
+            ar: ['ar-SA', 'ar-EG', 'ar-AE', 'ar'],
+            es: ['es-ES', 'es-MX', 'es-AR', 'es-CO', 'es'],
+            fr: ['fr-FR', 'fr-CA', 'fr-BE', 'fr'],
+            de: ['de-DE', 'de-AT', 'de-CH', 'de'],
+            ru: ['ru-RU', 'ru'],
+            zh: ['zh-CN', 'zh-TW', 'zh-HK', 'zh']
         };
 
         function getVoiceLang(code, fallback) {
             if (!code || code === 'auto') return fallback || 'en-US';
-            return voiceLangMap[code] || fallback || 'en-US';
+            const variants = voiceLangMap[code];
+            if (variants && variants.length > 0) {
+                return variants[0]; // Return primary variant
+            }
+            return fallback || 'en-US';
+        }
+        
+        function getVoiceLangVariants(code) {
+            if (!code || code === 'auto') return ['en-US', 'en-GB', 'en'];
+            const variants = voiceLangMap[code];
+            if (variants && variants.length > 0) {
+                return variants;
+            }
+            return ['en-US', 'en'];
         }
 
         function setStatus(message, isError = false) {
@@ -717,12 +768,27 @@
             const outText = outputText.value;
             inputText.value = outText || inText;
             outputText.value = '';
+            
+            // Auto-translate after swap if there's text
+            const text = inputText.value.trim();
+            if (text && text.length > 0) {
+                // Clear any pending auto-translate timer
+                if (autoTranslateTimer) {
+                    clearTimeout(autoTranslateTimer);
+                }
+                // Auto-translate immediately after swap
+                setTimeout(() => {
+                    translate();
+                }, 100);
+            }
         });
 
         async function translate() {
             const text = inputText.value.trim();
-            if (!text) {
-                setStatus('Please enter some text to translate.', true);
+            // Don't translate if empty or only whitespace
+            if (!text || text.length === 0 || /^\s*$/.test(text)) {
+                outputText.value = '';
+                setStatus('Ready to translate.');
                 return;
             }
 
@@ -749,8 +815,6 @@
             }
 
             setStatus('Translating...');
-            translateBtn.disabled = true;
-            translateBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Translating...';
             outputText.value = '';
             outputText.placeholder = 'Translating...';
 
@@ -764,10 +828,44 @@
                 
                 // Convert English numbers to Bengali if target language is Bengali
                 let finalTranslation = result.translated;
+                
+                // Post-process translation for better quality (removes error messages)
+                finalTranslation = postProcessTranslation(finalTranslation, text);
+                
+                // Final cleanup - ensure no error messages remain
+                const finalErrorPatterns = [
+                    /NO QUERY SPECIFIED[^\n]*/gi,
+                    /EXAMPLE REQUEST[^\n]*/gi,
+                    /GET\?[^\n]*/gi,
+                    /Q=[^\n]*/gi,
+                    /LANGPAIR=[^\n]*/gi
+                ];
+                
+                finalErrorPatterns.forEach(pattern => {
+                    finalTranslation = finalTranslation.replace(pattern, '');
+                });
+                
+                // Remove any remaining error message lines
+                const finalLines = finalTranslation.split('\n');
+                finalTranslation = finalLines.filter(line => {
+                    const trimmed = line.trim().toUpperCase();
+                    return !(trimmed.includes('GET?') || 
+                            trimmed.includes('EXAMPLE REQUEST') ||
+                            trimmed.includes('NO QUERY') ||
+                            trimmed.startsWith('Q=') ||
+                            trimmed.startsWith('LANGPAIR='));
+                }).join('\n').trim();
+                
                 if (targetLang.value === 'bn') {
                     finalTranslation = convertToBengaliNumbers(finalTranslation);
                 }
                 
+                // Final validation - ensure we have meaningful translation
+                if (!finalTranslation || finalTranslation.trim().length === 0) {
+                    throw new Error('Translation resulted in empty output after filtering');
+                }
+                
+                // Preserve line breaks in output
                 outputText.value = finalTranslation;
                 autoResizeTextArea(outputText);
 
@@ -788,24 +886,31 @@
                 outputText.value = '';
                 const errorMsg = error.message || 'Translation failed';
                 
-                // More user-friendly error messages
-                if (errorMsg.includes('timeout')) {
+                // More user-friendly and detailed error messages
+                if (errorMsg.includes('timeout') || errorMsg.includes('AbortError')) {
                     setStatus('Translation timeout. Please check your internet connection and try again.', true);
                 } else if (errorMsg.includes('unavailable') || errorMsg.includes('All translation services')) {
                     setStatus('Translation services are temporarily unavailable. Please check your internet connection and try again in a moment.', true);
-                } else if (errorMsg.includes('Network') || errorMsg.includes('Failed to fetch')) {
+                } else if (errorMsg.includes('Network') || errorMsg.includes('Failed to fetch') || errorMsg.includes('fetch')) {
                     setStatus('Network error. Please check your internet connection and try again.', true);
+                } else if (errorMsg.includes('CORS') || errorMsg.includes('cross-origin')) {
+                    setStatus('Translation service access issue. Please try again or refresh the page.', true);
+                } else if (errorMsg.includes('too long') || errorMsg.includes('length limit')) {
+                    setStatus('Text is too long. Please split it into smaller parts.', true);
+                } else if (errorMsg.includes('Invalid translation') || errorMsg.includes('unchanged')) {
+                    setStatus('Translation quality issue. Please try again or use a different language pair.', true);
+                } else if (errorMsg.includes('same')) {
+                    setStatus('Source and target languages are the same. Please select different languages.', true);
                 } else {
-                    setStatus('Translation failed. Please try again or check your internet connection.', true);
+                    setStatus('Translation failed: ' + errorMsg + '. Please try again or check your internet connection.', true);
                 }
+                
+                // Log error for debugging but don't show technical details to user
+                console.error('Full error details:', error);
             } finally {
-                translateBtn.disabled = false;
-                translateBtn.innerHTML = '<i class="fas fa-play"></i> Translate';
                 outputText.placeholder = 'Translation will appear here';
             }
         }
-
-        translateBtn.addEventListener('click', translate);
 
         inputText.addEventListener('keydown', (e) => {
             if (e.ctrlKey && e.key === 'Enter') {
@@ -820,7 +925,8 @@
             }
 
             const text = inputText.value.trim();
-            if (!text) {
+            // Don't translate if empty or only whitespace
+            if (!text || text.length === 0 || /^\s*$/.test(text)) {
                 outputText.value = '';
                 setStatus('Ready to translate.');
                 return;
@@ -828,21 +934,20 @@
 
             autoResizeTextArea(inputText);
 
-            // For very long text, avoid auto-translate to keep things fast and under control
-            if (text.length > 1200) {
-                setStatus('Press Translate to translate long text.', false);
-                return;
-            }
-
+            // Auto-translate with debounce - optimized delays for faster translation
+            const delay = text.length > 2000 ? 800 : text.length > 1000 ? 500 : 400;
             autoTranslateTimer = setTimeout(() => {
                 translate();
-            }, 600); // wait 600ms after user stops typing
+            }, delay); // wait after user stops typing
         });
 
         clearBtn.addEventListener('click', () => {
             inputText.value = '';
             outputText.value = '';
             setStatus('Ready to translate.');
+            // Reset textarea height to default
+            inputText.style.height = '160px';
+            outputText.style.height = '160px';
             inputText.focus();
         });
 
@@ -867,45 +972,186 @@
         });
 
         // Split text into sentence-based chunks for better translation quality
+        // Improved chunking that preserves context, sentence boundaries, and line breaks
+        // Optimized for meaningful translation by preserving complete sentences
         function splitIntoSentenceChunks(text, maxLength) {
-            if (text.length <= maxLength) return [text];
+            if (text.length <= maxLength) return [{ text: text, hasLineBreakAfter: false }];
             
             const chunks = [];
-            const sentences = text.split(/([.!?\n]+)/);
-            let currentChunk = '';
+            // First, split by paragraphs (double line breaks) to preserve structure
+            const paragraphs = text.split(/\n\s*\n/);
             
-            for (let i = 0; i < sentences.length; i++) {
-                const sentence = sentences[i];
-                if (currentChunk.length + sentence.length <= maxLength) {
-                    currentChunk += sentence;
-                } else {
-                    if (currentChunk.trim()) {
-                        chunks.push(currentChunk.trim());
-                    }
-                    // If single sentence is too long, split by words
-                    if (sentence.length > maxLength) {
-                        const words = sentence.split(/(\s+)/);
-                        let wordChunk = '';
-                        for (const word of words) {
-                            if (wordChunk.length + word.length <= maxLength) {
-                                wordChunk += word;
-                            } else {
-                                if (wordChunk.trim()) chunks.push(wordChunk.trim());
-                                wordChunk = word;
-                            }
+            for (let paraIdx = 0; paraIdx < paragraphs.length; paraIdx++) {
+                const paragraph = paragraphs[paraIdx];
+                const isLastPara = paraIdx === paragraphs.length - 1;
+                
+                // Split paragraph by single line breaks
+                const lines = paragraph.split(/\n/);
+                let currentChunk = '';
+                
+                for (let lineIdx = 0; lineIdx < lines.length; lineIdx++) {
+                    const line = lines[lineIdx];
+                    const isLastLine = lineIdx === lines.length - 1;
+                    const isLastLineOfPara = isLastLine && isLastPara;
+                    
+                    // If line is empty, preserve it
+                    if (!line.trim()) {
+                        if (currentChunk) {
+                            chunks.push({ text: currentChunk, hasLineBreakAfter: true });
+                            currentChunk = '';
                         }
-                        if (wordChunk.trim()) currentChunk = wordChunk.trim();
-                    } else {
-                        currentChunk = sentence;
+                        continue;
                     }
+                    
+                    // Split line by complete sentences for better context
+                    // Better sentence detection - includes common endings
+                    const sentenceRegex = /([.!?]+\s+|[\n\r]+)/g;
+                    const sentences = [];
+                    let lastIdx = 0;
+                    let match;
+                    
+                    while ((match = sentenceRegex.exec(line)) !== null) {
+                        const sentence = line.substring(lastIdx, match.index + match[0].length);
+                        if (sentence.trim()) {
+                            sentences.push(sentence.trim());
+                        }
+                        lastIdx = match.index + match[0].length;
+                    }
+                    
+                    // Add remaining text as a sentence if any
+                    if (lastIdx < line.length) {
+                        const remaining = line.substring(lastIdx).trim();
+                        if (remaining) {
+                            sentences.push(remaining);
+                        }
+                    }
+                    
+                    // If no sentences found, treat whole line as one
+                    if (sentences.length === 0) {
+                        sentences.push(line.trim());
+                    }
+                    
+                    // Group sentences into chunks, preserving complete sentences
+                    for (const sentence of sentences) {
+                        const sentenceWithSpace = sentence + (sentence.match(/[.!?]$/) ? ' ' : ' ');
+                        const wouldExceed = currentChunk && (currentChunk.length + sentenceWithSpace.length > maxLength);
+                        
+                        if (wouldExceed && currentChunk) {
+                            // Save current chunk before adding new sentence
+                            chunks.push({ text: currentChunk.trim(), hasLineBreakAfter: false });
+                            currentChunk = sentence;
+                        } else {
+                            // Add sentence to current chunk
+                            currentChunk += (currentChunk ? ' ' : '') + sentence;
+                        }
+                        
+                        // If single sentence is too long, split by clauses
+                        if (currentChunk.length > maxLength) {
+                            const clauses = currentChunk.split(/([,;:]\s+)/);
+                            let clauseChunk = '';
+                            
+                            for (const clause of clauses) {
+                                if (clauseChunk.length + clause.length > maxLength && clauseChunk) {
+                                    chunks.push({ text: clauseChunk.trim(), hasLineBreakAfter: false });
+                                    clauseChunk = clause;
+                                } else {
+                                    clauseChunk += clause;
+                                }
+                            }
+                            currentChunk = clauseChunk;
+                        }
+                    }
+                    
+                    // Add line break after line if not last
+                    if (!isLastLine && currentChunk) {
+                        chunks.push({ text: currentChunk.trim(), hasLineBreakAfter: true });
+                        currentChunk = '';
+                    }
+                }
+                
+                // Add paragraph break (double line break) if not last paragraph
+                if (currentChunk) {
+                    chunks.push({ text: currentChunk.trim(), hasLineBreakAfter: !isLastPara });
+                } else if (!isLastPara && chunks.length > 0) {
+                    // Add empty chunk for paragraph break
+                    chunks.push({ text: '', hasLineBreakAfter: true });
                 }
             }
             
-            if (currentChunk.trim()) {
-                chunks.push(currentChunk.trim());
-            }
+            return chunks.length > 0 ? chunks : [{ text: text, hasLineBreakAfter: false }];
+        }
+        
+        // Post-process translation to improve quality
+        function postProcessTranslation(translated, original) {
+            if (!translated) return translated;
             
-            return chunks.length > 0 ? chunks : [text];
+            // Filter out API error messages and debug text FIRST
+            const errorPatterns = [
+                /NO QUERY SPECIFIED[^\n]*/gi,
+                /EXAMPLE REQUEST[^\n]*/gi,
+                /GET\?[^\n]*/gi,
+                /Q=[^\n]*/gi,
+                /LANGPAIR=[^\n]*/gi,
+                /API[^\n]*ERROR[^\n]*/gi,
+                /INVALID[^\n]*REQUEST[^\n]*/gi,
+                /QUERY[^\n]*SPECIFIED[^\n]*/gi
+            ];
+            
+            errorPatterns.forEach(pattern => {
+                translated = translated.replace(pattern, '');
+            });
+            
+            // Remove lines that look like API debug messages
+            const lines = translated.split('\n');
+            const filteredLines = lines.filter(line => {
+                const trimmed = line.trim().toUpperCase();
+                // Filter out lines that look like API requests or errors
+                if (trimmed.includes('GET?') || 
+                    trimmed.includes('EXAMPLE REQUEST') ||
+                    trimmed.includes('NO QUERY') ||
+                    trimmed.startsWith('Q=') ||
+                    trimmed.startsWith('LANGPAIR=') ||
+                    (trimmed.includes('REQUEST') && trimmed.includes('GET'))) {
+                    return false;
+                }
+                return true;
+            });
+            translated = filteredLines.join('\n');
+            
+            // First, normalize line breaks (preserve them)
+            translated = translated.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+            
+            // Remove multiple consecutive spaces within lines (but preserve line breaks)
+            // Split by line breaks, process each line, then rejoin
+            const processedLines = translated.split('\n').map(line => {
+                // Remove multiple spaces within the line
+                return line.replace(/[ \t]+/g, ' ').trim();
+            });
+            translated = processedLines.join('\n');
+            
+            // Remove empty lines that were created by filtering (but preserve intentional line breaks)
+            // Only remove completely empty lines, keep lines with just spaces that might be intentional
+            translated = translated.split('\n').filter((line, index, arr) => {
+                // Keep line if it has content, or if it's an intentional paragraph break
+                if (line.trim()) return true;
+                // Keep if it's between two non-empty lines (paragraph break)
+                if (index > 0 && index < arr.length - 1 && arr[index - 1].trim() && arr[index + 1].trim()) {
+                    return true;
+                }
+                return false;
+            }).join('\n');
+            
+            // Remove excessive consecutive line breaks (max 2 consecutive)
+            translated = translated.replace(/\n{3,}/g, '\n\n');
+            
+            // Fix common issues
+            // Remove duplicate punctuation (keep only one)
+            translated = translated.replace(/[!?.]{2,}/g, match => match[0]);
+            
+            // Ensure proper spacing after punctuation (but not before line breaks)
+            translated = translated.replace(/([.!?])([^\s\n])/g, '$1 $2');
+            
+            return translated;
         }
 
         // Language code mapping for different APIs
@@ -923,7 +1169,8 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                // Reduced timeout for faster failure and fallback (was 10000ms, now 8000ms)
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
                 
                 const response = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -935,15 +1182,42 @@
                 const data = await response.json();
                 let translated = data?.responseData?.translatedText || '';
 
+                // Filter out API error messages and debug text immediately
+                const errorPatterns = [
+                    /NO QUERY SPECIFIED[^\n]*/gi,
+                    /EXAMPLE REQUEST[^\n]*/gi,
+                    /GET\?[^\n]*/gi,
+                    /Q=[^\n]*/gi,
+                    /LANGPAIR=[^\n]*/gi
+                ];
+                
+                errorPatterns.forEach(pattern => {
+                    translated = translated.replace(pattern, '');
+                });
+                
+                // Remove lines that are API debug messages
+                if (translated) {
+                    const lines = translated.split('\n');
+                    translated = lines.filter(line => {
+                        const trimmed = line.trim().toUpperCase();
+                        return !(trimmed.includes('GET?') || 
+                                trimmed.includes('EXAMPLE REQUEST') ||
+                                trimmed.includes('NO QUERY') ||
+                                trimmed.startsWith('Q=') ||
+                                trimmed.startsWith('LANGPAIR='));
+                    }).join('\n').trim();
+                }
+
                 // Handle various error messages from MyMemory API
                 const errorMessages = [
                     'PLEASE SELECT TWO DISTINCT LANGUAGES',
                     'QUERY LENGTH LIMIT EXCEEDED',
-                    'MAX ALLOWED QUERY'
+                    'MAX ALLOWED QUERY',
+                    'NO QUERY SPECIFIED'
                 ];
                 
                 const hasError = errorMessages.some(msg => translated.toUpperCase().includes(msg));
-                if (!translated || hasError) {
+                if (!translated || hasError || translated.trim().length === 0) {
                     if (translated.toUpperCase().includes('QUERY LENGTH LIMIT')) {
                         throw new Error('Text too long. Splitting into smaller chunks...');
                     }
@@ -953,8 +1227,24 @@
                 // Validate translation quality - if translation is same as input (for non-auto), might be wrong
                 // But skip this check for numbers/special characters
                 const isOnlyNumbersOrSpecial = /^[\d\s\-+().,;:!@#$%^&*_=]+$/.test(textChunk.trim());
+                
+                // Check if translation contains error messages
+                const upperTranslated = translated.toUpperCase();
+                if (upperTranslated.includes('NO QUERY') || 
+                    upperTranslated.includes('EXAMPLE REQUEST') ||
+                    upperTranslated.includes('GET?') ||
+                    upperTranslated.includes('LANGPAIR=')) {
+                    throw new Error('Translation contains API error messages');
+                }
+                
                 if (!isOnlyNumbersOrSpecial && from !== 'auto' && translated.trim().toLowerCase() === textChunk.trim().toLowerCase()) {
                     throw new Error('Translation appears unchanged');
+                }
+                
+                // Additional validation: check if translation is too short compared to original (might be incomplete)
+                if (translated.trim().length < textChunk.trim().length * 0.3 && textChunk.trim().length > 20) {
+                    // Translation is suspiciously short, but don't fail - might be valid for some languages
+                    console.warn('Translation seems shorter than expected');
                 }
 
                 let detected = null;
@@ -978,61 +1268,111 @@
             }
         }
 
-        // Fallback 1: Try MyMemory with retry
+        // Fallback 1: Try MyMemory with retry (increased retries for better quality)
         async function translateChunkMyMemoryRetry(textChunk, from, to, retries = 2) {
+            // Increased retries back to 2 for better translation quality
             for (let i = 0; i <= retries; i++) {
                 try {
                     return await translateChunkMyMemory(textChunk, from, to);
                 } catch (error) {
                     if (i === retries) throw error;
-                    // Wait a bit before retry
-                    await new Promise(resolve => setTimeout(resolve, 500 * (i + 1)));
+                    // Wait before retry
+                    await new Promise(resolve => setTimeout(resolve, 300 * (i + 1)));
                 }
             }
         }
 
-        // Fallback 2: Google Translate (unofficial, via proxy)
+        // Google Translate (unofficial, via proxy) - PRIMARY API for better quality
         async function translateChunkGoogle(textChunk, from, to) {
             try {
-                // Using a public Google Translate proxy
+                // Using Google Translate API - provides most meaningful translations
                 const sourceLang = from === 'auto' ? 'auto' : from;
                 const targetLang = to;
                 
-                const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(textChunk)}`;
+                // Use multiple Google Translate endpoints for better reliability
+                const endpoints = [
+                    `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=`,
+                    `https://translate.google.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=`
+                ];
                 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 12000);
-                
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                if (!response.ok) {
-                    throw new Error('Google Translate API error');
-                }
+                let lastError = null;
+                for (const baseUrl of endpoints) {
+                    try {
+                        const url = baseUrl + encodeURIComponent(textChunk);
+                        const controller = new AbortController();
+                        // Increased timeout for Google Translate (better quality worth waiting for)
+                        const timeoutId = setTimeout(() => controller.abort(), 12000);
+                        
+                        const response = await fetch(url, { signal: controller.signal });
+                        clearTimeout(timeoutId);
+                        
+                        if (!response.ok) {
+                            throw new Error('Google Translate API error');
+                        }
 
-                const data = await response.json();
-                let translated = '';
-                
-                if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
-                    translated = data[0].map(item => item[0]).join('');
-                }
+                        const data = await response.json();
+                        let translated = '';
+                        
+                        if (Array.isArray(data) && data[0] && Array.isArray(data[0])) {
+                            translated = data[0].map(item => item[0] || '').join('');
+                        }
 
-                if (!translated || translated.trim() === '') {
-                    throw new Error('No translation from Google Translate');
-                }
+                        // Filter out API error messages
+                        const errorPatterns = [
+                            /NO QUERY SPECIFIED[^\n]*/gi,
+                            /EXAMPLE REQUEST[^\n]*/gi,
+                            /GET\?[^\n]*/gi,
+                            /Q=[^\n]*/gi,
+                            /LANGPAIR=[^\n]*/gi
+                        ];
+                        
+                        errorPatterns.forEach(pattern => {
+                            translated = translated.replace(pattern, '');
+                        });
+                        
+                        // Remove lines that are API debug messages
+                        if (translated) {
+                            const lines = translated.split('\n');
+                            translated = lines.filter(line => {
+                                const trimmed = line.trim().toUpperCase();
+                                return !(trimmed.includes('GET?') || 
+                                        trimmed.includes('EXAMPLE REQUEST') ||
+                                        trimmed.includes('NO QUERY') ||
+                                        trimmed.startsWith('Q=') ||
+                                        trimmed.startsWith('LANGPAIR='));
+                            }).join('\n').trim();
+                        }
 
-                let detected = null;
-                if (from === 'auto' && data[2]) {
-                    detected = data[2].toLowerCase();
-                    if (detected.includes('-')) {
-                        detected = detected.split('-')[0];
+                        if (!translated || translated.trim() === '') {
+                            throw new Error('No translation from Google Translate');
+                        }
+
+                        let detected = null;
+                        if (from === 'auto' && data[2]) {
+                            detected = data[2].toLowerCase();
+                            if (detected.includes('-')) {
+                                detected = detected.split('-')[0];
+                            }
+                            if (!langCodeMap[detected]) {
+                                detected = null;
+                            }
+                        }
+
+                        return { translated, detected, source: 'google' };
+                    } catch (err) {
+                        lastError = err;
+                        continue; // Try next endpoint
                     }
-                    if (!langCodeMap[detected]) {
-                        detected = null;
-                    }
                 }
-
-                return { translated, detected, source: 'google' };
+                
+                // If all endpoints failed, throw the last error
+                if (lastError) {
+                    if (lastError.name === 'AbortError') {
+                        throw new Error('Translation timeout');
+                    }
+                    throw lastError;
+                }
+                throw new Error('Google Translate failed');
             } catch (error) {
                 if (error.name === 'AbortError') {
                     throw new Error('Translation timeout');
@@ -1057,7 +1397,8 @@
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                // Reduced timeout for faster failure and fallback (was 15000ms, now 10000ms)
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
                 
                 // Try multiple LibreTranslate instances
                 const instances = [
@@ -1089,9 +1430,35 @@
                         }
 
                         const data = await response.json();
-                        const translated = data?.translatedText || '';
+                        let translated = data?.translatedText || '';
 
-                        if (!translated) {
+                        // Filter out API error messages
+                        const errorPatterns = [
+                            /NO QUERY SPECIFIED[^\n]*/gi,
+                            /EXAMPLE REQUEST[^\n]*/gi,
+                            /GET\?[^\n]*/gi,
+                            /Q=[^\n]*/gi,
+                            /LANGPAIR=[^\n]*/gi
+                        ];
+                        
+                        errorPatterns.forEach(pattern => {
+                            translated = translated.replace(pattern, '');
+                        });
+                        
+                        // Remove lines that are API debug messages
+                        if (translated) {
+                            const lines = translated.split('\n');
+                            translated = lines.filter(line => {
+                                const trimmed = line.trim().toUpperCase();
+                                return !(trimmed.includes('GET?') || 
+                                        trimmed.includes('EXAMPLE REQUEST') ||
+                                        trimmed.includes('NO QUERY') ||
+                                        trimmed.startsWith('Q=') ||
+                                        trimmed.startsWith('LANGPAIR='));
+                            }).join('\n').trim();
+                        }
+
+                        if (!translated || translated.trim() === '') {
                             throw new Error('No translation from LibreTranslate');
                         }
 
@@ -1117,28 +1484,40 @@
         }
 
         // Main translation function with multiple fallbacks
+        // Prioritize Google Translate for better quality (as user requested)
         async function translateChunk(textChunk, from, to) {
             const errors = [];
             
-            // Strategy 1: Try MyMemory with retry
+            // Strategy 1: ALWAYS try Google Translate FIRST (best quality, as per user request)
+            // Google Translate generally provides more meaningful translations
             try {
-                return await translateChunkMyMemoryRetry(textChunk, from, to, 2);
-            } catch (error) {
-                errors.push(`MyMemory: ${error.message}`);
-                console.log('MyMemory failed, trying Google Translate...', error);
-            }
-            
-            // Strategy 2: Try Google Translate (unofficial)
-            try {
-                return await translateChunkGoogle(textChunk, from, to);
+                const result = await translateChunkGoogle(textChunk, from, to);
+                // Validate the result is meaningful
+                if (result && result.translated && result.translated.trim().length > 0) {
+                    return result;
+                }
             } catch (error) {
                 errors.push(`Google: ${error.message}`);
-                console.log('Google Translate failed, trying LibreTranslate...', error);
+                console.log('Google Translate failed, trying MyMemory...', error);
             }
             
-            // Strategy 3: Try LibreTranslate (multiple instances)
+            // Strategy 2: Try MyMemory with retry (good fallback)
             try {
-                return await translateChunkLibreTranslate(textChunk, from, to);
+                const result = await translateChunkMyMemoryRetry(textChunk, from, to, 2);
+                if (result && result.translated && result.translated.trim().length > 0) {
+                    return result;
+                }
+            } catch (error) {
+                errors.push(`MyMemory: ${error.message}`);
+                console.log('MyMemory failed, trying LibreTranslate...', error);
+            }
+            
+            // Strategy 3: Try LibreTranslate (multiple instances) as fallback
+            try {
+                const result = await translateChunkLibreTranslate(textChunk, from, to);
+                if (result && result.translated && result.translated.trim().length > 0) {
+                    return result;
+                }
             } catch (error) {
                 errors.push(`LibreTranslate: ${error.message}`);
                 console.error('All translation APIs failed:', errors);
@@ -1150,33 +1529,77 @@
 
         async function translateLongText(text, from, to) {
             // Use sentence-based chunking for better translation quality
-            // MyMemory API limit is 500 chars, so we use 450 for safe margin
-            const chunks = splitIntoSentenceChunks(text, 450);
+            // Increased chunk size for better context preservation (Google Translate can handle larger chunks)
+            // Use 300 chars for better context, but ensure we don't exceed API limits
+            const chunkSize = 300; // Smaller chunks but with better sentence boundaries
+            const chunkData = splitIntoSentenceChunks(text, chunkSize);
             
-            if (chunks.length === 1) {
-                const single = await translateChunk(chunks[0], from, to);
+            if (chunkData.length === 1) {
+                const single = await translateChunk(chunkData[0].text, from, to);
                 return { translated: single.translated, detected: single.detected };
             }
 
-            setStatus(`Translating (${chunks.length} parts)...`);
+            setStatus(`Translating (${chunkData.length} parts)...`);
 
             // Translate chunks sequentially to maintain context and avoid rate limiting
             // Sequential is better for quality, parallel can cause API rate limits
+            // Optimized delays for faster translation
             let combined = '';
             let detectedLang = null;
             
-            for (let i = 0; i < chunks.length; i++) {
+            for (let i = 0; i < chunkData.length; i++) {
                 try {
-                    setStatus(`Translating part ${i + 1} of ${chunks.length}...`);
-                    const result = await translateChunk(chunks[i], from, to);
-                    combined += result.translated;
+                    setStatus(`Translating part ${i + 1} of ${chunkData.length}...`);
+                    const chunk = chunkData[i];
                     
-                    // Add space between chunks if not already present
-                    if (i < chunks.length - 1 && !combined.endsWith(' ') && !combined.endsWith('\n')) {
-                        // Check if next chunk starts with space or if current ends with punctuation
-                        const nextStartsWithSpace = chunks[i + 1].startsWith(' ') || chunks[i + 1].startsWith('\n');
-                        if (!nextStartsWithSpace && !combined.match(/[.!?]$/)) {
-                            combined += ' ';
+                    // Skip empty chunks but preserve their line breaks
+                    if (!chunk.text || !chunk.text.trim()) {
+                        if (chunk.hasLineBreakAfter) {
+                            combined += '\n';
+                        }
+                        continue;
+                    }
+                    
+                    const result = await translateChunk(chunk.text, from, to);
+                    
+                    // Post-process each chunk to ensure quality
+                    let processedChunk = postProcessTranslation(result.translated, chunk.text);
+                    
+                    // Validate chunk translation quality
+                    if (!processedChunk || processedChunk.trim().length === 0) {
+                        console.warn(`Chunk ${i + 1} resulted in empty translation, using original`);
+                        processedChunk = chunk.text; // Fallback to original if translation is empty
+                    }
+                    
+                    // Add processed chunk
+                    combined += processedChunk;
+                    
+                    // Preserve line breaks from original structure
+                    if (chunk.hasLineBreakAfter) {
+                        combined += '\n';
+                    } else if (i < chunkData.length - 1) {
+                        // Smart spacing between chunks - preserve meaning
+                        const nextChunk = chunkData[i + 1];
+                        
+                        // Skip if next chunk is empty
+                        if (nextChunk && nextChunk.text && nextChunk.text.trim()) {
+                            const currentEndsWithPunct = /[.!?]$/.test(combined.trim());
+                            const currentEndsWithComma = /[,;:]$/.test(combined.trim());
+                            const nextStartsWithCapital = /^[A-Z\u0980-\u09FF\u0900-\u097F\u0600-\u06FF]/.test(nextChunk.text.trim());
+                            
+                            // Add appropriate spacing (but not if already has line break or space)
+                            if (!combined.endsWith(' ') && !combined.endsWith('\n')) {
+                                if (currentEndsWithPunct && nextStartsWithCapital) {
+                                    // New sentence - add space
+                                    combined += ' ';
+                                } else if (currentEndsWithComma) {
+                                    // After comma/semicolon - add space
+                                    combined += ' ';
+                                } else if (!currentEndsWithPunct) {
+                                    // Continue same sentence - add space
+                                    combined += ' ';
+                                }
+                            }
                         }
                     }
                     
@@ -1184,75 +1607,210 @@
                         detectedLang = result.detected;
                     }
                     
-                    // Small delay to avoid rate limiting
-                    if (i < chunks.length - 1) {
-                        await new Promise(resolve => setTimeout(resolve, 200));
+                    // Small delay to avoid rate limiting (but keep it minimal for speed)
+                    if (i < chunkData.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 150));
                     }
                 } catch (error) {
                     console.error(`Error translating chunk ${i + 1}:`, error);
+                    
+                    const chunk = chunkData[i];
                     
                     // If error is about length limit, try splitting this chunk further
                     if (error.message && error.message.includes('too long')) {
                         try {
                             setStatus(`Splitting long chunk ${i + 1} into smaller parts...`);
                             // Split this chunk into even smaller pieces (200 chars)
-                            const subChunks = splitIntoSentenceChunks(chunks[i], 200);
+                            const subChunks = splitIntoSentenceChunks(chunk.text, 200);
                             let subCombined = '';
-                            for (const subChunk of subChunks) {
-                                const subResult = await translateChunk(subChunk, from, to);
+                            for (let j = 0; j < subChunks.length; j++) {
+                                const subChunk = subChunks[j];
+                                const subResult = await translateChunk(subChunk.text, from, to);
                                 subCombined += subResult.translated;
-                                if (subChunks.indexOf(subChunk) < subChunks.length - 1) {
+                                
+                                // Preserve line breaks
+                                if (subChunk.hasLineBreakAfter) {
+                                    subCombined += '\n';
+                                } else if (j < subChunks.length - 1) {
                                     subCombined += ' ';
                                 }
-                                await new Promise(resolve => setTimeout(resolve, 300));
+                                
+                                await new Promise(resolve => setTimeout(resolve, 150));
                             }
                             combined += subCombined;
+                            
+                            // Preserve original chunk's line break
+                            if (chunk.hasLineBreakAfter) {
+                                combined += '\n';
+                            }
+                            
                             if (!detectedLang && subChunks.length > 0) {
                                 // Try to get detected language from first sub-chunk
-                                const firstSubResult = await translateChunk(subChunks[0], from, to);
+                                const firstSubResult = await translateChunk(subChunks[0].text, from, to);
                                 if (firstSubResult.detected) detectedLang = firstSubResult.detected;
                             }
                         } catch (subError) {
                             console.error(`Error translating sub-chunks:`, subError);
                             // If even sub-chunks fail, add original text
-                            combined += chunks[i];
-                            if (i < chunks.length - 1) combined += ' ';
+                            combined += chunk.text;
+                            if (chunk.hasLineBreakAfter) {
+                                combined += '\n';
+                            } else if (i < chunkData.length - 1) {
+                                combined += ' ';
+                            }
                         }
                     } else {
                         // For other errors, add original text as fallback
-                        combined += chunks[i];
-                        if (i < chunks.length - 1) combined += ' ';
+                        combined += chunk.text;
+                        if (chunk.hasLineBreakAfter) {
+                            combined += '\n';
+                        } else if (i < chunkData.length - 1) {
+                            combined += ' ';
+                        }
                     }
                 }
             }
 
-            return { translated: combined.trim(), detected: detectedLang };
+            // Final post-processing of combined translation (preserve line breaks)
+            let finalTranslation = postProcessTranslation(combined, text);
+            
+            // Final quality check - ensure translation is meaningful
+            if (!finalTranslation || finalTranslation.trim().length === 0) {
+                throw new Error('Translation resulted in empty output');
+            }
+            
+            // Ensure translation has reasonable length (at least 30% of original for meaningful content)
+            const originalLength = text.trim().length;
+            const translatedLength = finalTranslation.trim().length;
+            if (originalLength > 50 && translatedLength < originalLength * 0.2) {
+                console.warn('Translation seems too short, might be incomplete');
+            }
+            
+            // Don't trim - preserve leading/trailing line breaks if they exist in original
+            return { translated: finalTranslation, detected: detectedLang };
         }
 
         // Text to speech
         let voices = [];
-        if ('speechSynthesis' in window) {
-            voices = window.speechSynthesis.getVoices();
-            window.speechSynthesis.onvoiceschanged = () => {
+        let voicesLoaded = false;
+        
+        function loadVoices() {
+            if ('speechSynthesis' in window) {
                 voices = window.speechSynthesis.getVoices();
-            };
+                voicesLoaded = true;
+            }
+        }
+        
+        if ('speechSynthesis' in window) {
+            loadVoices();
+            window.speechSynthesis.onvoiceschanged = loadVoices;
+            // Some browsers need a delay
+            setTimeout(loadVoices, 100);
         }
 
         function getBestVoice(langCode) {
             if (!voices || !voices.length) return null;
-            const target = getVoiceLang(langCode, 'en-US').toLowerCase();
-            const base = target.split('-')[0];
-
-            let voice = voices.find(v => v.lang.toLowerCase() === target);
-            if (voice) return voice;
-
-            voice = voices.find(v => v.lang.toLowerCase().startsWith(base));
-            if (voice) return voice;
-
+            
+            // Get all possible language variants for this code
+            const variants = getVoiceLangVariants(langCode);
+            const base = langCode;
+            
+            // Strategy 1: Try exact matches with all variants (priority order)
+            for (const variant of variants) {
+                const variantLower = variant.toLowerCase();
+                let voice = voices.find(v => v.lang.toLowerCase() === variantLower);
+                if (voice) {
+                    console.log(`Found exact match voice: ${voice.name} for ${variant}`);
+                    return voice;
+                }
+            }
+            
+            // Strategy 2: Try partial matches (language-region or language only)
+            for (const variant of variants) {
+                const variantLower = variant.toLowerCase();
+                const [lang, region] = variantLower.split('-');
+                
+                // Try with region
+                if (region) {
+                    let voice = voices.find(v => {
+                        const vLang = v.lang.toLowerCase();
+                        return vLang === variantLower || 
+                               vLang.startsWith(lang + '-') ||
+                               (vLang === lang && vLang.includes(region));
+                    });
+                    if (voice) {
+                        console.log(`Found partial match voice: ${voice.name} for ${variant}`);
+                        return voice;
+                    }
+                }
+                
+                // Try base language only
+                let voice = voices.find(v => {
+                    const vLang = v.lang.toLowerCase();
+                    return vLang === lang || vLang.startsWith(lang + '-');
+                });
+                if (voice) {
+                    console.log(`Found base language voice: ${voice.name} for ${lang}`);
+                    return voice;
+                }
+            }
+            
+            // Strategy 3: Language-specific name matching (more flexible)
+            const languageNameMap = {
+                'bn': ['bengali', 'bangla', 'bn'],
+                'hi': ['hindi', 'hi'],
+                'ur': ['urdu', 'ur'],
+                'ar': ['arabic', 'ar'],
+                'es': ['spanish', 'español', 'es'],
+                'fr': ['french', 'français', 'fr'],
+                'de': ['german', 'deutsch', 'de'],
+                'ru': ['russian', 'русский', 'ru'],
+                'zh': ['chinese', '中文', 'mandarin', 'zh']
+            };
+            
+            const names = languageNameMap[base];
+            if (names) {
+                for (const name of names) {
+                    let voice = voices.find(v => {
+                        const vName = (v.name || '').toLowerCase();
+                        const vLang = (v.lang || '').toLowerCase();
+                        return vName.includes(name) || vLang.includes(name);
+                    });
+                    if (voice) {
+                        console.log(`Found name match voice: ${voice.name} for ${name}`);
+                        return voice;
+                    }
+                }
+            }
+            
+            // Strategy 4: Try to find any voice with matching base language code
+            const primaryVariant = getVoiceLang(langCode, 'en-US').toLowerCase();
+            const primaryBase = primaryVariant.split('-')[0];
+            let voice = voices.find(v => {
+                const vLang = v.lang.toLowerCase();
+                return vLang.startsWith(primaryBase);
+            });
+            if (voice) {
+                console.log(`Found base code match voice: ${voice.name}`);
+                return voice;
+            }
+            
+            // Strategy 5: Fallback to default English voice
+            const defaultVoice = voices.find(v => {
+                const vLang = v.lang.toLowerCase();
+                return vLang.includes('en') || vLang.startsWith('en-');
+            });
+            if (defaultVoice) {
+                console.log(`Using default English voice: ${defaultVoice.name}`);
+                return defaultVoice;
+            }
+            
+            // Last resort: return first available voice
+            console.log(`Using fallback voice: ${voices[0].name}`);
             return voices[0];
         }
 
-        function toggleSpeak(text, langCode) {
+        function toggleSpeak(text, langCode, buttonElement) {
             if (!text || !text.trim()) {
                 setStatus('Nothing to read. Please enter or translate some text first.', true);
                 return;
@@ -1262,32 +1820,143 @@
                 return;
             }
 
-            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+            // If this button is already speaking, stop it
+            if (currentSpeakingButton === buttonElement && (window.speechSynthesis.speaking || window.speechSynthesis.pending)) {
                 window.speechSynthesis.cancel();
-                setStatus('Speech stopped.');
+                if (currentSpeakingButton) {
+                    currentSpeakingButton.classList.remove('speaking');
+                }
+                currentSpeakingButton = null;
+                setStatus('Speech is off.');
                 return;
             }
 
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = getVoiceLang(langCode, 'en-US');
-            const voice = getBestVoice(langCode);
-            if (voice) utterance.voice = voice;
-            utterance.rate = 0.95;
-            utterance.pitch = 1;
-            utterance.volume = 1;
+            // Stop any currently speaking speech (from other button)
+            if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+                window.speechSynthesis.cancel();
+                if (currentSpeakingButton) {
+                    currentSpeakingButton.classList.remove('speaking');
+                }
+            }
 
-            window.speechSynthesis.speak(utterance);
-            setStatus('Speaking...');
+            // Set current button
+            currentSpeakingButton = buttonElement;
+
+            // Ensure voices are loaded - wait if needed
+            if (!voicesLoaded || voices.length === 0) {
+                loadVoices();
+                // Wait a bit for voices to load
+                setTimeout(() => {
+                    if (voices.length === 0) {
+                        loadVoices();
+                    }
+                    performSpeak(text, langCode, buttonElement);
+                }, 100);
+                return;
+            }
+
+            performSpeak(text, langCode, buttonElement);
+        }
+        
+        function performSpeak(text, langCode, buttonElement) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            
+            // Get best voice first, then set language accordingly
+            const voice = getBestVoice(langCode);
+            if (voice) {
+                utterance.voice = voice;
+                utterance.lang = voice.lang; // Use the voice's actual language code
+                console.log(`Speaking with voice: ${voice.name} (${voice.lang})`);
+            } else {
+                // Fallback: use language code from mapping
+                const langForSpeech = getVoiceLang(langCode, 'en-US');
+                utterance.lang = langForSpeech;
+                console.log(`No voice found, using language code: ${langForSpeech}`);
+            }
+            
+            // Optimized speech parameters for clarity
+            utterance.rate = 0.9; // Slightly slower for better clarity
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            // Handle speech end event
+            utterance.onend = () => {
+                if (currentSpeakingButton === buttonElement) {
+                    currentSpeakingButton.classList.remove('speaking');
+                    currentSpeakingButton = null;
+                }
+                setStatus('Speech finished.');
+            };
+            
+            utterance.onerror = (event) => {
+                console.error('Speech synthesis error:', event);
+                if (currentSpeakingButton === buttonElement) {
+                    currentSpeakingButton.classList.remove('speaking');
+                    currentSpeakingButton = null;
+                }
+                
+                let errorMsg = 'Speech is off.';
+                if (event.error === 'language-not-supported') {
+                    errorMsg = 'Language not supported for speech. Trying with default voice...';
+                    // Try with default voice
+                    utterance.voice = null;
+                    utterance.lang = 'en-US';
+                    try {
+                        window.speechSynthesis.speak(utterance);
+                        setStatus('Speaking with default voice...');
+                        if (buttonElement) {
+                            buttonElement.classList.add('speaking');
+                        }
+                        return;
+                    } catch (e) {
+                        errorMsg = 'Speech is off.';
+                    }
+                } else if (event.error === 'not-allowed') {
+                    errorMsg = 'Speech permission denied. Please check browser settings.';
+                } else if (event.error === 'network') {
+                    errorMsg = 'Network error during speech. Please try again.';
+                }
+                setStatus(errorMsg, true);
+            };
+
+            try {
+                window.speechSynthesis.speak(utterance);
+                if (buttonElement) {
+                    buttonElement.classList.add('speaking');
+                }
+                setStatus('Speaking...');
+            } catch (error) {
+                console.error('Error starting speech:', error);
+                if (currentSpeakingButton === buttonElement) {
+                    currentSpeakingButton.classList.remove('speaking');
+                    currentSpeakingButton = null;
+                }
+                setStatus('Speech is off.', true);
+            }
         }
 
         sourceSpeakBtn.addEventListener('click', () => {
             const code = sourceLang.value === 'auto' ? targetLang.value : sourceLang.value;
-            toggleSpeak(inputText.value, code);
+            toggleSpeak(inputText.value, code, sourceSpeakBtn);
         });
 
         outputSpeakBtn.addEventListener('click', () => {
-            toggleSpeak(outputText.value, targetLang.value);
+            toggleSpeak(outputText.value, targetLang.value, outputSpeakBtn);
         });
+
+        // Handle speech cancellation (e.g., when page loses focus or speech is interrupted)
+        if ('speechSynthesis' in window) {
+            // Listen for speech synthesis state changes
+            setInterval(() => {
+                if (currentSpeakingButton && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+                    // Speech ended or was cancelled externally
+                    if (currentSpeakingButton) {
+                        currentSpeakingButton.classList.remove('speaking');
+                        currentSpeakingButton = null;
+                    }
+                }
+            }, 500);
+        }
 
         // Voice input (speech-to-text) for source
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
