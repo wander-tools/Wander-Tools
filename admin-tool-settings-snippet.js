@@ -25,7 +25,7 @@ const toolsList = [
     { name: 'Currency Converter', url: 'tools/math&utility-tools/currency-converter.html', category: 'Math & Utility Tools' },
     { name: 'Age Calculator', url: 'tools/math&utility-tools/age-calculator.html', category: 'Math & Utility Tools' },
     { name: 'Word Counter', url: 'tools/text-tools/word-counter.html', category: 'Text Tools' },
-    { name: 'Translator', url: 'tools/text-tools/lorem-ipsum.html', category: 'Text Tools' },
+    { name: 'Translator', url: 'tools/text-tools/translator.html', category: 'Text Tools' },
     { name: 'Case Converter', url: 'tools/text-tools/case-converter.html', category: 'Text Tools' },
     { name: 'Text Generator', url: 'tools/text-tools/text-encryption.html', category: 'Text Tools' },
     { name: 'Base64 Converter', url: 'tools/developer-tools/base64-converter.html', category: 'Developer Tools' },
